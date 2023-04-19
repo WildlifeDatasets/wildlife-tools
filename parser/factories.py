@@ -4,7 +4,7 @@ import torch.nn as nn
 import timm
 import torchvision.transforms as T
 import os, sys
-sys.path.append(os.path.join('/home/cermavo3/projects/datasets/'))
+#sys.path.append(os.path.join('/home/cermavo3/projects/datasets/'))
 from wildlife_datasets import splits
 import pandas as pd
 import itertools

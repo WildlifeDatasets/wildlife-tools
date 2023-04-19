@@ -13,7 +13,7 @@ from data.dataset import WildlifeDataset
 
 # Wildlife datasets
 import os, sys
-sys.path.append(os.path.join('../../datasets'))
+#sys.path.append(os.path.join('../../datasets'))
 from wildlife_datasets import datasets
 
 
