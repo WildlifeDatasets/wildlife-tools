@@ -2,22 +2,18 @@
 Descibed recommended processing of datasets (apply bbox/segmentations, resize, etc.)
 Saves all processes and resized images to new folders
 '''
-import os
-import sys
+
 import torchvision.transforms as T
 from tqdm import tqdm
 import pandas as pd
 import numpy as np
 from PIL import Image
-# TODO: fix imports
 
-# Wildlife training
-root = os.path.join('..')
-sys.path.append(root)
-from wildlife_tools.data import ImageDataset
+from data.dataset import WildlifeDataset
+
 # Wildlife datasets
-root = os.path.join('../../datasets')
-sys.path.append(root)
+import os, sys
+sys.path.append(os.path.join('../../datasets'))
 from wildlife_datasets import datasets
 
 
@@ -31,7 +27,7 @@ def resize_dataset(dataset_factory, new_root, size=256, img_load='bbox'):
     resize_turtles(dataset_factory, 'data/256x256_bbox', max_size=256, img_load='bbox')
     '''
 
-    dataset = ImageDataset(
+    dataset = WildlifeDataset(
         dataset_factory.df,
         dataset_factory.root,
         transform=T.Resize(size=size),
@@ -200,12 +196,12 @@ def prepare_ndd20(root, new_root='data/NDD20', size=256):
 
 def prepare_smalst(root, new_root='data/SMALST', size=256):
     dataset_factory = datasets.SMALST(root)
-    dataset = ImageDataset(
+    dataset = WildlifeDataset(
         dataset_factory.df,
         dataset_factory.root,
         img_load='full',
     )
-    dataset_masks = ImageDataset(
+    dataset_masks = WildlifeDataset(
         dataset_factory.df,
         dataset_factory.root,
         img_load='full',

@@ -1,7 +1,6 @@
+from data.prepare import prepare_functions
 
-from wildlife_tools.data.prepare import prepare_functions
-
-requests = [
+configs = [
     {'name': 'NyalaData', 'root': '/mnt/data/turtles/datasets/datasets/NyalaData'},
     {'name': 'ZindiTurtleRecall', 'root': '/mnt/data/turtles/datasets/datasets/ZindiTurtleRecall'},
     {'name': 'BelugaID', 'root': '/mnt/data/turtles/datasets/datasets/BelugaID'},
@@ -38,4 +37,4 @@ if __name__ == '__main__':
     for config in configs:
         name = config.pop('name')
         print(f'Processing: {name}')
-        processing_function[name](**config)
+        prepare_functions[name](**config)

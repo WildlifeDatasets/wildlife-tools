@@ -1,0 +1,59 @@
+# Dataset
+datasets:
+    method: folder
+    path: /home/cermavo3/projects/turtles/experiments_compare_datasets/data/SeaTurtleIDHeads
+    datasets:
+        dataset_train:
+            split: train
+            transform: transform_train
+        dataset_test:
+            split: test
+            transform: transform_test
+
+splitter:
+    method: open_set
+    seed: 1
+    ratio_train: 0.5
+    ratio_class_test: 0.2
+
+transform_train:
+    method: timm
+    input_size: 224
+    is_training: True
+    auto_augment: rand-m10-n2-mstd1
+
+transform_test:
+    method: timm
+    input_size: 224
+    is_training: False
+
+# Model
+backbone:
+    method: timm
+    model_name: efficientnet_b0
+    pretrained: True
+
+objective:
+    method: arcface_loss
+    margin: 20
+    scale: 64
+
+optimizer:
+    method: 'adam'
+    lr: 0.001
+
+scheduler:
+    method: stepwise
+    step_size: 50
+
+trainer:
+    method: embedding
+    embedding_size: 512
+    device: 'cuda'
+    batch_size: 128
+    epochs: 10
+    num_workers: 6
+    evaluate_step: 1
+    evaluate_metrics:
+        - MAP
+        - top5_accuracy
