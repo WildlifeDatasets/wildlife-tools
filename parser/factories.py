@@ -126,16 +126,8 @@ class MinerFactory(BaseFactory):
 
 
 class FullSplit():
-    def __init__(self, return_as='train'):
-        self.return_as = return_as
-
     def split(self, df):
-        if self.return_as == 'train':
-            return (df.index, None)
-        elif self.return_as == 'test':
-            return (None, df.index)
-        else:
-            raise ValueError(f'Invalid return_as: {return_as}')
+        return [ (df.index.values, None) ]
 
 
 class SplitterFactory(BaseFactory):
@@ -228,8 +220,7 @@ class ObjectiveFactory(BaseFactory):
         return torch.nn.CrossEntropyLoss()
 
 
-from configs.factories import BaseFactory
-from data.dataset import WildlifeDataset
+
 
 class TrainerFactory(BaseFactory):
     @property
