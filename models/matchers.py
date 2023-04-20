@@ -5,6 +5,9 @@ import pandas as pd
 import torch
 import kornia.feature as KF
 from data.dataset import WildlifeDataset
+import math
+import os
+
 
 def batched(iterable, n):
     '''
@@ -81,6 +84,7 @@ class LOFTRMatcher():
         else:
             print('Matching all pairs in query')
             query = [i[0] for i in dataset_query]
+            database = None
             similarity = {t: np.zeros((len(query), len(query))) for t in self.thresholds}
 
         # Prepare pairs
@@ -107,10 +111,12 @@ class LOFTRMatcher():
 
             batch_idx = correspondences['batch_indexes'].cpu().numpy()
             confidence = correspondences['confidence'].cpu().numpy()
-
             for t in self.thresholds:
                 series = pd.Series(confidence > t)
-                similarity[t][a_idx, b_idx] = series.groupby(batch_idx).sum().values
+                #similarity[t][a_idx, b_idx] = series.groupby(batch_idx).sum().values
+                for j, group in series.groupby(batch_idx):
+                    similarity[t][a_idx[j], b_idx[j]] = group.sum()
+
 
             if i % 100 == 0:
                 print(f'batch {i}')
