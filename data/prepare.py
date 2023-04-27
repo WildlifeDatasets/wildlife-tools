@@ -51,8 +51,8 @@ def prepare_sea_turtle_id_heads(root, new_root='data/SeaTurtleIDHeads', size=256
     df = dataset_factory.df[['id', 'identity', 'path', 'date']]
     df.to_csv(os.path.join(new_root, 'annotations.csv'))
 
-def prepare_zebra_fish_id(root, new_root='data/AAUZebraFishID', size=256):
-    dataset_factory = datasets.AAUZebraFishID(root)
+def prepare_zebra_fish(root, new_root='data/AAUZebraFish', size=256):
+    dataset_factory = datasets.AAUZebraFish(root)
     resize_dataset(dataset_factory, new_root, size=size, img_load='bbox')
     save_dataframe(dataset_factory, new_root)
 
@@ -238,7 +238,7 @@ prepare_functions = {
     'NDD20': prepare_ndd20,
     'SMALST': prepare_smalst,
     'SeaTurtleIDHeads': prepare_sea_turtle_id_heads,
-    'AAUZebraFishID': prepare_zebra_fish_id,
+    'AAUZebraFish': prepare_zebra_fish,
     'CZoo': prepare_czoo,
     'CTai': prepare_ctai,
     'Giraffes': prepare_giraffes,

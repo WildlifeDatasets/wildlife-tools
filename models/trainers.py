@@ -40,7 +40,7 @@ class ClassifierTrainer():
 
     def predict(self, dataset):
         model = self.model.eval()
-        loader = DataLoader(
+        loader = torch.utils.data.DataLoader(
             dataset,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
