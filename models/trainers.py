@@ -47,7 +47,7 @@ class ClassifierTrainer():
             shuffle=False,
         )
         outputs = []
-        for batch in tqdm(loader):
+        for batch in tqdm(loader, mininterval=1):
             x, _ = prepare_batch(batch, device=self.device)
             with torch.no_grad():
                 outputs.append(model(x).cpu())
@@ -87,7 +87,7 @@ class ClassifierTrainer():
 
     def train_epoch(self, loader):
         model = self.model.train()
-        for batch in tqdm(loader, desc=f'Epoch {self.epoch}: ', disable=False):
+        for batch in tqdm(loader, desc=f'Epoch {self.epoch}: ', mininterval=1):
             x, y = prepare_batch(batch, device=self.device)
 
             self.optimizer.zero_grad()
@@ -108,7 +108,7 @@ class EmbeddingTrainer(ClassifierTrainer):
 
     def train_epoch(self, loader):
         model = self.model.train()
-        for batch in tqdm(loader, desc=f'Epoch {self.epoch}: ', disable=False):
+        for batch in tqdm(loader, desc=f'Epoch {self.epoch}: ', mininterval=1):
             x, y = prepare_batch(batch, device=self.device)
 
             self.optimizer.zero_grad()

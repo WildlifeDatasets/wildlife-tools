@@ -63,7 +63,7 @@ def prepare_pair_batches(query, database=None, batch_size=128, chunk=1, chunk_to
     print(f'Total pairs     : {pair_total}')
     print(f'Total batches   : {batch_total}')
     print(f'Batches in chunk: {len(batches)}')
-    return iterator, len(batched)
+    return iterator, len(batches)
 
 
 def prepare_pairs(query, database=None, batch_size=128, chunk=1, chunk_total=1):
@@ -151,7 +151,7 @@ class LOFTRMatcher():
             chunk_total = self.chunk_total
         )
 
-        for pair_batch in tqdm(iterator, total=iterator_size):
+        for pair_batch in tqdm(iterator, total=iterator_size, mininterval=1):
             a, b = zip(*pair_batch)
             a_idx, a_data = list(zip(*a))
             b_idx, b_data = list(zip(*b))
@@ -171,7 +171,8 @@ class LOFTRMatcher():
 
 
     def save(self, path, name='similarity.npy'):
-        np.save(os.path.join(path, name), self.similarity)
+        if self.similarity:
+            np.save(os.path.join(path, name), self.similarity)
 
     def load(self, path):
         self.similarity = np.load(path, allow_pickle='TRUE').item()
@@ -231,7 +232,7 @@ class DescriptorMatcher():
         )
 
         index = get_faiss_index(d=self.descriptor_dim, device=self.device)
-        for (a_idx, a_data), (b_idx, b_data) in tqdm(iterator, total=iterator_size):
+        for (a_idx, a_data), (b_idx, b_data) in tqdm(iterator, total=iterator_size, mininterval=1):
             if (a_data is None) or (b_data is None):
                 continue
             else:
@@ -242,6 +243,13 @@ class DescriptorMatcher():
                     ratio = score[:, 0] / score[:, 1]
                 for t in self.thresholds:
                     self.similarity[t][a_idx, b_idx] = np.sum(ratio < t)
+
+    def save(self, path, name='similarity.npy'):
+        if self.similarity:
+            np.save(os.path.join(path, name), self.similarity)
+
+    def load(self, path):
+        self.similarity = np.load(path, allow_pickle='TRUE').item()
 
 
 class SIFTMatcher(DescriptorMatcher):
@@ -257,7 +265,7 @@ class SIFTMatcher(DescriptorMatcher):
             sift = cv2.SIFT_create()
 
         descriptors = []
-        for img, y in tqdm(dataset):
+        for img, y in tqdm(dataset, mininterval=1):
             keypoint, d = sift.detectAndCompute(np.array(img), None)
             if len(keypoint) <= 1:
                 descriptors.append(None)
@@ -293,7 +301,7 @@ class SuperPointMatcher(DescriptorMatcher):
                 'keypoint_threshold': self.keypoint_threshold,
                 'max_keypoints': max_keypoints,
                 'remove_borders': self.remove_borders,
-        })
+        }).to(self.device)
         loader = torch.utils.data.DataLoader(
             dataset,
             batch_size=128,
@@ -301,8 +309,8 @@ class SuperPointMatcher(DescriptorMatcher):
         )
 
         descriptors = []
-        for image, label in tqdm(loader):
+        for image, label in tqdm(loader, mininterval=1):
             with torch.no_grad():
-                output = model({'image': image})
+                output = model({'image': image.to(self.device)})
             descriptors.extend([d.permute(1, 0).cpu().numpy() for d in output['descriptors']])
         return descriptors

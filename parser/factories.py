@@ -9,7 +9,7 @@ from wildlife_datasets import splits
 import pandas as pd
 import itertools
 from models.trainers import EmbeddingTrainer, ClassifierTrainer
-from models.matchers import LOFTRMatcher
+from models.matchers import LOFTRMatcher, SuperPointMatcher, SIFTMatcher
 from data.dataset import WildlifeDataset
 
 
@@ -136,6 +136,7 @@ class SplitterFactory(BaseFactory):
         return {
             'open_set': lambda: splits.OpenSetSplit(**self.config),
             'closed_set': lambda: splits.ClosedSetSplit(**self.config),
+            'disjoint_set': lambda: splits.DisjointSetSplit(**self.config),
             'full': lambda: FullSplit(**self.config),
         }
 
@@ -160,9 +161,13 @@ class DatasetsFactory(BaseFactory):
 
             split_datasets = {}
             for name, cfg in self.config['datasets'].items():
-                transform_factory = getattr(experiment, cfg['transform'])
-                if not transform_factory:
-                    raise ValueError(f"No transform {cfg['transform']} in the experiment")
+
+                if cfg.get('transform'):
+                    transform_factory = getattr(experiment, cfg['transform'])
+                    if not transform_factory:
+                        raise ValueError(f"No transform {cfg['transform']} in the experiment")
+                else:
+                    transform_factory = lambda: None
                 if cfg['split'] not in idx:
                     raise ValueError(f"Invalid split name: {cfg['split']}")
 
@@ -221,14 +226,15 @@ class ObjectiveFactory(BaseFactory):
 
 
 
-
 class TrainerFactory(BaseFactory):
     @property
     def methods(self):
         return {
         'embedding': self.create_embedding_trainer,
         'classifier': self.create_classifier_trainer,
-        'loftr_matcher': self.create_loftr_matcher
+        'loftr_matcher': self.create_loftr_matcher,
+        'sift_matcher': self.create_sift_matcher,
+        'superpoint_matcher': self.create_superpoint_matcher,
         }
 
     def create_classifier_trainer(self, experiment, dataset_train, **kwargs):
@@ -263,3 +269,9 @@ class TrainerFactory(BaseFactory):
 
     def create_loftr_matcher(self, *args, **kwargs):
         return LOFTRMatcher(**self.config)
+
+    def create_superpoint_matcher(self, *args, **kwargs):
+        return SuperPointMatcher(**self.config)
+
+    def create_sift_matcher(self, *args, **kwargs):
+        return SIFTMatcher(**self.config)
