@@ -41,14 +41,14 @@ def resize_dataset(dataset_factory, new_root, size=256, img_load='bbox'):
         image.save(path)
 
 def save_dataframe(dataset_factory, new_root):
-    df_simplified = dataset_factory.df[['id', 'identity', 'path']]
+    df_simplified = dataset_factory.df[['image_id', 'identity', 'path']]
     assert type(df_simplified.index) == pd.RangeIndex
     df_simplified.to_csv(os.path.join(new_root, 'annotations.csv'))
 
 def prepare_sea_turtle_id_heads(root, new_root='data/SeaTurtleIDHeads', size=256):
     dataset_factory = datasets.SeaTurtleIDHeads(root)
     resize_dataset(dataset_factory, new_root, size=size, img_load='full')
-    df = dataset_factory.df[['id', 'identity', 'path', 'date']]
+    df = dataset_factory.df[['image_id', 'identity', 'path', 'date']]
     df.to_csv(os.path.join(new_root, 'annotations.csv'))
 
 def prepare_zebra_fish(root, new_root='data/AAUZebraFish', size=256):
@@ -79,7 +79,7 @@ def prepare_hyena_id_2022(root, new_root='data/HyenaID2022', size=256):
 def prepare_macaque_faces(root, new_root='data/MacaqueFaces', size=256):
     dataset_factory = datasets.MacaqueFaces(root)
     resize_dataset(dataset_factory, new_root, size=size, img_load='full')
-    df = dataset_factory.df[['id', 'identity', 'path', 'date']]
+    df = dataset_factory.df[['image_id', 'identity', 'path', 'date']]
     df.to_csv(os.path.join(new_root, 'annotations.csv'))
 
 def prepare_open_cows_2020(root, new_root='data/OpenCows2020', size=256):
@@ -100,7 +100,7 @@ def prepare_aerial_cattle_2017(root, new_root='data/AerialCattle2017', size=256)
 def prepare_giraffe_zebra_id(root, new_root='data/GiraffeZebraID', size=256):
     dataset_factory = datasets.GiraffeZebraID(root)
     resize_dataset(dataset_factory, new_root, size=size, img_load='bbox')
-    df = dataset_factory.df[['id', 'identity', 'path', 'date']]
+    df = dataset_factory.df[['image_id', 'identity', 'path', 'date']]
     df.to_csv(os.path.join(new_root, 'annotations.csv'))
 
 def prepare_ipanda_50(root, new_root='data/IPanda50', size=256):
@@ -166,7 +166,7 @@ def prepare_zindi_turtle_recall(root, new_root='data/ZindiTurtleRecall', size=25
 def prepare_beluga_id(root, new_root='data/BelugaID', size=256):
     dataset_factory = datasets.BelugaID(root)
     resize_dataset(dataset_factory, new_root, size=size, img_load='bbox')
-    df = dataset_factory.df[['id', 'identity', 'path', 'date']]
+    df = dataset_factory.df[['image_id', 'identity', 'path', 'date']]
     df.to_csv(os.path.join(new_root, 'annotations.csv'))
 
 def prepare_bird_individual_id(root, new_root='data/BirdIndividualID', size=256):
