@@ -15,7 +15,7 @@ def prepare_batch(batch, device='cpu'):
     return x, y
 
 
-class ClassifierTrainer():
+class BasicTrainer():
     def __init__(
         self,
         model,
@@ -26,6 +26,8 @@ class ClassifierTrainer():
         device='cuda',
         batch_size=128,
         num_workers=1,
+        keep_checkpoint=True,
+        keep_prediction=False,
         **kwargs,
     ):
         self.model = model.to(device)
@@ -37,6 +39,8 @@ class ClassifierTrainer():
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.epoch = 0
+        self.keep_checkpoint = keep_checkpoint
+        self.keep_prediction = keep_prediction
 
     def predict(self, dataset):
         model = self.model.eval()
@@ -63,19 +67,32 @@ class ClassifierTrainer():
         )
 
         for e in range(self.epochs):
-            self.train_epoch(loader)
+            epoch_data = self.train_epoch(loader)
             self.epoch += 1
 
             if evaluation:
-                evaluation.evaluate(self)
+                pass
+                #evaluation.log(trainer=self, **epoch_data)
 
-    def save(self, folder, name='checkpoint.pth'):
-        checkpoint = { # Always save to cpu or cuda
+    def save(self, folder, **kwargs):
+        if not os.path.exists(folder):
+           os.makedirs(folder)
+        if self.keep_prediction:
+            self.save_prediction(folder=folder, **kwargs)
+        if self.keep_checkpoint:
+            self.save_checkpoint(folder=folder, **kwargs)
+
+    def save_prediction(self, folder, datasets, predictions_file='predictions.pth', **kwargs):
+        predictions = {name: self.predict(dataset) for name, dataset in datasets.items()}
+        torch.save(predictions, os.path.join(folder, predictions_file))
+
+    def save_checkpoint(self, folder, checkpoint_file='checkpoint.pth', **kwargs):
+        checkpoint = {
             'model': self.model.state_dict(),
             'objective': self.objective.state_dict(),
             'epoch': self.epoch,
         }
-        torch.save(checkpoint, os.path.join(folder, name))
+        torch.save(checkpoint, os.path.join(folder, checkpoint_file))
 
 
     def load(self, path, device='cpu'):
@@ -95,30 +112,6 @@ class ClassifierTrainer():
             loss = self.objective(out, y)
             loss.backward()
             self.optimizer.step()
-
         if self.scheduler:
             self.scheduler.step()
 
-
-class EmbeddingTrainer(ClassifierTrainer):
-    def __init__(self, *args, mining_func=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.mining_func = mining_func
-
-
-    def train_epoch(self, loader):
-        model = self.model.train()
-        for batch in tqdm(loader, desc=f'Epoch {self.epoch}: ', mininterval=1):
-            x, y = prepare_batch(batch, device=self.device)
-
-            self.optimizer.zero_grad()
-            embeddings = model(x)
-            if self.mining_func is not None:
-                indices_tuple = self.mining_func(embeddings, y)
-                loss = self.objective(embeddings, y, indices_tuple)
-            else:
-                loss = self.objective(embeddings, y)
-            self.optimizer.step()
-
-        if self.scheduler:
-            self.scheduler.step()

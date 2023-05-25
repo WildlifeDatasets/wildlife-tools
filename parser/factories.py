@@ -1,5 +1,6 @@
 import torch
-from pytorch_metric_learning import losses, miners, distances
+from pytorch_metric_learning import losses, distances
+from models.losses import ArcFaceLoss, TripletLoss, SoftmaxLoss
 import torch.nn as nn
 import timm
 import torchvision.transforms as T
@@ -8,10 +9,10 @@ import os, sys
 from wildlife_datasets import splits
 import pandas as pd
 import itertools
-from models.trainers import EmbeddingTrainer, ClassifierTrainer
+from models.trainers import BasicTrainer
 from models.matchers import LOFTRMatcher, SuperPointMatcher, SIFTMatcher
 from data.dataset import WildlifeDataset
-
+from inference.evaluate import EmbeddingEvaluate
 
 class BaseFactory():
     methods = {}
@@ -76,8 +77,8 @@ class BackboneFactory(BaseFactory):
             'timm': self.create_timm_backbone,
         }
 
-    def create_timm_backbone(self, embedding_size, **kwargs):
-        return timm.create_model(num_classes=embedding_size, **self.config)
+    def create_timm_backbone(self, num_classes, **kwargs):
+        return timm.create_model(num_classes=num_classes, **self.config)
 
 
 class OptimizerFactory(BaseFactory):
@@ -102,32 +103,24 @@ class OptimizerFactory(BaseFactory):
         return torch.optim.SGD(params=params, **self.config)
 
 
-class MinerFactory(BaseFactory):
+class SchedulerFactory(BaseFactory):
     '''
-    Example config:
+    Example config in YAML file:
 
-    miner:
-        method: semihard
-        margin: 0.1    
+    scheduler:
+        method: 'cosine'
+        lr: 1e-3
     '''
-
     @property
     def methods(self):
         return {
-            'semihard': self.create_semihard_miner,
+            'cosine': self.create_cosine_scheduler,
         }
-    
-    def create_semihard_miner(self, **kwargs):
-        return miners.TripletMarginMiner(
-            distance = distances.CosineSimilarity(),
-            type_of_triplets = "semihard",
-            **self.config
-            )
 
-
-class FullSplit():
-    def split(self, df):
-        return [ (df.index.values, None) ]
+    def create_cosine_scheduler(self, optimizer, epochs, **kwargs):
+        lr = optimizer.defaults.get("lr")
+        lr_min = lr * 1e-3 if lr is not None else 1e-5
+        return torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=lr_min)
 
 
 class SplitterFactory(BaseFactory):
@@ -137,7 +130,7 @@ class SplitterFactory(BaseFactory):
             'open_set': lambda: splits.OpenSetSplit(**self.config),
             'closed_set': lambda: splits.ClosedSetSplit(**self.config),
             'disjoint_set': lambda: splits.DisjointSetSplit(**self.config),
-            'full': lambda: FullSplit(**self.config),
+            'full': lambda: splits.FullSplit(**self.config),
         }
 
 
@@ -180,14 +173,7 @@ class DatasetsFactory(BaseFactory):
         return datasets
 
 
-class SoftmaxLoss(nn.Module):
-    def __init__(self, num_classes, embedding_size):
-        super().__init__()
-        self.criterion = nn.CrossEntropyLoss()
-        self.flat = nn.Linear(embedding_size, num_classes)
 
-    def forward(self, x, target):
-        return self.criterion(self.flat(x), target)
 
 
 class ObjectiveFactory(BaseFactory):
@@ -216,14 +202,28 @@ class ObjectiveFactory(BaseFactory):
         return SoftmaxLoss(num_classes, embedding_size)
 
     def create_arcface_loss(self, num_classes, embedding_size, **kwargs):
-        return losses.ArcFaceLoss(num_classes, embedding_size, **self.config)
+        return ArcFaceLoss(num_classes, embedding_size, **self.config)
 
     def create_triplet_loss(self, **kwargs):
-        return losses.TripletMarginLoss(**self.config)
+        return TripletLoss(**self.config)
 
     def create_ce_loss(self, **kwargs):
         return torch.nn.CrossEntropyLoss()
 
+
+class EvaluateFactory(BaseFactory):
+    @property
+    def methods(self):
+        return {
+        'embedding': self.create_embedding_evaluate,
+        }
+
+    def create_embedding_evaluate(self, dataset_train, dataset_test, **kwargs):
+        return EmbeddingEvaluate(
+            dataset_train=dataset_train,
+            dataset_test=dataset_test,
+            **self.config
+        )
 
 
 class TrainerFactory(BaseFactory):
@@ -241,29 +241,43 @@ class TrainerFactory(BaseFactory):
         model = experiment.backbone(embedding_size=dataset_train.num_classes)
         objective = experiment.objective()
         optimizer = experiment.optimizer(params=model.parameters())
-        return ClassifierTrainer(
+        if experiment.scheduler:
+            scheduler = experiment.scheduler(optimizer, epoch=self.config['epochs'])
+        else:
+            scheduler = None
+        return BasicTrainer(
             model=model,
             objective=objective,
             optimize=optimizer,
+            scheduler=scheduler,
             **self.config
         )
 
     def create_embedding_trainer(self, experiment, dataset_train, **kwargs):
-        model = experiment.backbone(embedding_size=self.config['embedding_size'])
+        if 'embedding_size' in self.config:
+            embedding_size = self.config['embedding_size']
+            model = experiment.backbone(num_classes=embedding_size)
+        else:
+            model = experiment.backbone(num_classes=0)
+            dummy_input = torch.randn(model.default_cfg['input_size']).unsqueeze(0)
+            with torch.no_grad():
+                embedding_size = model(dummy_input).shape[1]
+
         objective = experiment.objective(
-            embedding_size=self.config['embedding_size'],
+            embedding_size=embedding_size,
             num_classes=dataset_train.num_classes,
         )
         optimizer = experiment.optimizer(params=itertools.chain(model.parameters(), objective.parameters()))
-        if experiment.miner:
-            miner = experiment.miner()
+        if experiment.scheduler:
+            scheduler = experiment.scheduler(optimizer, epochs=self.config['epochs'])
         else:
-            miner = None
-        return EmbeddingTrainer(
+            scheduler = None
+
+        return BasicTrainer(
             model=model,
             objective=objective,
             optimizer=optimizer,
-            miner=miner,
+            scheduler=scheduler,
             **self.config
         )
 

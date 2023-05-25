@@ -4,8 +4,7 @@ class Experiment():
     factories = {
         'optimizer': OptimizerFactory,
         'objective': ObjectiveFactory,
-        'miner': MinerFactory,
-        'scheduler': lambda optimizer, **kwargs: None, # TODO:
+        'scheduler': SchedulerFactory,
         'transform': TransformsFactory,
         'backbone': BackboneFactory,
         'trainer': TrainerFactory,

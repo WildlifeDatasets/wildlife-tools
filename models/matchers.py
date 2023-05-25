@@ -10,9 +10,65 @@ import os
 from tqdm import tqdm
 import cv2
 import faiss
-from tqdm import tqdm
 import torch
 from models.superpoint import SuperPoint # Superpoint from https://github.com/magicleap/SuperGluePretrainedNetwork
+import numpy as np
+import fcntl
+import time
+import errno
+
+
+def create_distance_matrix(sim, idx_train, idx_test):
+    '''
+    Create distance matrix for each of the train / test pair, given input matrix.
+    Input matrix is product of matching algorithm
+
+    Input: upper triangular matrix with shape (n_total, n_total) with zeros on diagonal.
+    Output: distance matrix of shape (n_test, n_train)     
+
+    `'''
+    sim = sim.copy().astype(np.float32)
+
+    if not np.allclose(sim, np.triu(sim)):
+        raise ValueError('Input matrix needs to be upper triangular.')
+
+    if not np.all(np.diag(sim) == 0):
+        raise ValueError('Input matrix needs to have zeros in diagonal.')
+
+
+    np.fill_diagonal(sim, np.inf)
+    sim_symetric = np.sum([sim, sim.T], axis=0)
+    sim_subset = sim_symetric[:, idx_train][idx_test, :]
+    return -sim_subset
+
+
+
+def single_file_save(path, simimlarity_new):
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w') as f: # Create empty file to lock on first write.
+            pass
+
+    for i in range(60): # Try for one hour
+        try:
+            with open(path, 'rb+') as file:
+                fcntl.flock(file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                if os.path.getsize(path) == 0:
+                    simimlarity = simimlarity_new
+                else:
+                    simimlarity = np.load(file, allow_pickle='TRUE').item()
+                    for key in simimlarity_new.keys():
+                        simimlarity[key] = np.sum([simimlarity[key], simimlarity_new[key]], axis=0)
+                    file.seek(0)
+
+                np.save(file, simimlarity)
+                fcntl.flock(file, fcntl.LOCK_UN)
+                break
+        except (OSError, IOError) as e:
+            if e.errno != errno.EAGAIN:
+                raise
+            print('File locked - waiting...')
+            time.sleep(60)
 
 
 def get_faiss_index(d, device='cpu'):
@@ -136,12 +192,12 @@ class LOFTRMatcher():
             print('Matching query with database')
             query = [i[0] for i in dataset_query]
             database = [i[0] for i in dataset_database]
-            self.similarity = {t: np.zeros((len(query), len(database))) for t in self.thresholds}
+            self.similarity = {t: np.zeros((len(query), len(database)), dtype=np.float16) for t in self.thresholds}
         else:
             print('Matching all pairs in query')
             query = [i[0] for i in dataset_query]
             database = None
-            self.similarity = {t: np.zeros((len(query), len(query))) for t in self.thresholds}
+            self.similarity = {t: np.zeros((len(query), len(query)), dtype=np.float16) for t in self.thresholds}
 
         iterator, iterator_size = prepare_pair_batches(
             query = query,
@@ -170,7 +226,7 @@ class LOFTRMatcher():
                     self.similarity[t][a_idx[j], b_idx[j]] = group.sum()
 
 
-    def save(self, path, name='similarity.npy'):
+    def save(self, path, name='similarity.npy', **kwargs):
         if self.similarity:
             np.save(os.path.join(path, name), self.similarity)
 
@@ -188,6 +244,7 @@ class DescriptorMatcher():
         device: str = 'cpu',
         chunk: int = 1,
         chunk_total: int = 1,
+        joint_save: str | None = None,
     ):
     
         self.descriptor_function = descriptor_function
@@ -199,6 +256,7 @@ class DescriptorMatcher():
             raise ValueError('Current chunk is larger that chunk total.')
         self.chunk = chunk
         self.chunk_total = chunk_total
+        self.joint_save = joint_save
         self.similarity = None
 
     def get_descriptors(self, dataset):
@@ -217,12 +275,12 @@ class DescriptorMatcher():
             print('Mode: Matching query with database')
             query = self.get_descriptors(dataset_query)
             database = self.get_descriptors(dataset_database)
-            self.similarity = {t: np.zeros((len(query), len(database))) for t in self.thresholds}
+            self.similarity = {t: np.zeros((len(query), len(database)), dtype=np.float16) for t in self.thresholds}
         else:
             print('Mode: Matching all pairs in query')
             query = self.get_descriptors(dataset_query)
             database = None
-            self.similarity = {t: np.zeros((len(query), len(query))) for t in self.thresholds}
+            self.similarity = {t: np.zeros((len(query), len(query)), dtype=np.float16) for t in self.thresholds}
 
         iterator, iterator_size = prepare_pairs(
             query = query,
@@ -244,8 +302,13 @@ class DescriptorMatcher():
                 for t in self.thresholds:
                     self.similarity[t][a_idx, b_idx] = np.sum(ratio < t)
 
-    def save(self, path, name='similarity.npy'):
-        if self.similarity:
+    def save(self, path, name='similarity.npy', **kwargs):
+        if not self.similarity:
+            return
+
+        if self.joint_save:
+            single_file_save(self.joint_save, self.similarity)
+        else:
             np.save(os.path.join(path, name), self.similarity)
 
     def load(self, path):
