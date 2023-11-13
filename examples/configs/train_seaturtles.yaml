@@ -1,0 +1,52 @@
+method: TrainingPipeline
+workdir: 'test/'
+
+trainer:
+  method: EmbeddingTrainer
+  batch_size: 128
+  device: cpu
+  epochs: 100
+  num_workers: 2
+  accumulation_steps: 1
+
+  dataset:
+    method: WildlifeDataset
+    metadata: examples/SampleDataset/metadata.csv
+    root: examples/SampleDataset
+    transform:
+      method: TransformTorchvision
+      compose:
+        - Resize(size=256)
+        - CenterCrop(size=(224, 224))
+        - ToTensor()
+    split:
+      method: SplitMetadata
+      col: split
+      value: train
+
+  objective:
+    margin: 0.5
+    method: ArcFaceLoss
+    scale: 64
+
+  optimizer:
+    method: OptimizerSGD
+    lr: 0.001
+    momentum: 0.9
+
+  backbone:
+    method: TimmBackbone
+    model_name: swin_tiny_patch4_window7_224
+    pretrained: true
+
+  scheduler:
+    method: SchedulerCosine
+
+  epoch_callback:
+    method: EpochCallbacks
+    steps:
+      - method: EpochCheckpoint
+        folder: 'logs'
+        save_step: 10
+      - method: EpochLog
+        folder: 'logs'
