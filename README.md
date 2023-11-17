@@ -29,7 +29,7 @@ More information can be found in [Documentation](https://wildlifedatasets.github
 
 ## Example
 ### 1. Create `WildlifeDataset` 
-Using metadata from `wildlife-datasets`, create `WildlifeDataset` object for the SeaTurtleID.
+Using metadata from `wildlife-datasets`, create `WildlifeDataset` object for the StripeSpotter dataset..
 
 ```Python
 from wildlife_datasets.datasets import StripeSpotter
