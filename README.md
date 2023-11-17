@@ -14,7 +14,7 @@ More information can be found in [Documentation](https://wildlifedatasets.github
 
 
 
-## Relations between modules in the `wildlife-tools`:
+## Relations between modules:
 
 ```mermaid
   graph TD;
