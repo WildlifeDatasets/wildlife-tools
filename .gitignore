@@ -6,3 +6,4 @@
 /temp
 *.egg-info
 /build
+/wildlife-benchmark

@@ -32,7 +32,7 @@ sim = similarity(query, database)
 
 ## MatchDescriptors
 
-Calculate similarity between query and database as number of descriptor correspondences after filtering with ratio test.
+Calculates similarity between query and database as number of descriptor correspondences after filtering with ratio test.
 For each descriptor in query, nearest two descriptors in database are found. If their ratio of their distance is lesser than treshold, they are considered as valid correspondence. Similarity is calculated as sum of all correspondences.
 
 Output is dictionary with key for each treshold. Values contains 2D array with number of correspondences.

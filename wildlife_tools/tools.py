@@ -20,7 +20,7 @@ class Store():
         'SplitChunk': ('wildlife_tools.data.split', 'SplitChunk'),
         'SplitWildlife': ('wildlife_tools.data.split', 'SplitWildlife'),
         'SplitMetadata': ('wildlife_tools.data.split', 'SplitMetadata'),
-        'SplitPipeline': ('wildlife_tools.data.split', 'SplitPipeline'),
+        'SplitChain': ('wildlife_tools.data.split', 'SplitChain'),
     
         'TransformTimm': ('wildlife_tools.data.transform', 'TransformTimm'),
         'TransformTorchvision': ('wildlife_tools.data.transform', 'TransformTorchvision'),

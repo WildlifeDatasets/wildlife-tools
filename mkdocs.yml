@@ -29,5 +29,5 @@ nav:
   - Similarity: similarity.md
   - Evaluation: evaluation.md
   - Benchmarks:
-    - Overview: evaluation.md
-    - MegaDescriptors: evaluation.md
+    - Overview: benchmark.md
+ 

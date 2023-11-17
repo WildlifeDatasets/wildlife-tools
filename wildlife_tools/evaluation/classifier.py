@@ -29,7 +29,7 @@ class KnnClassifier():
         k: use k nearest in database for the majority voting.
         labels_map: If provided, decode predictions to database string labels.
     Returns:
-        1D array with length `n_query` of database labels (Ordinally encoded by default). 
+        1D array with length `n_query` of database labels (Ordinally encoded by default - col index of the similarity matrix).
     '''
 
     def __init__(self, k: int = 1, labels_map: dict | None = None):
