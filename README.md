@@ -1,7 +1,7 @@
 # Introduction
 The `wildlife-tools` library offers a simple interface for various tasks in the Wildlife Re-Identification domain. It covers use cases such as training, feature extraction, similarity calculation, image retrieval, and classification. It complements the `wildlife-datasets` library, which acts as dataset repository. All datasets there can be used in combination with `WildlifeDataset` component, which serves for loading extracting images and image tensors other tasks. 
 
-
+More information can be found in [Documentation](https://wildlifedatasets.github.io/wildlife-tools/)
 
 
 ## Modules in the in the `wildlife-tools`
