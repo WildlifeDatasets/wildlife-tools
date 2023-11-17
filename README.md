@@ -29,34 +29,44 @@ More information can be found in [Documentation](https://wildlifedatasets.github
 
 ## Example
 ### 1. Create `WildlifeDataset` 
-Using metadata dataframes, create `WildlifeDataset` instances for both query and database.
+Using metadata from `wildlife-datasets`, create `WildlifeDataset` object for the SeaTurtleID.
 
 ```Python
-dataset_folder = 'ExampleDataset'
-metadata_database = pd.read_csv('metadata_database.csv')
-metadata_query = pd.read_csv('metadata_query.csv')
+from wildlife_datasets.datasets import StripeSpotter
+from wildlife_tools.data import WildlifeDataset
+import torchvision.transforms as T
 
+metadata = StripeSpotter('datasets/StripeSpotter')
 transform = T.Compose([T.Resize([224, 224]), T.ToTensor()])
-database = WildlifeDataset(metadata_database, dataset_folder, transform)
-query = WildlifeDataset(metadata_query, dataset_folder, transform)
+dataset = WildlifeDataset(metadata.df, metadata.root, transform=transform)
+```
+
+Optionally, split metadata into subsets. In this example, query is first 100 images and rest are in database.
+
+```Python
+database = WildlifeDataset(metadata.df.iloc[100:,:], metadata.root, transform=transform)
+query = WildlifeDataset(metadata.df.iloc[:100,:], metadata.root, transform=transform)
 ```
 
 ### 2. Extract features
 Extract features using MegaDescriptor Tiny, downloaded from HuggingFace hub.
 
 ```Python
+from wildlife_tools.features import DeepFeatures
+
 name = 'hf-hub:BVRA/MegaDescriptor-T-224'
 extractor = DeepFeatures(timm.create_model(name, num_classes=0, pretrained=True))
-query, database = extractor(dataset_query), extractor(dataset_database)
+query, database = extractor(query), extractor(database)
 ```
 
 ### 3. Calculate similarity
 Calculate cosine similarity between query and database deep features.
 
 ```Python
+from wildlife_tools.similarity import CosineSimilarity
+
 similarity_function = CosineSimilarity()
 similarity = similarity_function(query, database)
-
 ```
 
 
@@ -67,9 +77,6 @@ Use the cosine similarity in nearest neigbour classifier and get predictions.
 classifier = KnnClassifier(k=1)
 predictions = classifier(similarity['cosine'])
 ```
-
-
-
 
 
 ## Installation

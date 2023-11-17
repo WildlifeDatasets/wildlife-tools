@@ -107,6 +107,18 @@
     
     
     
+      <div class="md-header__source">
+        <a href="https://github.com/WildlifeDatasets/wildlife-tools" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    wildlife-tools
+  </div>
+</a>
+      </div>
+    
   </nav>
   
 </header>
@@ -139,6 +151,18 @@
     </a>
     Wildlife Tools
   </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/WildlifeDatasets/wildlife-tools" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    wildlife-tools
+  </div>
+</a>
+    </div>
   
   <ul class="md-nav__list" data-md-scrollfix>
     
@@ -191,8 +215,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#relations-between-modules-in-the-wildlife-tools" class="md-nav__link">
-    Relations between modules in the wildlife-tools:
+  <a href="#relations-between-modules" class="md-nav__link">
+    Relations between modules:
   </a>
   
 </li>
@@ -362,22 +386,8 @@
   
   
     <li class="md-nav__item">
-      <a href="evaluation/" class="md-nav__link">
+      <a href="benchmark.md" class="md-nav__link">
         Overview
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="evaluation/" class="md-nav__link">
-        MegaDescriptors
       </a>
     </li>
   
@@ -424,8 +434,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#relations-between-modules-in-the-wildlife-tools" class="md-nav__link">
-    Relations between modules in the wildlife-tools:
+  <a href="#relations-between-modules" class="md-nav__link">
+    Relations between modules:
   </a>
   
 </li>
@@ -492,6 +502,11 @@
                 
                   
 
+  <a href="https://github.com/WildlifeDatasets/wildlife-tools/edit/master/docs/index.md" title="Edit this page" class="md-content__button md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+  </a>
+
 
 <h1 id="introduction">Introduction</h1>
 <p>The <code>wildlife-tools</code> library offers a simple interface for various tasks in the Wildlife Re-Identification domain. It covers use cases such as training, feature extraction, similarity calculation, image retrieval, and classification. It complements the <code>wildlife-datasets</code> library, which acts as dataset repository. All datasets there can be used in combination with <code>WildlifeDataset</code> component, which serves for loading extracting images and image tensors other tasks. </p>
@@ -503,7 +518,7 @@
 <li>The <code>similarity</code> module provides tools for constructing a similarity matrix from query and database features.</li>
 <li>The <code>evaluation</code> module offers tools for creating and evaluating predictions using the similarity matrix.</li>
 </ul>
-<h2 id="relations-between-modules-in-the-wildlife-tools">Relations between modules in the <code>wildlife-tools</code>:</h2>
+<h2 id="relations-between-modules">Relations between modules:</h2>
 <pre class="mermaid"><code>  graph TD;
       A[Data]--&gt;|WildlifeDataset|B[Features]
       A--&gt;|WildlifeDataset|C;
@@ -512,24 +527,32 @@
       D--&gt;|similarity matrix|E[Evaluation]</code></pre>
 <h2 id="example">Example</h2>
 <h3 id="1-create-wildlifedataset">1. Create <code>WildlifeDataset</code></h3>
-<p>Using metadata dataframes, create <code>WildlifeDataset</code> instances for both query and database.</p>
-<div class="highlight"><pre><span></span><code><span class="n">dataset_folder</span> <span class="o">=</span> <span class="s1">&#39;ExampleDataset&#39;</span>
-<span class="n">metadata_database</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;metadata_database.csv&#39;</span><span class="p">)</span>
-<span class="n">metadata_query</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;metadata_query.csv&#39;</span><span class="p">)</span>
+<p>Using metadata from <code>wildlife-datasets</code>, create <code>WildlifeDataset</code> object for the SeaTurtleID.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">wildlife_datasets.datasets</span> <span class="kn">import</span> <span class="n">StripeSpotter</span>
+<span class="kn">from</span> <span class="nn">wildlife_tools.data</span> <span class="kn">import</span> <span class="n">WildlifeDataset</span>
+<span class="kn">import</span> <span class="nn">torchvision.transforms</span> <span class="k">as</span> <span class="nn">T</span>
 
+<span class="n">metadata</span> <span class="o">=</span> <span class="n">StripeSpotter</span><span class="p">(</span><span class="s1">&#39;datasets/StripeSpotter&#39;</span><span class="p">)</span>
 <span class="n">transform</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span><span class="n">T</span><span class="o">.</span><span class="n">Resize</span><span class="p">([</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">]),</span> <span class="n">T</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">()])</span>
-<span class="n">database</span> <span class="o">=</span> <span class="n">WildlifeDataset</span><span class="p">(</span><span class="n">metadata_database</span><span class="p">,</span> <span class="n">dataset_folder</span><span class="p">,</span> <span class="n">transform</span><span class="p">)</span>
-<span class="n">query</span> <span class="o">=</span> <span class="n">WildlifeDataset</span><span class="p">(</span><span class="n">metadata_query</span><span class="p">,</span> <span class="n">dataset_folder</span><span class="p">,</span> <span class="n">transform</span><span class="p">)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">WildlifeDataset</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">df</span><span class="p">,</span> <span class="n">metadata</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">)</span>
+</code></pre></div>
+<p>Optionally, split metadata into subsets. In this example, query is first 100 images and rest are in database.</p>
+<div class="highlight"><pre><span></span><code><span class="n">database</span> <span class="o">=</span> <span class="n">WildlifeDataset</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">100</span><span class="p">:,:],</span> <span class="n">metadata</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">)</span>
+<span class="n">query</span> <span class="o">=</span> <span class="n">WildlifeDataset</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">100</span><span class="p">,:],</span> <span class="n">metadata</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="2-extract-features">2. Extract features</h3>
 <p>Extract features using MegaDescriptor Tiny, downloaded from HuggingFace hub.</p>
-<div class="highlight"><pre><span></span><code><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;hf-hub:BVRA/MegaDescriptor-T-224&#39;</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">wildlife_tools.features</span> <span class="kn">import</span> <span class="n">DeepFeatures</span>
+
+<span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;hf-hub:BVRA/MegaDescriptor-T-224&#39;</span>
 <span class="n">extractor</span> <span class="o">=</span> <span class="n">DeepFeatures</span><span class="p">(</span><span class="n">timm</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-<span class="n">query</span><span class="p">,</span> <span class="n">database</span> <span class="o">=</span> <span class="n">extractor</span><span class="p">(</span><span class="n">dataset_query</span><span class="p">),</span> <span class="n">extractor</span><span class="p">(</span><span class="n">dataset_database</span><span class="p">)</span>
+<span class="n">query</span><span class="p">,</span> <span class="n">database</span> <span class="o">=</span> <span class="n">extractor</span><span class="p">(</span><span class="n">query</span><span class="p">),</span> <span class="n">extractor</span><span class="p">(</span><span class="n">database</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="3-calculate-similarity">3. Calculate similarity</h3>
 <p>Calculate cosine similarity between query and database deep features.</p>
-<div class="highlight"><pre><span></span><code><span class="n">similarity_function</span> <span class="o">=</span> <span class="n">CosineSimilarity</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">wildlife_tools.similarity</span> <span class="kn">import</span> <span class="n">CosineSimilarity</span>
+
+<span class="n">similarity_function</span> <span class="o">=</span> <span class="n">CosineSimilarity</span><span class="p">()</span>
 <span class="n">similarity</span> <span class="o">=</span> <span class="n">similarity_function</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">database</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="4-evaluate">4. Evaluate</h3>
