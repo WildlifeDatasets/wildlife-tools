@@ -20,12 +20,26 @@ def batched(iterable, n):
 
 
 class MatchLOFTR(Similarity):
+    '''
+    Calculate similarity between query and database as number of descriptors correspondences 
+    after filtering with Low ratio test.
+    
+    Args:
+        pretrained: LOFTR model used. `outdoor` or `indoor`.
+        thresholds: Iterable with confidence tresholds. Should be in [0, 1] interval.
+        batch_size: Batch size used for the inference.
+        device: Specifies device used for the inference.
+
+    Returns:
+        dict: dictionary with key for each treshold. Values are 2D array with number of correspondences.
+    '''
+
     def __init__(
         self,
-        device: str ='cuda',
         pretrained: str ='outdoor',
         thresholds: tuple[float] = (0.99, ),
         batch_size: int = 128,
+        device: str ='cuda',
     ):
         self.device = device
         self.matcher = KF.LoFTR(pretrained=pretrained).to(device)

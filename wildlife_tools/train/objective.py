@@ -52,7 +52,7 @@ class TripletLoss(nn.Module):
 
 class SoftmaxLoss(nn.Module):
     '''
-    CE with simple single dense layer classification head.
+    CE with single dense layer classification head.
     '''
     def __init__(self, num_classes, embedding_size):
         super().__init__()

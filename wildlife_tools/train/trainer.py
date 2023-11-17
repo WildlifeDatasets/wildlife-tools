@@ -91,6 +91,7 @@ class BasicTrainer():
 
     def train_epoch(self, loader):
         model = self.model.train()
+        losses = []
         for i, batch in tqdm(enumerate(loader), desc=f'Epoch {self.epoch}: ', mininterval=1):
             x, y = batch
             x, y = x.to(self.device), y.to(self.device)
@@ -107,7 +108,7 @@ class BasicTrainer():
         if self.scheduler:
             self.scheduler.step()
 
-        return {'train_loss_epoch_avg': losses.mean()}
+        return {'train_loss_epoch_avg': np.mean(losses)}
 
     def save(self, folder, file_name='checkpoint.pth', **kwargs):
         if not os.path.exists(folder):
@@ -150,7 +151,7 @@ class ClassifierTrainer():
     @classmethod
     def from_config(cls, config):
         """
-        Parses config dict setup BasicTrainer for training classifier.
+        Use config dict to setup BasicTrainer for training classifier.
 
         Config keys:
             dataset (dict):
@@ -216,7 +217,7 @@ class EmbeddingTrainer():
     @classmethod
     def from_config(cls, config):
         """
-        Parses config dict setup BasicTrainer for training embedder.
+        Use config dict to setup BasicTrainer for training embedder.
     
         Config keys:
             dataset (dict):
@@ -227,11 +228,11 @@ class EmbeddingTrainer():
                 Config dictionary of the objective.
             scheduler (dict | None, default: None):
                 Config dictionary of the scheduler (no scheduler is used by default).
-            epochs (int):
-                Number of training epochs.
             embedding_size (int | None, default: None):
                 Adds a linear layer after the backbone with the target embedding size.
                 By default, embedding size is inferred from the backbone (e.g., num_classes=0 in TIMM).
+            epochs (int):
+                Number of training epochs.
             device (str, default: 'cuda'):
                 Device to be used.
             batch_size (int, default: 128):
@@ -242,7 +243,7 @@ class EmbeddingTrainer():
                 Number of gradient accumulation steps.
 
         Returns:
-            Ready to use BasicTrainer
+            Instance of BasicTrainer
 
         """
 
@@ -257,7 +258,7 @@ class EmbeddingTrainer():
             output_size=embedding_size
         )
 
-        if embedding_size is None: # Infers embedding size
+        if embedding_size is None: # Infer embedding size
             with torch.no_grad():
                 x = dataset[0][0].unsqueeze(0)
                 embedding_size = backbone(x).shape[1]

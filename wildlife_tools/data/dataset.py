@@ -6,44 +6,41 @@ import pandas as pd
 from PIL import Image
 import json
 from wildlife_tools.tools import realize
+from typing import Callable
 
 
 class WildlifeDataset():
     '''
-    PyTorch-style dataset for a wildlife image classification task.
+    PyTorch-style dataset for a wildlife datasets
 
     Args:
         metadata: A pandas dataframe containing image metadata.
-        root: Root directory for images.
-        transform: A function/transform that takes in an image and returns a transformed version.
-        img_load: Method to load images. 
+        root: Root directory if paths in metadata are relative. If None, paths in metadata are used as they are.
+        split: A function that splits metadata, e.g., instance of data.Split.
+        transform: A function that takes in an image and returns its transformed version.
+        img_load: Method to load images.
             Options: 'full', 'full_mask', 'full_hide', 'bbox', 'bbox_mask', 'bbox_hide', and 'crop_black'.
-        col_path: Column name in the dataframe containing image file paths.
-        col_identity: Column name in the dataframe containing class labels.
+        col_path: Column name in the metadata containing image file paths.
+        col_label: Column name in the metadata containing class labels.
+        load_label: If False, \_\_getitem\_\_ returns only image instead of (image, label) tuple.
 
     Attributes:
-        label: An array of integer labels for all images in the dataset.
-        label_map: A mapping between integer label and string label.
-            
-    Methods:
-        get_image(path): Load an image from file and convert it to a PIL Image object.
-        
-    Properties:
-        num_classes: Return the number of unique classes in the dataset.
-        __len__: Return the number of samples in the dataset.
-        __getitem__(idx): Return (sample, label) tuple. Get a sample from the dataset at a given index.
+        labels np.array : An integers array of ordinal encoding of labels.
+        labels_string np.array: A strings array of original labels.
+        labels_map dict: A mapping between labels and their ordinal encoding.
+        num_classes int: Return the number of unique classes in the dataset.
     '''
 
     def __init__(
         self,
-        metadata,
-        root,
-        split=None,
-        transform=None,
-        img_load='full',
-        col_path='path',
-        col_label='identity',
-        load_label=True,
+        metadata: pd.DataFrame,
+        root: str | None = None,
+        split: Callable | None = None,
+        transform: Callable | None  = None,
+        img_load: str = 'full',
+        col_path: str = 'path',
+        col_label: str = 'identity',
+        load_label: bool = True,
     ):
         self.split = split
         if self.split:
@@ -80,7 +77,11 @@ class WildlifeDataset():
 
     def __getitem__(self, idx):
         data = self.metadata.iloc[idx]
-        img = self.get_image(os.path.join(self.root, data[self.col_path]))
+        if self.root:
+            img_path = os.path.join(self.root, data[self.col_path])
+        else:
+            img_path = data[self.col_path]
+        img = self.get_image(img_path)
         
         if self.img_load in ['full_mask', 'full_hide', 'bbox_mask', 'bbox_hide']:
             if not ('segmentation' in data):
@@ -90,7 +91,7 @@ class WildlifeDataset():
             else:
                 segmentation = data['segmentation']
 
-        if self.img_load in ['bbox', 'bbox_mask', 'bbox_mask']:
+        if self.img_load in ['bbox', 'bbox_mask', 'bbox_hide']:
             if not ('bbox' in data):
                 raise ValueError(f"{self.img_load} selected but no bbox found.")
             if type(data['bbox']) == str:

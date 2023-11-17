@@ -98,7 +98,7 @@ class SplitMetadata(Split):
 
 
 
-class SplitPipeline(Split):
+class SplitChain(Split):
     ''' Returns split from sequence of splits '''
 
     def __init__(self, steps):

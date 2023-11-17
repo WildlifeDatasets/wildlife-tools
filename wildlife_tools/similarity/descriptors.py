@@ -19,6 +19,19 @@ def get_faiss_index(d, device='cpu'):
 
 
 class MatchDescriptors(Similarity):
+    '''
+    Calculate similarity between query and database as number of descriptors correspondences 
+    after filtering with Low ratio test.
+    
+    Args:
+        descriptor_dim: dimensionality of descriptors. 128 for SIFT, 256 for SuperPoint.
+        thresholds: iterable with ratio test tresholds. Should be in [0, 1] interval.
+        device: Specifies device used for nearest neigbour search.
+
+    Returns:
+        dict: dictionary with key for each treshold. Values are 2D array with number of correspondences.
+    '''
+
     def __init__(
         self,
         descriptor_dim: int,

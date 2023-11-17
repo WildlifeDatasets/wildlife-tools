@@ -3,16 +3,31 @@ import os
 import numpy as np
 from tqdm import tqdm 
 from wildlife_tools.features.base import FeatureExtractor
+from wildlife_tools.data import WildlifeDataset
 from wildlife_tools.tools import realize
 
 
 class DeepFeatures(FeatureExtractor):
+    '''
+    Extracts features using forward pass of pytorch model.
+
+    Args:
+        model: Pytorch model used for the feature extraction.
+        batch_size: Batch size used for the feature extraction.
+        num_workers: Number of workers used for data loading.
+        device: Select between cuda and cpu devices.
+
+    Returns:
+        An array with a shape of `n_input` x `dim_embedding`.
+
+    '''
+
     def __init__(
         self,
         model,
-        batch_size=128,
-        num_workers=1,
-        device='cpu',
+        batch_size: int = 128,
+        num_workers: int = 1,
+        device: str = 'cpu',
     ):
         self.batch_size = batch_size
         self.num_workers = num_workers
@@ -20,7 +35,7 @@ class DeepFeatures(FeatureExtractor):
         self.model = model
 
 
-    def __call__(self, dataset):
+    def __call__(self, dataset: WildlifeDataset):
         self.model = self.model.to(self.device)
         self.model = self.model.eval()
 

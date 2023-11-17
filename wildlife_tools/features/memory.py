@@ -3,12 +3,13 @@ import os
 import numpy as np
 from tqdm import tqdm 
 from wildlife_tools.features.base import FeatureExtractor
+from wildlife_tools.data import WildlifeDataset
 
 
-class InMemoryFeatures(FeatureExtractor):
-    ''' Loads dataset in memory for faster access.'''
+class DataToMemory(FeatureExtractor):
+    ''' Loads dataset to memory for faster access. '''
 
-    def __call__(self, dataset):
+    def __call__(self, dataset: WildlifeDataset):
         features = []
         for x, y in tqdm(dataset, mininterval=1, ncols=100):
             features.append(x)
