@@ -13,6 +13,7 @@ trainer:
     method: WildlifeDataset
     metadata: examples/SampleDataset/metadata.csv
     root: examples/SampleDataset
+
     transform:
       method: TransformTorchvision
       compose:
@@ -25,8 +26,8 @@ trainer:
       value: train
 
   objective:
-    margin: 0.5
     method: ArcFaceLoss
+    margin: 0.5
     scale: 64
 
   optimizer:
