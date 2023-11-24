@@ -82,7 +82,7 @@ predictions = classifier(similarity['cosine'])
 ## Installation
 
 ```shell
-pip install wildlife-tools
+pip install wildlife-tools wildlife-datasets
 ```
 
 
