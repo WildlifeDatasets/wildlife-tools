@@ -27,23 +27,23 @@ class KnnClassifier():
 
     Args:
         k: use k nearest in database for the majority voting.
-        labels_map: If provided, decode predictions to database string labels.
+        database_labels: list of labels in database. If provided, decode predictions to database (e.g. string) labels.
     Returns:
-        1D array with length `n_query` of database labels (Ordinally encoded by default - col index of the similarity matrix).
+        1D array with length `n_query` of database labels (col index of the similarity matrix).
     '''
 
-    def __init__(self, k: int = 1, labels_map: dict | None = None):
+    def __init__(self, k: int = 1, database_labels: np.array | None = None):
         self.k = k
-        self.labels_map = labels_map
+        self.database_labels = database_labels
 
 
-    def __call__(self, similarity, ):
+    def __call__(self, similarity):
         similarity = torch.tensor(similarity, dtype=float)
         scores, idx = similarity.topk(k=self.k, dim=1)
         pred = self.aggregate(idx)[:, self.k-1]
 
-        if self.labels_map is not None:
-            pred = self.labels_map[pred]
+        if self.database_labels is not None:
+            pred = self.database_labels[pred]
         return pred
 
 

@@ -74,7 +74,7 @@ similarity = similarity_function(query, database)
 Use the cosine similarity in nearest neigbour classifier and get predictions.
 
 ```Python
-classifier = KnnClassifier(k=1)
+classifier = KnnClassifier(k=1, database_labels=database.labels_string)
 predictions = classifier(similarity['cosine'])
 ```
 

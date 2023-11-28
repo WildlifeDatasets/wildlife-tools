@@ -29,6 +29,7 @@ class MatchLOFTR(Similarity):
         thresholds: Iterable with confidence tresholds. Should be in [0, 1] interval.
         batch_size: Batch size used for the inference.
         device: Specifies device used for the inference.
+        silent: disable tqdm bar.
 
     Returns:
         dict: dictionary with key for each treshold. Values are 2D array with number of correspondences.
@@ -40,11 +41,13 @@ class MatchLOFTR(Similarity):
         thresholds: tuple[float] = (0.99, ),
         batch_size: int = 128,
         device: str ='cuda',
+        silent: bool = False,
     ):
         self.device = device
         self.matcher = KF.LoFTR(pretrained=pretrained).to(device)
         self.thresholds = thresholds
         self.batch_size = batch_size
+        self.silent = silent
 
 
     def __call__(self, query, database):
@@ -52,7 +55,7 @@ class MatchLOFTR(Similarity):
         iterator_size = int(np.ceil(len(query)*len(database) / self.batch_size))
         similarities = {t: np.full((len(query), len(database)), np.nan, dtype=np.float16) for t in self.thresholds}
 
-        for pair_batch in tqdm(iterator, total=iterator_size, mininterval=1, ncols=100):
+        for pair_batch in tqdm(iterator, total=iterator_size, mininterval=1, ncols=100, disable=self.silent):
             q, d = zip(*pair_batch)
             q_idx, q_data = list(zip(*q))
             d_idx, d_data = list(zip(*d))
