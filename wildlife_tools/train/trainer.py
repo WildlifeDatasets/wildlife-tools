@@ -103,7 +103,7 @@ class BasicTrainer():
                 self.optimizer.step()
                 self.optimizer.zero_grad()
 
-            losses.append(loss.detach())
+            losses.append(loss.detach().cpu())
 
         if self.scheduler:
             self.scheduler.step()
