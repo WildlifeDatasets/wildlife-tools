@@ -2,9 +2,9 @@
 .ipynb_checkpoints
 /venv
 /venv_docs
-/old
 /temp
 *.egg-info
 /build
 /dist
-/benchmark/data/images
+/baselines/data/images
+*old
