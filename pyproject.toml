@@ -50,7 +50,7 @@ dependencies=[
 packages = [
   "wildlife_tools",
   "wildlife_tools.data",
-  "wildlife_tools.evaluation",
+  "wildlife_tools.inference",
   "wildlife_tools.features",
   "wildlife_tools.similarity",
   "wildlife_tools.train",

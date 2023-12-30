@@ -8,7 +8,7 @@ The `wildlife-tools` library offers a simple interface for various tasks in the 
 - The `train` module offers tools for fine-tuning feature extractors on the `WildlifeDataset`.
 - The `features` module provides tools for extracting features from the `WildlifeDataset` using various extractors.
 - The `similarity` module provides tools for constructing a similarity matrix from query and database features.
-- The `evaluation` module offers tools for creating and evaluating predictions using the similarity matrix.
+- The `inference` module offers tools for creating predictions using the similarity matrix.
 
 
 
@@ -20,7 +20,7 @@ The `wildlife-tools` library offers a simple interface for various tasks in the 
       A-->|WildlifeDataset|C;
       C[Train]-->|finetuned extractor|B;
       B-->|query and database features|D[Similarity]
-      D-->|similarity matrix|E[Evaluation]
+      D-->|similarity matrix|E[Inference]
 ```
 
 
@@ -75,9 +75,6 @@ Use the cosine similarity in nearest neigbour classifier and get predictions.
 classifier = KnnClassifier(k=1, database_labels=database.labels_string)
 predictions = classifier(similarity['cosine'])
 ```
-
-
-
 
 
 ## Installation

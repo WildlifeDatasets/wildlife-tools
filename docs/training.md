@@ -1,7 +1,7 @@
 # Training
 We provide simple trainer class for training on `WildlifeDataset` instances as well as wrappers for ArcFace and Triplet losses.
 
-## Example
+## Training Example
 Fine-tuning MegaDescriptor-T from HuggingFace Hub
 
 ```Python
@@ -46,3 +46,19 @@ trainer.train()
       show_symbol_type_heading: false
       show_bases: false
       show_root_toc_entry: false
+
+
+## Replicability
+The model can be trained with a specified seed to ensure replicable results by calling the `set_seed` function at the beginning of the training process. If the trainer is saved into checkpoint, the seed is stored as well, allowing for its later use in restarting the model and maintaining replicability throughout the restart.
+
+### Example
+
+```Python
+from wildlife_tools.train import set_seed, BasicTrainer
+
+
+set_seed(0)
+trainer = BasicTrainer(<add trainer parameters here>)
+trainer.train()
+
+```
