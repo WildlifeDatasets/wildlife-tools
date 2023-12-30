@@ -17,8 +17,6 @@ class NearestClassifier():
         return pred
 
 
-
-
 class KnnClassifier():
     '''
     Predict query label as k labels of nearest matches in database. If there is tie at given k, prediction from k-1 is used.
@@ -73,4 +71,24 @@ class KnnClassifier():
         return results.values
 
 
+class KnnMatcher():
+    ''' 
+    Find nearest match to query in existing database of features.
+    Combines CosineSimilarity and KnnClassifier.
+    '''
 
+    def __init__(self, database, k=1):
+        self.similarity = CosineSimilarity()
+        self.database = database
+        self.classifier = KnnClassifier(database_labels=self.database.labels_string, k=k)
+
+
+    def __call__(self, query):
+        if isinstance(query, list):
+            query = np.concatenate(query)
+
+        if not isinstance(query, np.ndarray):
+            raise ValueError('Query should be array or list of features.')
+
+        sim_matrix = self.similarity(query, self.database.features)['cosine']
+        return self.classifier(sim_matrix)
