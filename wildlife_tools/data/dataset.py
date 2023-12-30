@@ -172,25 +172,13 @@ class FeatureDataset():
         self.load_label = load_label
         self.features = features
         self.metadata = metadata.reset_index(drop=True)
-        self.col_label=col_label
+        self.col_label = col_label
         self.labels, self.labels_map = pd.factorize(self.metadata[self.col_label].values)
 
 
-    def save(self, path):
-        data = {
-            'features': self.features,
-            'metadata': self.metadata,
-        }
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, 'wb') as file:
-            pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
-
-
-    @classmethod
-    def load(cls, path, **config):
-        with open(path, 'rb') as file:
-            data = pickle.load(file)
-        return cls(**data, **config)
+    @property
+    def labels_string(self):
+        return self.metadata[self.col_label].astype(str).values
 
 
     def __getitem__(self, idx):
@@ -209,7 +197,29 @@ class FeatureDataset():
         return len(self.labels_map)
 
 
+    def save(self, path):
+        data = {
+            'features': self.features,
+            'metadata': self.metadata,
+        }
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'wb') as file:
+            pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+    @classmethod
+    def from_file(cls, path, **config):
+        with open(path, 'rb') as file:
+            data = pickle.load(file)
+        return cls(**data, **config)
+
+
     @classmethod
     def from_config(cls, config):
         path = config.pop('path')
         return cls.load(path, **config)
+
+
+class FeatureDatabase(FeatureDataset):
+    ''' Alias for FeatureDataset '''
+    pass

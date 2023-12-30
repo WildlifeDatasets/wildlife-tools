@@ -22,7 +22,6 @@ plugins:
             annotations_path: brief
 
 
-
 nav:
   - Introduction: index.md  
   - Wildlife Dataset: wildlife_dataset.md
