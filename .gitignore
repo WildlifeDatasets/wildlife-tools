@@ -8,3 +8,5 @@
 /dist
 /baselines/data/images
 *old
+
+.idea

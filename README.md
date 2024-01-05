@@ -1,8 +1,56 @@
+<p align="center">
+  <a href="https://github.com/WildlifeDatasets/wildlife-tools/issues"><img src="https://img.shields.io/github/issues/WildlifeDatasets/wildlife-tools" alt="GitHub issues"></a>
+  <a href="https://github.com/WildlifeDatasets/wildlife-tools/pulls"><img src="https://img.shields.io/github/issues-pr/WildlifeDatasets/wildlife-tools" alt="GitHub pull requests"></a>
+  <a href="https://github.com/WildlifeDatasets/wildlife-tools/graphs/contributors"><img src="https://img.shields.io/github/contributors/WildlifeDatasets/wildlife-tools" alt="GitHub contributors"></a>
+  <a href="https://github.com/WildlifeDatasets/wildlife-tools/network/members"><img src="https://img.shields.io/github/forks/WildlifeDatasets/wildlife-tools" alt="GitHub forks"></a>
+  <a href="https://github.com/WildlifeDatasets/wildlife-tools/stargazers"><img src="https://img.shields.io/github/stars/WildlifeDatasets/wildlife-tools" alt="GitHub stars"></a>
+  <a href="https://github.com/WildlifeDatasets/wildlife-tools/watchers"><img src="https://img.shields.io/github/watchers/WildlifeDatasets/wildlife-tools" alt="GitHub watchers"></a>
+  <a href="https://github.com/WildlifeDatasets/wildlife-tools/blob/main/LICENSE"><img src="https://img.shields.io/github/license/WildlifeDatasets/wildlife-tools" alt="License"></a>
+</p>
+
+<div align="center">
+  <img src="docs/resources/logo-transparent.png" alt="Project logo" width="300">
+  <p align="center">A tool-kit for Wildlife Individual Identification that provides a wide variety of pre-trained models for inference and fine-tuning.</p>
+  <a href="https://wildlifedatasets.github.io/wildlife-tools/">Documentation</a>
+  ·
+  <a href="https://huggingface.co/BVRA/MegaDescriptor-L-384">MegaDescriptor</a>
+  ·
+  <a href="https://github.com/WildlifeDatasets/wildlife-tools/issues/new?assignees=aerodynamic-sauce-pan&labels=bug&projects=&template=bug_report.md&title=%5BBUG%5D">Report Bug</a>
+  ·
+  <a href="https://github.com/WildlifeDatasets/wildlife-tools/issues/new?assignees=aerodynamic-sauce-pan&labels=enhancement&projects=&template=enhancement.md&title=%5BEnhancement%5D">Request Feature</a>
+  <h1></h1>
+</div>
+
+
 # Introduction
 The `wildlife-tools` library offers a simple interface for various tasks in the Wildlife Re-Identification domain. It covers use cases such as training, feature extraction, similarity calculation, image retrieval, and classification. It complements the `wildlife-datasets` library, which acts as dataset repository. All datasets there can be used in combination with `WildlifeDataset` component, which serves for loading extracting images and image tensors other tasks. 
 
 More information can be found in [Documentation](https://wildlifedatasets.github.io/wildlife-tools/)
 
+## Installation
+
+To install `wildlife-tools`, you can build it from scratch or use pre-build Pypi package.
+
+
+### Using Pypi
+
+```script
+pip install wildlife-tools
+
+```
+
+### Building from scratch
+
+Clone the repository using `git` and install it.
+```script
+git clone git@github.com:WildlifeDatasets/wildlife-tools.git
+
+cd wildlife-tools
+pip install -e .
+```
+
+
+---
 
 ## Modules in the in the `wildlife-tools`
 
