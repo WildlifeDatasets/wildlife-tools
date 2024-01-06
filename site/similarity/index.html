@@ -631,8 +631,8 @@
 
 </div><h2 id="matchdescriptors">MatchDescriptors</h2>
 <p>Calculates similarity between query and database as number of descriptor correspondences after filtering with ratio test.
-For each descriptor in query, nearest two descriptors in database are found. If their ratio of their distance is lesser than treshold, they are considered as valid correspondence. Similarity is calculated as sum of all correspondences.</p>
-<p>Output is dictionary with key for each treshold. Values contains 2D array with number of correspondences.</p>
+For each descriptor in query, nearest two descriptors in database are found. If their ratio of their distance is lesser than threshold, they are considered as valid correspondence. Similarity is calculated as sum of all correspondences.</p>
+<p>Output is dictionary with key for each threshold. Values contains 2D array with number of correspondences.</p>
 <h3 id="example_1">Example</h3>
 <p>In this context, query and database are sets of SIFT descriptors with <code>descriptor_dim</code> = 128.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">wildlife_tools.similarity</span> <span class="kn">import</span> <span class="n">MatchDescriptors</span>
@@ -679,7 +679,7 @@ after filtering with Low ratio test.</p>
           <td>
                 <code>tuple[float]</code>
           </td>
-          <td><p>iterable with ratio test tresholds. Should be in [0, 1] interval.</p></td>
+          <td><p>iterable with ratio test thresholds. Should be in [0, 1] interval.</p></td>
           <td>
                 <code>(0.5)</code>
           </td>
@@ -709,7 +709,7 @@ after filtering with Low ratio test.</p>
         <tr>
 <td><code>dict</code></td>          <td>
           </td>
-          <td><p>dictionary with key for each treshold. Values are 2D array with number of correspondences.</p></td>
+          <td><p>dictionary with key for each threshold. Values are 2D array with number of correspondences.</p></td>
         </tr>
     </tbody>
   </table>
@@ -772,11 +772,11 @@ after filtering with Low ratio test.</p>
 
 <span class="sd">    Args:</span>
 <span class="sd">        descriptor_dim: dimensionality of descriptors. 128 for SIFT, 256 for SuperPoint.</span>
-<span class="sd">        thresholds: iterable with ratio test tresholds. Should be in [0, 1] interval.</span>
+<span class="sd">        thresholds: iterable with ratio test thresholds. Should be in [0, 1] interval.</span>
 <span class="sd">        device: Specifies device used for nearest neigbour search.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        dict: dictionary with key for each treshold. Values are 2D array with number of correspondences.</span>
+<span class="sd">        dict: dictionary with key for each threshold. Values are 2D array with number of correspondences.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -837,7 +837,7 @@ after filtering with Low ratio test.</p>
 
 </div><h2 id="matchloftr">MatchLOFTR</h2>
 <p>Uses LOFTR matching capabilities to calculate number of correspondences. Does not use descriptors and takes pair of greyscale image tensors instead. LOFTR implementation from Kornia is used.</p>
-<p>Output is dictionary with key for each confidence treshold. Values contains corresponding 2D array with cosine similarities.</p>
+<p>Output is dictionary with key for each confidence threshold. Values contains corresponding 2D array with cosine similarities.</p>
 <h3 id="reference_2">Reference</h3>
 
 
@@ -877,7 +877,7 @@ after filtering with Low ratio test.</p>
           <td>
                 <code>tuple[float]</code>
           </td>
-          <td><p>Iterable with confidence tresholds. Should be in [0, 1] interval.</p></td>
+          <td><p>Iterable with confidence thresholds. Should be in [0, 1] interval.</p></td>
           <td>
                 <code>(0.99)</code>
           </td>
@@ -917,7 +917,7 @@ after filtering with Low ratio test.</p>
         <tr>
 <td><code>dict</code></td>          <td>
           </td>
-          <td><p>dictionary with key for each treshold. Values are 2D array with number of correspondences.</p></td>
+          <td><p>dictionary with key for each threshold. Values are 2D array with number of correspondences.</p></td>
         </tr>
     </tbody>
   </table>
@@ -982,12 +982,12 @@ after filtering with Low ratio test.</p>
 
 <span class="sd">    Args:</span>
 <span class="sd">        pretrained: LOFTR model used. `outdoor` or `indoor`.</span>
-<span class="sd">        thresholds: Iterable with confidence tresholds. Should be in [0, 1] interval.</span>
+<span class="sd">        thresholds: Iterable with confidence thresholds. Should be in [0, 1] interval.</span>
 <span class="sd">        batch_size: Batch size used for the inference.</span>
 <span class="sd">        device: Specifies device used for the inference.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        dict: dictionary with key for each treshold. Values are 2D array with number of correspondences.</span>
+<span class="sd">        dict: dictionary with key for each threshold. Values are 2D array with number of correspondences.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>

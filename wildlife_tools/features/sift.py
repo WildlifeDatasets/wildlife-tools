@@ -1,20 +1,21 @@
 import cv2
 import numpy as np
 from tqdm import tqdm
-from wildlife_tools.features.base import FeatureExtractor
+
 from wildlife_tools.data import WildlifeDataset
+from wildlife_tools.features.base import FeatureExtractor
 
 
 class SIFTFeatures(FeatureExtractor):
-    '''
+    """
     Extracts SIFT descriptors for each image in the dataset.
 
     Args:
         max_keypoints: Limit number of extracted keypoints / descriptors.
-    
+
     Returns:
-        list of arrays, each array corresponds to an input image and have shape `[n_descriptors x 128]`.
-    '''
+        list of arrays, each corresponds to an input image and have shape `[n_descriptors x 128]`.
+    """
 
     descriptor_dim: int = 128
 

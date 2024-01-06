@@ -1,3 +1,3 @@
-from .dataset import WildlifeDataset, FeatureDataset, FeatureDatabase
-from .split import SplitChunk, SplitWildlife, SplitMetadata, SplitChain
+from .dataset import FeatureDatabase, FeatureDataset, WildlifeDataset
+from .split import SplitChain, SplitChunk, SplitMetadata, SplitWildlife
 from .transform import TransformTimm, TransformTorchvision

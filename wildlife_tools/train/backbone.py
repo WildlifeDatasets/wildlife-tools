@@ -1,14 +1,15 @@
 import timm
 
-class TimmBackbone():
-    '''
+
+class TimmBackbone:
+    """
     Example config in YAML file:
-    
+
     backbone:
         method: TimmBackbone
         model_name: 'efficientnet_b0'
         pretrained: True
-    '''
+    """
 
     @classmethod
     def from_config(cls, config, output_size=None):

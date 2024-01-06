@@ -1,60 +1,53 @@
 import importlib
+import os
+import random
 from copy import deepcopy
-from jinja2 import Template, Environment, meta
-import yaml
+
+import numpy as np
 import torch
 import torch.backends.cudnn
-import torch.nn as nn
-import random, os
-import numpy as np
+import yaml
+from jinja2 import Environment, meta
 
 
-class Store():
-    ''' Dictionary with components. Components are imported as needed.'''
+class Store:
+    """Dictionary with components. Components are imported as needed."""
 
     modules = {
         # Pipelines
-        'SplitChunk': ('data.split', 'SplitChunk'),
-        
+        "SplitChunk": ("data.split", "SplitChunk"),
         # Data
-        'SplitChunk': ('wildlife_tools.data.split', 'SplitChunk'),
-        'SplitWildlife': ('wildlife_tools.data.split', 'SplitWildlife'),
-        'SplitMetadata': ('wildlife_tools.data.split', 'SplitMetadata'),
-        'SplitChain': ('wildlife_tools.data.split', 'SplitChain'),
-    
-        'TransformTimm': ('wildlife_tools.data.transform', 'TransformTimm'),
-        'TransformTorchvision': ('wildlife_tools.data.transform', 'TransformTorchvision'),
-
-        'WildlifeDataset': ('wildlife_tools.data.dataset', 'WildlifeDataset'),
-        'FeatureDataset': ('wildlife_tools.data.dataset', 'FeatureDataset'),
-
-
+        "SplitChunk": ("wildlife_tools.data.split", "SplitChunk"),
+        "SplitWildlife": ("wildlife_tools.data.split", "SplitWildlife"),
+        "SplitMetadata": ("wildlife_tools.data.split", "SplitMetadata"),
+        "SplitChain": ("wildlife_tools.data.split", "SplitChain"),
+        "TransformTimm": ("wildlife_tools.data.transform", "TransformTimm"),
+        "TransformTorchvision": (
+            "wildlife_tools.data.transform",
+            "TransformTorchvision",
+        ),
+        "WildlifeDataset": ("wildlife_tools.data.dataset", "WildlifeDataset"),
+        "FeatureDataset": ("wildlife_tools.data.dataset", "FeatureDataset"),
         # Features & Similarity
-        'SimilarityPipeline': ('wildlife_tools.pipelines.similarity', 'SimilarityPipeline'),
-
-
+        "SimilarityPipeline": (
+            "wildlife_tools.pipelines.similarity",
+            "SimilarityPipeline",
+        ),
         # Train
-        'TrainingPipeline': ('wildlife_tools.pipelines.train', 'TrainingPipeline'),
-        'EpochCallbacks': ('wildlife_tools.train.callbacks', 'EpochCallbacks'),
-        'EpochLog': ('wildlife_tools.train.callbacks', 'EpochLog'),
-        'EpochCheckpoint': ('wildlife_tools.train.callbacks', 'EpochCheckpoint'),
-
-
-        'EmbeddingTrainer': ('wildlife_tools.train.trainer', 'EmbeddingTrainer'),
-        'ClassifierTrainer': ('wildlife_tools.train.trainer', 'ClassifierTrainer'),
-
-        'OptimizerAdam': ('wildlife_tools.train.optim', 'OptimizerAdam'),
-        'OptimizerSGD': ('wildlife_tools.train.optim', 'OptimizerSGD'),
-        'SchedulerCosine': ('wildlife_tools.train.optim', 'SchedulerCosine'),
-
-
-        'TimmBackbone': ('wildlife_tools.train.backbone', 'TimmBackbone'),
-
-        'ArcFaceLoss': ('wildlife_tools.train.objective', 'ArcFaceLoss'),
-        'TripletLoss': ('wildlife_tools.train.objective', 'TripletLoss'),
-        'SoftmaxLoss': ('wildlife_tools.train.objective', 'SoftmaxLoss'),
+        "TrainingPipeline": ("wildlife_tools.pipelines.train", "TrainingPipeline"),
+        "EpochCallbacks": ("wildlife_tools.train.callbacks", "EpochCallbacks"),
+        "EpochLog": ("wildlife_tools.train.callbacks", "EpochLog"),
+        "EpochCheckpoint": ("wildlife_tools.train.callbacks", "EpochCheckpoint"),
+        "EmbeddingTrainer": ("wildlife_tools.train.trainer", "EmbeddingTrainer"),
+        "ClassifierTrainer": ("wildlife_tools.train.trainer", "ClassifierTrainer"),
+        "OptimizerAdam": ("wildlife_tools.train.optim", "OptimizerAdam"),
+        "OptimizerSGD": ("wildlife_tools.train.optim", "OptimizerSGD"),
+        "SchedulerCosine": ("wildlife_tools.train.optim", "SchedulerCosine"),
+        "TimmBackbone": ("wildlife_tools.train.backbone", "TimmBackbone"),
+        "ArcFaceLoss": ("wildlife_tools.train.objective", "ArcFaceLoss"),
+        "TripletLoss": ("wildlife_tools.train.objective", "TripletLoss"),
+        "SoftmaxLoss": ("wildlife_tools.train.objective", "SoftmaxLoss"),
     }
-
 
     def __getitem__(self, key):
         module_path, class_name = self.modules[key]
@@ -66,7 +59,7 @@ class Store():
 
 
 def realize(config, store=None, **kwargs):
-    ''' realize object from config given its name and method store '''
+    """realize object from config given its name and method store"""
 
     if config is None:
         return None
@@ -75,15 +68,15 @@ def realize(config, store=None, **kwargs):
         store = Store()
 
     config_local = deepcopy(config)
-    name = config_local.pop('method', None)
+    name = config_local.pop("method", None)
 
     if name is None:
-        raise ValueError(f"No 'method' attribute in config")
+        raise ValueError("No 'method' attribute in config")
     if name not in store:
         raise ValueError(f"No method {name} in method store.")
 
     obj_class = store[name]
-    if hasattr(obj_class, 'from_config'):
+    if hasattr(obj_class, "from_config"):
         obj = obj_class.from_config(config=config_local, **kwargs)
     else:
         obj = obj_class(**config_local, **kwargs)
@@ -108,8 +101,8 @@ def parse_yaml(yaml_string):
     '''
 
     env = Environment(
-        variable_start_string = "'{{",
-        variable_end_string = "}}'",
+        variable_start_string="'{{",
+        variable_end_string="}}'",
     )
 
     data = yaml.safe_load(yaml_string)
@@ -123,18 +116,18 @@ def parse_yaml(yaml_string):
 
         # Check if number of resolved variables changed
         if len(variables) == len(variables_new):
-            raise ValueError(f'Unable to impute variables in all places: {variables}')
+            raise ValueError(f"Unable to impute variables in all places: {variables}")
 
         variables = variables_new
     return data
 
 
-def set_seed(seed=0, device='cuda'):
-    os.environ['PYTHONHASHSEED'] = str(seed)
+def set_seed(seed=0, device="cuda"):
+    os.environ["PYTHONHASHSEED"] = str(seed)
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
-    if device == 'cuda':
+    if device == "cuda":
         torch.cuda.manual_seed(seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False

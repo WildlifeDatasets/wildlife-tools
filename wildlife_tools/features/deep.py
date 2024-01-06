@@ -1,15 +1,14 @@
 import torch
-import os
-import numpy as np
-from tqdm import tqdm 
-from wildlife_tools.features.base import FeatureExtractor
+from tqdm import tqdm
+from transformers import CLIPModel, CLIPProcessor
+
 from wildlife_tools.data import WildlifeDataset
+from wildlife_tools.features.base import FeatureExtractor
 from wildlife_tools.tools import realize
-from transformers import CLIPProcessor, CLIPModel
 
 
 class DeepFeatures(FeatureExtractor):
-    '''
+    """
     Extracts features using forward pass of pytorch model.
 
     Args:
@@ -21,20 +20,19 @@ class DeepFeatures(FeatureExtractor):
     Returns:
         An array with a shape of `n_input` x `dim_embedding`.
 
-    '''
+    """
 
     def __init__(
         self,
         model,
         batch_size: int = 128,
         num_workers: int = 1,
-        device: str = 'cpu',
+        device: str = "cpu",
     ):
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.device = device
         self.model = model
-
 
     def __call__(self, dataset: WildlifeDataset):
         self.model = self.model.to(self.device)
@@ -53,15 +51,14 @@ class DeepFeatures(FeatureExtractor):
                 outputs.append(output.cpu())
         return torch.cat(outputs).numpy()
 
-
     @classmethod
     def from_config(cls, config):
-        model = realize(config.pop('model'))
+        model = realize(config.pop("model"))
         return cls(model=model, **config)
 
 
-class ClipFeatures():
-    '''
+class ClipFeatures:
+    """
     Extract features using CLIP model (https://arxiv.org/pdf/2103.00020.pdf).
     Uses raw images of input WildlifeDataset (i.e. dataset.transform = None)
 
@@ -74,17 +71,20 @@ class ClipFeatures():
 
     Returns:
         An array with a shape of `n_input` x `dim_embedding`.
-    '''
+    """
+
     def __init__(
         self,
         model=None,
         processor=None,
         batch_size=128,
         num_workers=1,
-        device='cpu',
+        device="cpu",
     ):
         if model is None:
-            model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14").vision_model
+            model = CLIPModel.from_pretrained(
+                "openai/clip-vit-large-patch14"
+            ).vision_model
 
         if processor is None:
             processor = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14")
@@ -94,14 +94,15 @@ class ClipFeatures():
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.device = device
-        self.transform = lambda x: processor(images=x, return_tensors="pt")['pixel_values']
-
+        self.transform = lambda x: processor(images=x, return_tensors="pt")[
+            "pixel_values"
+        ]
 
     def __call__(self, dataset: WildlifeDataset):
         self.model = self.model.to(self.device)
         self.model = self.model.eval()
-        
-        dataset.transforms = None # Reset transforms.
+
+        dataset.transforms = None  # Reset transforms.
 
         loader = torch.utils.data.DataLoader(
             dataset,
