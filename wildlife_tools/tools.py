@@ -14,8 +14,6 @@ class Store:
     """Dictionary with components. Components are imported as needed."""
 
     modules = {
-        # Pipelines
-        "SplitChunk": ("data.split", "SplitChunk"),
         # Data
         "SplitChunk": ("wildlife_tools.data.split", "SplitChunk"),
         "SplitWildlife": ("wildlife_tools.data.split", "SplitWildlife"),

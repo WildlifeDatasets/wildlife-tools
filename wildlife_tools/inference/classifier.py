@@ -6,17 +6,7 @@ import numpy as np
 import pandas as pd
 import torch
 
-
-class NearestClassifier:
-    def __call__(self, similarity, labels=None):
-
-        similarity = torch.tensor(similarity, dtype=float)
-        scores, idx = similarity.topk(k=1, dim=1)
-        pred = pred.numpy().flatten()
-
-        if labels is not None:
-            pred = labels[pred]
-        return pred
+from wildlife_tools.similarity import CosineSimilarity
 
 
 class KnnClassifier:
