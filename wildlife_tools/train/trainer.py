@@ -217,8 +217,7 @@ class ClassifierTrainer:
 class EmbeddingTrainer:
     @classmethod
     def from_config(cls, config):
-        """
-        Use config dict to setup BasicTrainer for training embedder.
+        """Use config dict to setup BasicTrainer for training embedder.
 
         Config keys:
             dataset (dict):

@@ -4,7 +4,7 @@ from pytorch_metric_learning import distances, losses, miners
 
 class ArcFaceLoss(nn.Module):
     """
-    Wraps Pytorch Metric Learning ArcFaceLoss
+    Wraps Pytorch Metric Learning ArcFaceLoss.
 
     Default margin (in radians): 0.5
     Default scale: 64
@@ -25,7 +25,7 @@ class ArcFaceLoss(nn.Module):
 
 class TripletLoss(nn.Module):
     """
-    Wraps Pytorch Metric Learning TripletMarginLoss
+    Wraps Pytorch Metric Learning TripletMarginLoss.
 
     Mining is one of: 'all', 'hard', 'semihard'
     Distance is one of: 'cosine', 'l2', 'l2_squared'
@@ -53,9 +53,7 @@ class TripletLoss(nn.Module):
 
 
 class SoftmaxLoss(nn.Module):
-    """
-    CE with single dense layer classification head.
-    """
+    """CE with single dense layer classification head."""
 
     def __init__(self, num_classes, embedding_size):
         super().__init__()

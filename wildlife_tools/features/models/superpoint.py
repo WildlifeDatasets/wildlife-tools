@@ -47,7 +47,7 @@ from torch import nn
 
 
 def simple_nms(scores, nms_radius: int):
-    """Fast Non-maximum suppression to remove nearby points"""
+    """Fast Non-maximum suppression to remove nearby points."""
     assert nms_radius >= 0
 
     def max_pool(x):
@@ -66,7 +66,7 @@ def simple_nms(scores, nms_radius: int):
 
 
 def remove_borders(keypoints, scores, border: int, height: int, width: int):
-    """Removes keypoints too close to the border"""
+    """Removes keypoints too close to the border."""
     mask_h = (keypoints[:, 0] >= border) & (keypoints[:, 0] < (height - border))
     mask_w = (keypoints[:, 1] >= border) & (keypoints[:, 1] < (width - border))
     mask = mask_h & mask_w
@@ -81,7 +81,7 @@ def top_k_keypoints(keypoints, scores, k: int):
 
 
 def sample_descriptors(keypoints, descriptors, s: int = 8):
-    """Interpolate descriptors at keypoint locations"""
+    """Interpolate descriptors at keypoint locations."""
     b, c, h, w = descriptors.shape
     keypoints = keypoints - s / 2 + 0.5
     keypoints /= torch.tensor([(w * s - s / 2 - 0.5), (h * s - s / 2 - 0.5)],).to(
@@ -99,7 +99,7 @@ def sample_descriptors(keypoints, descriptors, s: int = 8):
 
 
 class SuperPoint(nn.Module):
-    """SuperPoint Convolutional Detector and Descriptor
+    """SuperPoint Convolutional Detector and Descriptor.
 
     SuperPoint: Self-Supervised Interest Point Detection and
     Description. Daniel DeTone, Tomasz Malisiewicz, and Andrew
@@ -150,7 +150,7 @@ class SuperPoint(nn.Module):
         print("Loaded SuperPoint model")
 
     def forward(self, data):
-        """Compute keypoints, scores, descriptors for image"""
+        """Compute keypoints, scores, descriptors for image."""
         # Shared Encoder
         x = self.relu(self.conv1a(data["image"]))
         x = self.relu(self.conv1b(x))
