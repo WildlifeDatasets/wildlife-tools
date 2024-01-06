@@ -81,9 +81,11 @@ Using metadata from `wildlife-datasets`, create `WildlifeDataset` object for the
 
 ```Python
 from wildlife_datasets.datasets import StripeSpotter
+from wildlife_datasets import datasets
 from wildlife_tools.data import WildlifeDataset
 import torchvision.transforms as T
 
+datasets.StripeSpotter.get_data('datasets/StripeSpotter')
 metadata = StripeSpotter('datasets/StripeSpotter')
 transform = T.Compose([T.Resize([224, 224]), T.ToTensor()])
 dataset = WildlifeDataset(metadata.df, metadata.root, transform=transform)
@@ -101,6 +103,7 @@ Extract features using MegaDescriptor Tiny, downloaded from HuggingFace hub.
 
 ```Python
 from wildlife_tools.features import DeepFeatures
+import timm
 
 name = 'hf-hub:BVRA/MegaDescriptor-T-224'
 extractor = DeepFeatures(timm.create_model(name, num_classes=0, pretrained=True))
@@ -122,6 +125,8 @@ similarity = similarity_function(query, database)
 Use the cosine similarity in nearest neigbour classifier and get predictions.
 
 ```Python
+from wildlife_tools.inference import KnnClassifier
+
 classifier = KnnClassifier(k=1, database_labels=database.labels_string)
 predictions = classifier(similarity['cosine'])
 ```
