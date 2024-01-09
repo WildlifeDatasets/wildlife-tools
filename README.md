@@ -50,15 +50,13 @@ pip install -e .
 ```
 
 
----
-
 ## Modules in the in the `wildlife-tools`
 
 - The `data` module provides tools for creating instances of the `WildlifeDataset`.
 - The `train` module offers tools for fine-tuning feature extractors on the `WildlifeDataset`.
 - The `features` module provides tools for extracting features from the `WildlifeDataset` using various extractors.
 - The `similarity` module provides tools for constructing a similarity matrix from query and database features.
-- The `evaluation` module offers tools for creating and evaluating predictions using the similarity matrix.
+- The `inference` module offers tools for creating predictions using the similarity matrix.
 
 
 
@@ -70,7 +68,7 @@ pip install -e .
       A-->|WildlifeDataset|C;
       C[Train]-->|finetuned extractor|B;
       B-->|query and database features|D[Similarity]
-      D-->|similarity matrix|E[Evaluation]
+      D-->|similarity matrix|E[Inference]
 ```
 
 
@@ -129,22 +127,4 @@ from wildlife_tools.inference import KnnClassifier
 
 classifier = KnnClassifier(k=1, database_labels=database.labels_string)
 predictions = classifier(similarity['cosine'])
-```
-
-
-## Installation
-
-```shell
-pip install wildlife-tools wildlife-datasets
-```
-
-
-Following dependencies were used:
-
-```
-torch==2.0.1
-pytorch-metric-learning==1.6.0
-faiss-gpu==1.7.2
-pycocotools==2.0.4
-timm==0.9.2
 ```

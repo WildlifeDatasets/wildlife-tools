@@ -28,7 +28,5 @@ nav:
   - Train: training.md
   - Feature Extraction: features.md
   - Similarity: similarity.md
-  - Evaluation: evaluation.md
-  - Benchmarks:
-    - Overview: benchmark.md
- 
+  - Inference: inference.md
+  - Baseline Results: baseline.md
