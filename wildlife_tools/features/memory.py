@@ -1,13 +1,11 @@
-import torch
-import os
-import numpy as np
-from tqdm import tqdm 
-from wildlife_tools.features.base import FeatureExtractor
+from tqdm import tqdm
+
 from wildlife_tools.data import WildlifeDataset
+from wildlife_tools.features.base import FeatureExtractor
 
 
 class DataToMemory(FeatureExtractor):
-    ''' Loads dataset to memory for faster access. '''
+    """Loads dataset to memory for faster access."""
 
     def __call__(self, dataset: WildlifeDataset):
         features = []

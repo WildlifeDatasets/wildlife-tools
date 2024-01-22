@@ -33,9 +33,9 @@ sim = similarity(query, database)
 ## MatchDescriptors
 
 Calculates similarity between query and database as number of descriptor correspondences after filtering with ratio test.
-For each descriptor in query, nearest two descriptors in database are found. If their ratio of their distance is lesser than treshold, they are considered as valid correspondence. Similarity is calculated as sum of all correspondences.
+For each descriptor in query, nearest two descriptors in database are found. If their ratio of their distance is lesser than threshold, they are considered as valid correspondence. Similarity is calculated as sum of all correspondences.
 
-Output is dictionary with key for each treshold. Values contains 2D array with number of correspondences.
+Output is dictionary with key for each threshold. Values contains 2D array with number of correspondences.
 
 
 ### Example
@@ -63,7 +63,7 @@ sim = similarity(query, database)
 
 Uses LOFTR matching capabilities to calculate number of correspondences. Does not use descriptors and takes pair of greyscale image tensors instead. LOFTR implementation from Kornia is used.
 
-Output is dictionary with key for each confidence treshold. Values contains corresponding 2D array with cosine similarities.
+Output is dictionary with key for each confidence threshold. Values contains corresponding 2D array with cosine similarities.
 
 
 ### Reference

@@ -1,51 +1,53 @@
+import os
+import random
+from copy import deepcopy
+from itertools import chain
+
+import numpy as np
 import torch
 import torch.backends.cudnn
-import torch.nn as nn
-import random, os
-import numpy as np
-from tqdm import tqdm 
-from itertools import chain
-from copy import deepcopy
+from tqdm import tqdm
+
 from wildlife_tools.tools import realize
 
 
-def set_seed(seed=0, device='cuda'):
-    os.environ['PYTHONHASHSEED'] = str(seed)
+def set_seed(seed=0, device="cuda"):
+    os.environ["PYTHONHASHSEED"] = str(seed)
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
-    if device=='cuda':
+    if device == "cuda":
         torch.cuda.manual_seed(seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
 
-def set_random_states(states, device='cuda'):
-    if states['os_rng_state']:
-        os.environ['PYTHONHASHSEED'] = states['os_rng_state']
+def set_random_states(states, device="cuda"):
+    if states["os_rng_state"]:
+        os.environ["PYTHONHASHSEED"] = states["os_rng_state"]
     random.setstate(states["random_rng_state"])
     np.random.set_state(states["numpy_rng_state"])
     torch.set_rng_state(states["torch_rng_state"])
-    if device=='cuda':
+    if device == "cuda":
         torch.cuda.set_rng_state(states["torch_cuda_rng_state"])
         torch.cuda.set_rng_state_all(states["torch_cuda_rng_state_all"])
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
 
-def get_random_states(device='cuda'):
+def get_random_states(device="cuda"):
     states = {}
-    states['os_rng_state'] = os.environ.get('PYTHONHASHSEED')
-    states['random_rng_state'] = random.getstate()
-    states['numpy_rng_state'] = np.random.get_state()
-    states['torch_rng_state'] = torch.get_rng_state()
-    if device=='cuda':
-        states['torch_cuda_rng_state'] = torch.cuda.get_rng_state()
-        states['torch_cuda_rng_state_all'] = torch.cuda.get_rng_state_all()
+    states["os_rng_state"] = os.environ.get("PYTHONHASHSEED")
+    states["random_rng_state"] = random.getstate()
+    states["numpy_rng_state"] = np.random.get_state()
+    states["torch_rng_state"] = torch.get_rng_state()
+    if device == "cuda":
+        states["torch_cuda_rng_state"] = torch.cuda.get_rng_state()
+        states["torch_cuda_rng_state_all"] = torch.cuda.get_rng_state_all()
     return states
 
 
-class BasicTrainer():
+class BasicTrainer:
     def __init__(
         self,
         dataset,
@@ -54,7 +56,7 @@ class BasicTrainer():
         optimizer,
         epochs,
         scheduler=None,
-        device='cuda',
+        device="cuda",
         batch_size=128,
         num_workers=1,
         accumulation_steps=1,
@@ -73,13 +75,12 @@ class BasicTrainer():
         self.accumulation_steps = accumulation_steps
         self.epoch_callback = epoch_callback
 
-
     def train(self):
         loader = torch.utils.data.DataLoader(
             self.dataset,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
-            shuffle=True
+            shuffle=True,
         )
 
         for e in range(self.epochs):
@@ -89,18 +90,19 @@ class BasicTrainer():
             if self.epoch_callback:
                 self.epoch_callback(trainer=self, epoch_data=epoch_data)
 
-
     def train_epoch(self, loader):
         model = self.model.train()
         losses = []
-        for i, batch in enumerate(tqdm(loader, desc=f'Epoch {self.epoch}: ', mininterval=1, ncols=100)):
+        for i, batch in enumerate(
+            tqdm(loader, desc=f"Epoch {self.epoch}: ", mininterval=1, ncols=100)
+        ):
             x, y = batch
             x, y = x.to(self.device), y.to(self.device)
 
             out = model(x)
             loss = self.objective(out, y)
             loss.backward()
-            if (i-1) % self.accumulation_steps == 0:
+            if (i - 1) % self.accumulation_steps == 0:
                 self.optimizer.step()
                 self.optimizer.zero_grad()
 
@@ -109,46 +111,44 @@ class BasicTrainer():
         if self.scheduler:
             self.scheduler.step()
 
-        return {'train_loss_epoch_avg': np.mean(losses)}
+        return {"train_loss_epoch_avg": np.mean(losses)}
 
-    def save(self, folder, file_name='checkpoint.pth', **kwargs):
+    def save(self, folder, file_name="checkpoint.pth", **kwargs):
         if not os.path.exists(folder):
-           os.makedirs(folder)
+            os.makedirs(folder)
         if self.scheduler:
             scheduler_state = self.scheduler.state_dict()
         else:
             scheduler_state = None
 
         checkpoint = {
-            'model': self.model.state_dict(),
-            'objective': self.objective.state_dict(),
-            'optimizer': self.optimizer.state_dict(),
-            'epoch': self.epoch,
-            'scheduler': scheduler_state,
-            'rng_states': get_random_states(device=self.device),
+            "model": self.model.state_dict(),
+            "objective": self.objective.state_dict(),
+            "optimizer": self.optimizer.state_dict(),
+            "epoch": self.epoch,
+            "scheduler": scheduler_state,
+            "rng_states": get_random_states(device=self.device),
         }
         torch.save(checkpoint, os.path.join(folder, file_name))
 
-
-    def load(self, path, device='cpu'):
+    def load(self, path, device="cpu"):
         checkpoint = torch.load(path, map_location=torch.device(device))
 
-        if 'rng_states' in checkpoint:
-            set_random_states(checkpoint['rng_states'], device=self.device)
-        if 'model' in checkpoint:
-            self.model.load_state_dict(checkpoint['model'])
-        if 'objective' in checkpoint:
-            self.objective.load_state_dict(checkpoint['objective'])
-        if 'optimizer' in checkpoint:
-            self.optimizer.load_state_dict(checkpoint['optimizer'])
-        if 'epoch' in checkpoint:
-            self.epoch = checkpoint['epoch']
-        if 'scheduler' in checkpoint:
-            self.scheduler.load_state_dict(checkpoint['scheduler'])
+        if "rng_states" in checkpoint:
+            set_random_states(checkpoint["rng_states"], device=self.device)
+        if "model" in checkpoint:
+            self.model.load_state_dict(checkpoint["model"])
+        if "objective" in checkpoint:
+            self.objective.load_state_dict(checkpoint["objective"])
+        if "optimizer" in checkpoint:
+            self.optimizer.load_state_dict(checkpoint["optimizer"])
+        if "epoch" in checkpoint:
+            self.epoch = checkpoint["epoch"]
+        if "scheduler" in checkpoint:
+            self.scheduler.load_state_dict(checkpoint["scheduler"])
 
 
-
-class ClassifierTrainer():
+class ClassifierTrainer:
     @classmethod
     def from_config(cls, config):
         """
@@ -182,25 +182,25 @@ class ClassifierTrainer():
         config = deepcopy(config)
 
         dataset = realize(
-            config=config.pop('dataset'),
+            config=config.pop("dataset"),
         )
         model = realize(
-            config=config.pop('backbone'),
+            config=config.pop("backbone"),
             output_size=dataset.num_classes,
         )
         objective = realize(
-            config=config.pop('objective'),
+            config=config.pop("objective"),
         )
         optimizer = realize(
-            config=config.pop('optimizer'),
+            config=config.pop("optimizer"),
             params=model.parameters(),
         )
         scheduler = realize(
-            config=config.pop('scheduler', None),
-            epochs=config.get('epochs'),
+            config=config.pop("scheduler", None),
+            epochs=config.get("epochs"),
         )
-        epoch_callback=realize(
-            config = config.pop('epoch_callback', None),
+        epoch_callback = realize(
+            config=config.pop("epoch_callback", None),
         )
 
         return BasicTrainer(
@@ -210,16 +210,15 @@ class ClassifierTrainer():
             optimizer=optimizer,
             scheduler=scheduler,
             epoch_callback=epoch_callback,
-            **config
+            **config,
         )
 
 
-class EmbeddingTrainer():
+class EmbeddingTrainer:
     @classmethod
     def from_config(cls, config):
-        """
-        Use config dict to setup BasicTrainer for training embedder.
-    
+        """Use config dict to setup BasicTrainer for training embedder.
+
         Config keys:
             dataset (dict):
                 Config dictionary of the training dataset.
@@ -231,7 +230,7 @@ class EmbeddingTrainer():
                 Config dictionary of the scheduler (no scheduler is used by default).
             embedding_size (int | None, default: None):
                 Adds a linear layer after the backbone with the target embedding size.
-                By default, embedding size is inferred from the backbone (e.g., num_classes=0 in TIMM).
+                By default, embedding size is inferred from backbone (e.g., num_classes=0 in TIMM).
             epochs (int):
                 Number of training epochs.
             device (str, default: 'cuda'):
@@ -249,37 +248,32 @@ class EmbeddingTrainer():
         """
 
         config = deepcopy(config)
-        embedding_size = config.pop('embedding_size', None)
-        
-        dataset = realize(
-            config=config.pop('dataset')
-        )
-        backbone = realize(
-            config=config.pop('backbone'),
-            output_size=embedding_size
-        )
+        embedding_size = config.pop("embedding_size", None)
 
-        if embedding_size is None: # Infer embedding size
+        dataset = realize(config=config.pop("dataset"))
+        backbone = realize(config=config.pop("backbone"), output_size=embedding_size)
+
+        if embedding_size is None:  # Infer embedding size
             with torch.no_grad():
                 x = dataset[0][0].unsqueeze(0)
                 embedding_size = backbone(x).shape[1]
 
         objective = realize(
-            config=config.pop('objective'),
+            config=config.pop("objective"),
             embedding_size=embedding_size,
             num_classes=dataset.num_classes,
         )
         optimizer = realize(
-            config=config.pop('optimizer'),
+            config=config.pop("optimizer"),
             params=chain(backbone.parameters(), objective.parameters()),
         )
         scheduler = realize(
             optimizer=optimizer,
-            config=config.pop('scheduler', None),
-            epochs=config.get('epochs'),
+            config=config.pop("scheduler", None),
+            epochs=config.get("epochs"),
         )
-        epoch_callback=realize(
-            config = config.pop('epoch_callback', None),
+        epoch_callback = realize(
+            config=config.pop("epoch_callback", None),
         )
         return BasicTrainer(
             model=backbone,
@@ -288,5 +282,5 @@ class EmbeddingTrainer():
             optimizer=optimizer,
             scheduler=scheduler,
             epoch_callback=epoch_callback,
-            **config
+            **config,
         )
