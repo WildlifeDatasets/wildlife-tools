@@ -9,18 +9,36 @@
 </p>
 
 <div align="center">
-  <img src="docs/resources/logo-transparent.png" alt="Project logo" width="300">
+  <img src="resources/logo-transparent.png" alt="Project logo" width="300">
   <p align="center">A tool-kit for Wildlife Individual Identification that provides a wide variety of pre-trained models for inference and fine-tuning.</p>
   <a href="https://wildlifedatasets.github.io/wildlife-tools/">Documentation</a>
-  ·
-  <a href="https://huggingface.co/BVRA/MegaDescriptor-L-384">MegaDescriptor</a>
   ·
   <a href="https://github.com/WildlifeDatasets/wildlife-tools/issues/new?assignees=aerodynamic-sauce-pan&labels=bug&projects=&template=bug_report.md&title=%5BBUG%5D">Report Bug</a>
   ·
   <a href="https://github.com/WildlifeDatasets/wildlife-tools/issues/new?assignees=aerodynamic-sauce-pan&labels=enhancement&projects=&template=enhancement.md&title=%5BEnhancement%5D">Request Feature</a>
-  <h1></h1>
 </div>
 
+</br >
+
+## Our other projects
+
+
+<div align="center">
+<div style="display: flex; justify-content: center">
+  <div style="margin-right: 50px;">
+    <img src="resources/megadescriptor-logo.png" alt="Image 1" width="200" style="margin-bottom: 5px;">
+    <p><a href="https://huggingface.co/BVRA/MegaDescriptor-L-384">MegaDescriptor</a></p>
+  </div>
+
+  <div>
+    <img src="resources/datasets-logo.png" alt="Image 2" width="200" style="margin-bottom: 5px;"> <!-- Adjust margin as needed -->
+    <p><a href="https://huggingface.co/BVRA/MegaDescriptor-L-384">Wildlife Datasets</a></p>
+  </div>
+</div>
+</div>
+
+
+<h1></h1>
 
 # Introduction
 The `wildlife-tools` library offers a simple interface for various tasks in the Wildlife Re-Identification domain. It covers use cases such as training, feature extraction, similarity calculation, image retrieval, and classification. It complements the `wildlife-datasets` library, which acts as dataset repository. All datasets there can be used in combination with `WildlifeDataset` component, which serves for loading extracting images and image tensors other tasks. 
@@ -79,11 +97,9 @@ Using metadata from `wildlife-datasets`, create `WildlifeDataset` object for the
 
 ```Python
 from wildlife_datasets.datasets import StripeSpotter
-from wildlife_datasets import datasets
 from wildlife_tools.data import WildlifeDataset
 import torchvision.transforms as T
 
-datasets.StripeSpotter.get_data('datasets/StripeSpotter')
 metadata = StripeSpotter('datasets/StripeSpotter')
 transform = T.Compose([T.Resize([224, 224]), T.ToTensor()])
 dataset = WildlifeDataset(metadata.df, metadata.root, transform=transform)
@@ -92,8 +108,8 @@ dataset = WildlifeDataset(metadata.df, metadata.root, transform=transform)
 Optionally, split metadata into subsets. In this example, query is first 100 images and rest are in database.
 
 ```Python
-database = WildlifeDataset(metadata.df.iloc[100:,:], metadata.root, transform=transform)
-query = WildlifeDataset(metadata.df.iloc[:100,:], metadata.root, transform=transform)
+dataset_database = WildlifeDataset(metadata.df.iloc[100:,:], metadata.root, transform=transform)
+dataset_query = WildlifeDataset(metadata.df.iloc[:100,:], metadata.root, transform=transform)
 ```
 
 ### 2. Extract features
@@ -101,11 +117,10 @@ Extract features using MegaDescriptor Tiny, downloaded from HuggingFace hub.
 
 ```Python
 from wildlife_tools.features import DeepFeatures
-import timm
 
 name = 'hf-hub:BVRA/MegaDescriptor-T-224'
 extractor = DeepFeatures(timm.create_model(name, num_classes=0, pretrained=True))
-query, database = extractor(query), extractor(database)
+query, database = extractor(dataset_query), extractor(dataset_database)
 ```
 
 ### 3. Calculate similarity
@@ -123,8 +138,6 @@ similarity = similarity_function(query, database)
 Use the cosine similarity in nearest neigbour classifier and get predictions.
 
 ```Python
-from wildlife_tools.inference import KnnClassifier
-
-classifier = KnnClassifier(k=1, database_labels=database.labels_string)
+classifier = KnnClassifier(k=1, database_labels=dataset_database.labels_string)
 predictions = classifier(similarity['cosine'])
 ```
