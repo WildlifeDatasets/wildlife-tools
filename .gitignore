@@ -1,12 +1,12 @@
 *__pycache__
 .ipynb_checkpoints
-/venv
-/venv_docs
+*venv
+*venv_docs
 /temp
 *.egg-info
 /build
 /dist
 /baselines/data/images
 *old
-
 .idea
+*site
