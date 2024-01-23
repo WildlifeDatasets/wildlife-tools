@@ -37,6 +37,7 @@ dependencies=[
           'scikit-learn>=1.0.1',
           'faiss-gpu ; platform_system != "Windows"',
           'faiss-cpu ; platform_system == "Windows"',
+          'pycocotools',
           'transformers>=4.30.2',
           'wildlife-datasets>=0.3.4',
           'kornia>=0.6.12',
