@@ -38,6 +38,8 @@ dependencies=[
           'faiss-gpu ; platform_system != "Windows"',
           'faiss-cpu ; platform_system == "Windows"',
           'pycocotools',
+          'tensorboard',
+          'pytorch_metric_learning',
           'transformers>=4.30.2',
           'wildlife-datasets>=0.3.4',
           'kornia>=0.6.12',
