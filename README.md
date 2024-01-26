@@ -93,15 +93,15 @@ pip install -e .
 
 ## Example
 ### 1. Create `WildlifeDataset` 
-Using metadata from `wildlife-datasets`, create `WildlifeDataset` object for the StripeSpotter dataset.
+Using metadata from `wildlife-datasets`, create `WildlifeDataset` object for the MacaqueFaces dataset.
 
 ```Python
-from wildlife_datasets.datasets import StripeSpotter
+from wildlife_datasets.datasets import MacaqueFaces
 from wildlife_tools.data import WildlifeDataset
 import torchvision.transforms as T
 
-metadata = StripeSpotter('datasets/StripeSpotter')
-transform = T.Compose([T.Resize([224, 224]), T.ToTensor()])
+metadata = MacaqueFaces('datasets/MacaqueFaces')
+transform = T.Compose([T.Resize([224, 224]), T.ToTensor(), T.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))])
 dataset = WildlifeDataset(metadata.df, metadata.root, transform=transform)
 ```
 
@@ -140,4 +140,20 @@ Use the cosine similarity in nearest neigbour classifier and get predictions.
 ```Python
 classifier = KnnClassifier(k=1, database_labels=dataset_database.labels_string)
 predictions = classifier(similarity['cosine'])
+accuracy = np.mean(dataset_database.labels_string == predictions)
+```
+
+## Citation
+
+If you like our package, please cite us.
+
+```
+@InProceedings{Cermak_2024_WACV,
+    author    = {\v{C}erm\'ak, Vojt\v{e}ch and Picek, Luk\'a\v{s} and Adam, Luk\'a\v{s} and Papafitsoros, Kostas},
+    title     = {{WildlifeDatasets: An Open-Source Toolkit for Animal Re-Identification}},
+    booktitle = {Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)},
+    month     = {January},
+    year      = {2024},
+    pages     = {5953-5963}
+}
 ```
