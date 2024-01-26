@@ -45,8 +45,9 @@ def get_random_states():
     states["random_rng_state"] = random.getstate()
     states["numpy_rng_state"] = np.random.get_state()
     states["torch_rng_state"] = torch.get_rng_state()
-    states["torch_cuda_rng_state"] = torch.cuda.get_rng_state()
-    states["torch_cuda_rng_state_all"] = torch.cuda.get_rng_state_all()
+    if torch.cuda.is_available():
+        states["torch_cuda_rng_state"] = torch.cuda.get_rng_state()
+        states["torch_cuda_rng_state_all"] = torch.cuda.get_rng_state_all()
     return states
 
 
