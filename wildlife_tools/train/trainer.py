@@ -11,37 +11,41 @@ from tqdm import tqdm
 from wildlife_tools.tools import realize
 
 
-def set_seed(seed=0, device="cuda"):
+def set_seed(seed=0):
     os.environ["PYTHONHASHSEED"] = str(seed)
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
-    if device == "cuda":
-        torch.cuda.manual_seed(seed)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 
-def set_random_states(states, device="cuda"):
-    if states["os_rng_state"]:
+def set_random_states(states):
+    if 'os_rng_state' in states and states["os_rng_state"]:
         os.environ["PYTHONHASHSEED"] = states["os_rng_state"]
-    random.setstate(states["random_rng_state"])
-    np.random.set_state(states["numpy_rng_state"])
-    torch.set_rng_state(states["torch_rng_state"])
-    if device == "cuda":
+    if 'random_rng_state' in states:
+        random.setstate(states["random_rng_state"])
+    if 'numpy_rng_state' in states:
+        np.random.set_state(states["numpy_rng_state"])
+    if 'torch_rng_state' in states:
+        torch.set_rng_state(states["torch_rng_state"])
+    if 'torch_cuda_rng_state' in states:
         torch.cuda.set_rng_state(states["torch_cuda_rng_state"])
+    if 'torch_cuda_rng_state_all' in states:
         torch.cuda.set_rng_state_all(states["torch_cuda_rng_state_all"])
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
+
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 
-def get_random_states(device="cuda"):
+def get_random_states():
     states = {}
     states["os_rng_state"] = os.environ.get("PYTHONHASHSEED")
     states["random_rng_state"] = random.getstate()
     states["numpy_rng_state"] = np.random.get_state()
     states["torch_rng_state"] = torch.get_rng_state()
-    if device == "cuda":
+    if torch.cuda.is_available():
         states["torch_cuda_rng_state"] = torch.cuda.get_rng_state()
         states["torch_cuda_rng_state_all"] = torch.cuda.get_rng_state_all()
     return states
@@ -113,29 +117,25 @@ class BasicTrainer:
 
         return {"train_loss_epoch_avg": np.mean(losses)}
 
-    def save(self, folder, file_name="checkpoint.pth", **kwargs):
+    def save(self, folder, file_name="checkpoint.pth", save_rng=True, **kwargs):
         if not os.path.exists(folder):
             os.makedirs(folder)
-        if self.scheduler:
-            scheduler_state = self.scheduler.state_dict()
-        else:
-            scheduler_state = None
 
-        checkpoint = {
-            "model": self.model.state_dict(),
-            "objective": self.objective.state_dict(),
-            "optimizer": self.optimizer.state_dict(),
-            "epoch": self.epoch,
-            "scheduler": scheduler_state,
-            "rng_states": get_random_states(device=self.device),
-        }
+        checkpoint = {}
+        checkpoint["model"] = self.model.state_dict()
+        checkpoint["objective"] = self.objective.state_dict()
+        checkpoint["optimizer"] = self.optimizer.state_dict()
+        checkpoint["epoch"] = self.epoch
+        if save_rng:
+            checkpoint["rng_states"] = get_random_states()
+        if self.scheduler:
+            checkpoint["scheduler"] = self.scheduler.state_dict()
+
         torch.save(checkpoint, os.path.join(folder, file_name))
 
-    def load(self, path, device="cpu"):
-        checkpoint = torch.load(path, map_location=torch.device(device))
+    def load(self, path, load_rng=True):
+        checkpoint = torch.load(path, map_location=torch.device(self.device))
 
-        if "rng_states" in checkpoint:
-            set_random_states(checkpoint["rng_states"], device=self.device)
         if "model" in checkpoint:
             self.model.load_state_dict(checkpoint["model"])
         if "objective" in checkpoint:
@@ -144,7 +144,9 @@ class BasicTrainer:
             self.optimizer.load_state_dict(checkpoint["optimizer"])
         if "epoch" in checkpoint:
             self.epoch = checkpoint["epoch"]
-        if "scheduler" in checkpoint:
+        if "rng_states" in checkpoint and load_rng:
+            set_random_states(checkpoint["rng_states"])
+        if "scheduler" in checkpoint and self.scheduler:
             self.scheduler.load_state_dict(checkpoint["scheduler"])
 
 

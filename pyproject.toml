@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wildlife-tools"
-version = "0.0.8"
+version = "0.0.9"
 authors = [
   { name="Vojtěch Čermák", email="cermak.vojtech@seznam.cz" },
 ]
@@ -35,7 +35,11 @@ dependencies=[
           'opencv-python>=4.5.5.62',
           'Pillow>=7.1.2',
           'scikit-learn>=1.0.1',
-          'faiss-gpu>=1.7.2',
+          'faiss-gpu ; platform_system != "Windows"',
+          'faiss-cpu ; platform_system == "Windows"',
+          'pycocotools',
+          'tensorboard',
+          'pytorch_metric_learning',
           'transformers>=4.30.2',
           'wildlife-datasets>=0.3.4',
           'kornia>=0.6.12',

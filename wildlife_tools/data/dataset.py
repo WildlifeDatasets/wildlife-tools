@@ -204,8 +204,12 @@ class FeatureDataset:
         data = {
             "features": self.features,
             "metadata": self.metadata,
+            "col_label": self.col_label,
+            "load_label": self.load_label,
         }
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+        dirname = os.path.dirname(path)
+        if dirname and not os.path.exists(dirname):
+            os.makedirs(dirname)
         with open(path, "wb") as file:
             pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
 
