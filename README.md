@@ -9,7 +9,7 @@
 </p>
 
 <div align="center">
-  <img src="resources/logo-transparent.png" alt="Project logo" width="300">
+  <img src="resources/dev/logo-transparent.png" alt="Project logo" width="300">
   <p align="center">A tool-kit for Wildlife Individual Identification that provides a wide variety of pre-trained models for inference and fine-tuning.</p>
   <a href="https://wildlifedatasets.github.io/wildlife-tools/">Documentation</a>
   ·
@@ -26,12 +26,12 @@
 <div align="center">
 <div style="display: flex; justify-content: center">
   <div style="margin-right: 50px;">
-    <img src="resources/megadescriptor-logo.png" alt="Image 1" width="200" style="margin-bottom: 5px;">
+    <img src="resources/dev/megadescriptor-logo.png" alt="Image 1" width="200" style="margin-bottom: 5px;">
     <p><a href="https://huggingface.co/BVRA/MegaDescriptor-L-384">MegaDescriptor</a></p>
   </div>
 
   <div>
-    <img src="resources/datasets-logo.png" alt="Image 2" width="200" style="margin-bottom: 5px;"> <!-- Adjust margin as needed -->
+    <img src="resources/dev/datasets-logo.png" alt="Image 2" width="200" style="margin-bottom: 5px;"> <!-- Adjust margin as needed -->
     <p><a href="https://huggingface.co/BVRA/MegaDescriptor-L-384">Wildlife Datasets</a></p>
   </div>
 </div>
