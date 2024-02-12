@@ -86,7 +86,7 @@ class WildlifeDataset:
             img_path = data[self.col_path]
         img = self.get_image(img_path)
 
-        if self.img_load in ["full_mask", "full_hide", "bbox_mask", "bbox_hide"]:
+        if self.img_load in ["full_mask", "full_hide", "bbox_mask", "bbox_hide", "mask_crop"]:
             if not ("segmentation" in data):
                 raise ValueError(f"{self.img_load} selected but no segmentation found.")
             if type(data["segmentation"]) == str:
@@ -123,6 +123,21 @@ class WildlifeDataset:
                 mask = mask_coco.decode(segmentation).astype("bool")
                 img = Image.fromarray(img * ~mask[..., np.newaxis])
 
+        # Apply mask and crop black boxes
+        elif self.img_load == "mask_crop":
+            if not np.any(pd.isnull(segmentation)):
+                mask = mask_coco.decode(segmentation).astype("bool")
+                img = Image.fromarray(img * mask[..., np.newaxis])
+                y_nonzero, x_nonzero, _ = np.nonzero(img)
+                img = img.crop(
+                    (
+                        np.min(x_nonzero),
+                        np.min(y_nonzero),
+                        np.max(x_nonzero),
+                        np.max(y_nonzero),
+                    )
+                )
+        
         # Crop to bounding box
         elif self.img_load == "bbox":
             if not np.any(pd.isnull(bbox)):
