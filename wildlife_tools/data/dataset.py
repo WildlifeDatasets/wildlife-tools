@@ -108,31 +108,31 @@ class WildlifeDataset:
 
         # Mask background using segmentation mask.
         elif self.img_load == "full_mask":
-            if segmentation is not None:
+            if not pd.isnull(segmentation):
                 mask = mask_coco.decode(segmentation).astype("bool")
                 img = Image.fromarray(img * mask[..., np.newaxis])
 
         # Hide object using segmentation mask
         elif self.img_load == "full_hide":
-            if segmentation is not None:
+            if not pd.isnull(segmentation):
                 mask = mask_coco.decode(segmentation).astype("bool")
                 img = Image.fromarray(img * ~mask[..., np.newaxis])
 
         # Crop to bounding box
         elif self.img_load == "bbox":
-            if bbox is not None:
+            if not pd.isnull(bbox):
                 img = img.crop((bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3]))
 
         # Mask background using segmentation mask and crop to bounding box.
         elif self.img_load == "bbox_mask":
-            if (segmentation is not None) and (bbox is not None):
+            if (not pd.isnull(segmentation)) and (not pd.isnull(bbox)):
                 mask = mask_coco.decode(segmentation).astype("bool")
                 img = Image.fromarray(img * mask[..., np.newaxis])
                 img = img.crop((bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3]))
 
         # Hide object using segmentation mask and crop to bounding box.
         elif self.img_load == "bbox_hide":
-            if (segmentation is not None) and (bbox is not None):
+            if (not pd.isnull(segmentation)) and (not pd.isnull(bbox)):
                 mask = mask_coco.decode(segmentation).astype("bool")
                 img = Image.fromarray(img * ~mask[..., np.newaxis])
                 img = img.crop((bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3]))
