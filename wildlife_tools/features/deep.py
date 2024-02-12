@@ -49,7 +49,10 @@ class DeepFeatures(FeatureExtractor):
             with torch.no_grad():
                 output = self.model(image.to(self.device))
                 outputs.append(output.cpu())
+
+        self.model = self.model.to('cpu')
         return torch.cat(outputs).numpy()
+
 
     @classmethod
     def from_config(cls, config):
