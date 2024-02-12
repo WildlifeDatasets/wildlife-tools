@@ -38,11 +38,13 @@ class MatchDescriptors(Similarity):
         descriptor_dim: int,
         thresholds: tuple[float] = (0.5,),
         device: str = "cpu",
+        silent: bool = False,
     ):
 
         self.descriptor_dim = descriptor_dim
         self.thresholds = thresholds
         self.device = device
+        self.silent = silent
 
     def __call__(self, query, database):
         iterator = itertools.product(enumerate(query), enumerate(database))
@@ -53,7 +55,9 @@ class MatchDescriptors(Similarity):
         }
 
         index = get_faiss_index(d=self.descriptor_dim, device=self.device)
-        for pair in tqdm(iterator, total=iterator_size, mininterval=1, ncols=100):
+        for pair in tqdm(
+            iterator, total=iterator_size, mininterval=1, ncols=100, disable=self.silent
+        ):
             (q_idx, q_data), (d_idx, d_data) = pair
 
             if (q_data is None) or (d_data is None):
