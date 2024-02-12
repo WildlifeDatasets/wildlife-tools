@@ -93,6 +93,11 @@ class WildlifeDataset:
                 segmentation = eval(data["segmentation"])
             else:
                 segmentation = data["segmentation"]
+            if isinstance(segmentation, list) or isinstance(segmentation, np.ndarray):
+                # Convert polygon to RLE
+                w, h = img.size
+                rles = mask_coco.frPyObjects([segmentation], h, w)
+                segmentation = mask_coco.merge(rles)
 
         if self.img_load in ["bbox", "bbox_mask", "bbox_hide"]:
             if not ("bbox" in data):
