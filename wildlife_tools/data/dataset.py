@@ -99,7 +99,7 @@ class WildlifeDataset:
                 rles = mask_coco.frPyObjects([segmentation], h, w)
                 segmentation = mask_coco.merge(rles)
 
-        if self.img_load in ["bbox", "bbox_mask", "bbox_hide"]:
+        if self.img_load in ["bbox"]:
             if not ("bbox" in data):
                 raise ValueError(f"{self.img_load} selected but no bbox found.")
             if type(data["bbox"]) == str:
@@ -123,9 +123,14 @@ class WildlifeDataset:
                 mask = mask_coco.decode(segmentation).astype("bool")
                 img = Image.fromarray(img * ~mask[..., np.newaxis])
 
-        # Apply mask and crop black boxes
-        elif self.img_load == "mask_crop":
-            if not np.any(pd.isnull(segmentation)):
+        # Crop to bounding box
+        elif self.img_load == "bbox":
+            if not np.any(pd.isnull(bbox)):
+                img = img.crop((bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3]))
+
+        # Mask background using segmentation mask and crop to bounding box.
+        elif self.img_load == "bbox_mask":
+            if (not np.any(pd.isnull(segmentation))):
                 mask = mask_coco.decode(segmentation).astype("bool")
                 img = Image.fromarray(img * mask[..., np.newaxis])
                 y_nonzero, x_nonzero, _ = np.nonzero(img)
@@ -137,25 +142,21 @@ class WildlifeDataset:
                         np.max(y_nonzero),
                     )
                 )
-        
-        # Crop to bounding box
-        elif self.img_load == "bbox":
-            if not np.any(pd.isnull(bbox)):
-                img = img.crop((bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3]))
-
-        # Mask background using segmentation mask and crop to bounding box.
-        elif self.img_load == "bbox_mask":
-            if (not np.any(pd.isnull(segmentation))) and (not np.any(pd.isnull(bbox))):
-                mask = mask_coco.decode(segmentation).astype("bool")
-                img = Image.fromarray(img * mask[..., np.newaxis])
-                img = img.crop((bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3]))
 
         # Hide object using segmentation mask and crop to bounding box.
         elif self.img_load == "bbox_hide":
-            if (not np.any(pd.isnull(segmentation))) and (not np.any(pd.isnull(bbox))):
+            if (not np.any(pd.isnull(segmentation))):
                 mask = mask_coco.decode(segmentation).astype("bool")
                 img = Image.fromarray(img * ~mask[..., np.newaxis])
-                img = img.crop((bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3]))
+                y_nonzero, x_nonzero, _ = np.nonzero(img)
+                img = img.crop(
+                    (
+                        np.min(x_nonzero),
+                        np.min(y_nonzero),
+                        np.max(x_nonzero),
+                        np.max(y_nonzero),
+                    )
+                )
 
         # Crop black background around images
         elif self.img_load == "crop_black":
