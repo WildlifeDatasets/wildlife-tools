@@ -94,10 +94,14 @@ class WildlifeDataset:
             else:
                 segmentation = data["segmentation"]
             if isinstance(segmentation, list) or isinstance(segmentation, np.ndarray):
-                # Convert polygon to RLE
+                # Convert polygon to compressed RLE
                 w, h = img.size
                 rles = mask_coco.frPyObjects([segmentation], h, w)
                 segmentation = mask_coco.merge(rles)
+            if isinstance(segmentation, dict) and (isinstance(segmentation['counts'], list) or isinstance(segmentation['counts'], np.ndarray)):            
+                # Convert uncompressed RLE to compressed RLE
+                h, w = segmentation['size']
+                segmentation = mask_coco.frPyObjects(segmentation, h, w)
 
         if self.img_load in ["bbox"]:
             if not ("bbox" in data):
