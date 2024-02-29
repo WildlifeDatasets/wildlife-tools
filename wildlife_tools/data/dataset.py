@@ -86,15 +86,24 @@ class WildlifeDataset:
             img_path = data[self.col_path]
         img = self.get_image(img_path)
 
-        if self.img_load in ["full_mask", "full_hide", "bbox_mask", "bbox_hide"]:
+        if self.img_load in ["full_mask", "full_hide", "bbox_mask", "bbox_hide", "mask_crop"]:
             if not ("segmentation" in data):
                 raise ValueError(f"{self.img_load} selected but no segmentation found.")
             if type(data["segmentation"]) == str:
                 segmentation = eval(data["segmentation"])
             else:
                 segmentation = data["segmentation"]
+            if isinstance(segmentation, list) or isinstance(segmentation, np.ndarray):
+                # Convert polygon to compressed RLE
+                w, h = img.size
+                rles = mask_coco.frPyObjects([segmentation], h, w)
+                segmentation = mask_coco.merge(rles)
+            if isinstance(segmentation, dict) and (isinstance(segmentation['counts'], list) or isinstance(segmentation['counts'], np.ndarray)):            
+                # Convert uncompressed RLE to compressed RLE
+                h, w = segmentation['size']
+                segmentation = mask_coco.frPyObjects(segmentation, h, w)
 
-        if self.img_load in ["bbox", "bbox_mask", "bbox_hide"]:
+        if self.img_load in ["bbox"]:
             if not ("bbox" in data):
                 raise ValueError(f"{self.img_load} selected but no bbox found.")
             if type(data["bbox"]) == str:
@@ -108,34 +117,50 @@ class WildlifeDataset:
 
         # Mask background using segmentation mask.
         elif self.img_load == "full_mask":
-            if not pd.isnull(segmentation):
+            if not np.any(pd.isnull(segmentation)):
                 mask = mask_coco.decode(segmentation).astype("bool")
                 img = Image.fromarray(img * mask[..., np.newaxis])
 
         # Hide object using segmentation mask
         elif self.img_load == "full_hide":
-            if not pd.isnull(segmentation):
+            if not np.any(pd.isnull(segmentation)):
                 mask = mask_coco.decode(segmentation).astype("bool")
                 img = Image.fromarray(img * ~mask[..., np.newaxis])
 
         # Crop to bounding box
         elif self.img_load == "bbox":
-            if not pd.isnull(bbox):
+            if not np.any(pd.isnull(bbox)):
                 img = img.crop((bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3]))
 
         # Mask background using segmentation mask and crop to bounding box.
         elif self.img_load == "bbox_mask":
-            if (not pd.isnull(segmentation)) and (not pd.isnull(bbox)):
+            if (not np.any(pd.isnull(segmentation))):
                 mask = mask_coco.decode(segmentation).astype("bool")
                 img = Image.fromarray(img * mask[..., np.newaxis])
-                img = img.crop((bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3]))
+                y_nonzero, x_nonzero, _ = np.nonzero(img)
+                img = img.crop(
+                    (
+                        np.min(x_nonzero),
+                        np.min(y_nonzero),
+                        np.max(x_nonzero),
+                        np.max(y_nonzero),
+                    )
+                )
 
         # Hide object using segmentation mask and crop to bounding box.
         elif self.img_load == "bbox_hide":
-            if (not pd.isnull(segmentation)) and (not pd.isnull(bbox)):
+            if (not np.any(pd.isnull(segmentation))):
                 mask = mask_coco.decode(segmentation).astype("bool")
                 img = Image.fromarray(img * ~mask[..., np.newaxis])
-                img = img.crop((bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3]))
+                y_nonzero, x_nonzero, _ = np.nonzero(img)
+                img = img.crop(
+                    (
+                        np.min(x_nonzero),
+                        np.min(y_nonzero),
+                        np.max(x_nonzero),
+                        np.max(y_nonzero),
+                    )
+                )
 
         # Crop black background around images
         elif self.img_load == "crop_black":
