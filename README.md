@@ -8,9 +8,12 @@
   <a href="https://github.com/WildlifeDatasets/wildlife-tools/blob/main/LICENSE"><img src="https://img.shields.io/github/license/WildlifeDatasets/wildlife-tools" alt="License"></a>
 </p>
 
+<p align="center">
+<img src="docs/resources/tools-logo.png" alt="Wildlife tools" width="300">
+</p>
+
 <div align="center">
-  <img src="resources/logo-transparent.png" alt="Project logo" width="300">
-  <p align="center">A tool-kit for Wildlife Individual Identification that provides a wide variety of pre-trained models for inference and fine-tuning.</p>
+  <p align="center">Pipeline for wildlife re-identification including dataset zoo, training tools and trained models. Usage includes classifying new images in labelled databases and clustering individuals in unlabelled databases.</p>
   <a href="https://wildlifedatasets.github.io/wildlife-tools/">Documentation</a>
   ·
   <a href="https://github.com/WildlifeDatasets/wildlife-tools/issues/new?assignees=aerodynamic-sauce-pan&labels=bug&projects=&template=bug_report.md&title=%5BBUG%5D">Report Bug</a>
@@ -18,27 +21,13 @@
   <a href="https://github.com/WildlifeDatasets/wildlife-tools/issues/new?assignees=aerodynamic-sauce-pan&labels=enhancement&projects=&template=enhancement.md&title=%5BEnhancement%5D">Request Feature</a>
 </div>
 
-</br >
+</br>
 
-## Our other projects
+| <a href="https://github.com/WildlifeDatasets/wildlife-datasets"><img src="docs/resources/datasets-logo.png" alt="Wildlife datasets" width="200"></a>  | <a href="https://huggingface.co/BVRA/MegaDescriptor-L-384"><img src="docs/resources/megadescriptor-logo.png" alt="MegaDescriptor" width="200"></a> | <a href="https://github.com/WildlifeDatasets/wildlife-tools"><img src="docs/resources/tools-logo.png" alt="Wildlife tools" width="200"></a> |
+|:--------------:|:-----------:|:------------:|
+| Datasets for identification of individual animals | Trained model for individual re&#x2011;identification  | Tools for training re&#x2011;identification models |
 
-
-<div align="center">
-<div style="display: flex; justify-content: center">
-  <div style="margin-right: 50px;">
-    <img src="resources/megadescriptor-logo.png" alt="Image 1" width="200" style="margin-bottom: 5px;">
-    <p><a href="https://huggingface.co/BVRA/MegaDescriptor-L-384">MegaDescriptor</a></p>
-  </div>
-
-  <div>
-    <img src="resources/datasets-logo.png" alt="Image 2" width="200" style="margin-bottom: 5px;"> <!-- Adjust margin as needed -->
-    <p><a href="https://huggingface.co/BVRA/MegaDescriptor-L-384">Wildlife Datasets</a></p>
-  </div>
-</div>
-</div>
-
-
-<h1></h1>
+</br>
 
 # Introduction
 The `wildlife-tools` library offers a simple interface for various tasks in the Wildlife Re-Identification domain. It covers use cases such as training, feature extraction, similarity calculation, image retrieval, and classification. It complements the `wildlife-datasets` library, which acts as dataset repository. All datasets there can be used in combination with `WildlifeDataset` component, which serves for loading extracting images and image tensors other tasks. 
@@ -54,7 +43,6 @@ To install `wildlife-tools`, you can build it from scratch or use pre-build Pypi
 
 ```script
 pip install wildlife-tools
-
 ```
 
 ### Building from scratch
@@ -116,6 +104,7 @@ dataset_query = WildlifeDataset(metadata.df.iloc[:100,:], metadata.root, transfo
 Extract features using MegaDescriptor Tiny, downloaded from HuggingFace hub.
 
 ```Python
+import timm
 from wildlife_tools.features import DeepFeatures
 
 name = 'hf-hub:BVRA/MegaDescriptor-T-224'
@@ -138,6 +127,9 @@ similarity = similarity_function(query, database)
 Use the cosine similarity in nearest neigbour classifier and get predictions.
 
 ```Python
+import numpy as np
+from wildlife_tools.inference import KnnClassifier
+
 classifier = KnnClassifier(k=1, database_labels=dataset_database.labels_string)
 predictions = classifier(similarity['cosine'])
 accuracy = np.mean(dataset_database.labels_string == predictions)
