@@ -3,6 +3,7 @@ import pickle
 
 
 class Similarity:
+
     def __call__(self, query, database):
         raise NotImplementedError()
 

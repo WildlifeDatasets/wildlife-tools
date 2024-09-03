@@ -1,8 +1,6 @@
 import os
 from copy import deepcopy
-
 from torch.utils.tensorboard import SummaryWriter
-
 from wildlife_tools.tools import realize
 
 
@@ -20,9 +18,10 @@ class EpochCheckpoint:
 
 
 class EpochLog:
-    def __init__(self, folder="."):
-        self.folder = folder
-        self.writer = SummaryWriter(log_dir=folder)
+    def __init__(self, folder=".", writer=None):
+        if writer is None:
+            writer = SummaryWriter(log_dir=folder)
+        self.writer = writer
 
     def __call__(self, trainer, epoch_data: dict[str, int], **kwargs):
         if trainer.scheduler is not None:
