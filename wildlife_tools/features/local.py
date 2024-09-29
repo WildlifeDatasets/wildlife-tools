@@ -12,40 +12,42 @@ from .gluefactory_fix import extract_single_image_fix
 
 class GlueFactoryExtractor(FeatureExtractor):
     '''
-    
-    Arguments common for all gluefactory extractors:
+    Args:
+        num_workers: Number of workers used for data loading.
+        device: Select between cuda and cpu devices.
+        max_num_keypoints: Maximum number of keypoints to return.
+        detection_threshold: Threshold for keypoints detection (use 0.0 if force_num_keypoints = True).
+        force_num_keypoints: Force to return exactly max_num_keypoints keypoints.
 
-    device: - device to run the model.
-    max_num_keypoints - maximum number of keypoints to return
-    detection_threshold - threshold for keypoints detection (use 0.0 if force_num_keypoints = True)
-    force_num_keypoints - force to return exactly max_num_keypoints keypoints
+    Returns:
+        An array with a shape of `n_input` x `dim_embedding`.
 
-    Gluefactory extractors requires with 3 channel RBG tensors scaled to [0, 1].
-
-    Sample dataset transform:
-
-    transform = T.Compose([
-        T.Resize([224, 224]),
-        T.ToTensor(),
-    ])
+    Note:
+        Gluefactory extractors requires with 3 channel RBG tensors scaled to [0, 1]. e.g:
+        transform = T.Compose([
+            T.Resize([224, 224]),
+            T.ToTensor(),
+        ])
 
     '''
     def __init__(
         self,
         config: dict,
         device: None | str = None,
+        num_workers: int = 1,
     ):
         config = OmegaConf.create(config)
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = get_model(config.name)(config)
         self.device = device
+        self.num_workers = num_workers
 
     def __call__(self, dataset: WildlifeDataset):
         features = []
         loader = torch.utils.data.DataLoader(
             dataset,
-            num_workers=1,
+            num_workers=self.num_workers,
             batch_size=1,
             shuffle=False,
         )

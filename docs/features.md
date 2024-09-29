@@ -44,13 +44,13 @@ features = extractor(dataset)
 
 
 ### Reference
-::: features.sift.SIFTFeatures
+<!-- ::: features.sift.SIFTFeatures
     options:
       show_symbol_type_heading: false
       show_bases: false
       show_root_toc_entry: false
 
-
+ -->
 
 ## Data to memory
 

@@ -50,11 +50,11 @@ sim = similarity(query, database)
 
 
 ### Reference
-::: similarity.descriptors.MatchDescriptors
+<!-- ::: similarity.descriptors.MatchDescriptors
     options:
       show_symbol_type_heading: false
       show_bases: false
-      show_root_toc_entry: false
+      show_root_toc_entry: false -->
 
 
 
@@ -67,8 +67,8 @@ Output is dictionary with key for each confidence threshold. Values contains cor
 
 
 ### Reference
-::: similarity.loftr.MatchLOFTR
+<!-- ::: similarity.loftr.MatchLOFTR
     options:
       show_symbol_type_heading: false
       show_bases: false
-      show_root_toc_entry: false
+      show_root_toc_entry: false -->

@@ -3,8 +3,6 @@ import numpy as np
 import pandas as pd
 import torch
 
-from wildlife_tools.similarity import CosineSimilarity
-
 
 class KnnClassifier:
     """
@@ -82,7 +80,7 @@ class TopkClassifier:
     Predict top k query labels given nearest matches in the database.
     """
 
-    def __init__(self, database_labels: np.array, k: int = 10, return_all=False):
+    def __init__(self, database_labels: np.array, k: int = 10, return_all: bool = False):
         """
         Initializes the TopkClassifier with database labels and parameters.
 
@@ -141,29 +139,3 @@ class TopkClassifier:
             return preds, scores, idx
         else:
             return preds
-
-
-
-
-class KnnMatcher:
-    """
-    Find nearest match to query in existing database of features.
-    Combines CosineSimilarity and KnnClassifier.
-    """
-
-    def __init__(self, database, k=1):
-        self.similarity = CosineSimilarity()
-        self.database = database
-        self.classifier = KnnClassifier(
-            database_labels=self.database.labels_string, k=k
-        )
-
-    def __call__(self, query):
-        if isinstance(query, list):
-            query = np.concatenate(query)
-
-        if not isinstance(query, np.ndarray):
-            raise ValueError("Query should be array or list of features.")
-
-        sim_matrix = self.similarity(query, self.database.features)["cosine"]
-        return self.classifier(sim_matrix)

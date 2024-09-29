@@ -1,10 +1,10 @@
 # Wildlife dataset
 
-WildlifeDataset is a class for creating pytorch style datasets by integration of datasets provided by wildlife-datasets library. It has implemented \_\_len\_\_ and \_\_getattr\_\_ methods, which allows using pytorch dataloaders for training and inference.
+WildlifeDataset is a class for creating Pytorch style image datasets and allows integration of datasets provided by `wildlife-datasets` library. It has implemented `__len__` and `__getattr__` methods, which allows using standard Pytorch dataloaders for training and inference.
 
 
 ## Metadata dataframe
-Integral part of WildlifeDataset is metadata dataframe, which includes all information about images in the dataset.
+Key part of WildlifeDataset is metadata dataframe, which includes all information about images in the dataset.
 Typical dataset from the wildlife-dataset have following metadata table:
 
 

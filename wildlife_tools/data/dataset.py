@@ -1,28 +1,21 @@
-
 import json
 import os
 import pickle
 from typing import Callable
-import itertools
-
-import torch
 import cv2
 import numpy as np
 import pandas as pd
 import pycocotools.mask as mask_coco
 from PIL import Image
-
-from wildlife_tools.tools import realize
-
+import torch
 
 class WildlifeDataset:
     """
-    PyTorch-style dataset for a wildlife datasets
+    PyTorch-style dataset for a image datasets
 
     Args:
         metadata: A pandas dataframe containing image metadata.
-        root: Root directory if paths in metadata are relative. If None, paths in metadata are used.
-        split: A function that splits metadata, e.g., instance of data.Split.
+        root: Root directory if paths in metadata are relative. If None, absolute paths in metadata are used.
         transform: A function that takes in an image and returns its transformed version.
         img_load: Method to load images.
             Options: 'full', 'full_mask', 'full_hide', 'bbox', 'bbox_mask', 'bbox_hide',
@@ -42,17 +35,12 @@ class WildlifeDataset:
         self,
         metadata: pd.DataFrame,
         root: str | None = None,
-        split: Callable | None = None,
         transform: Callable | None = None,
         img_load: str = "full",
         col_path: str = "path",
         col_label: str = "identity",
         load_label: bool = True,
     ):
-        self.split = split
-        if self.split:
-            metadata = self.split(metadata)
-
         self.metadata = metadata.reset_index(drop=True)
         self.root = root
         self.transform = transform
@@ -188,21 +176,31 @@ class WildlifeDataset:
         else:
             return img
 
-    @classmethod
-    def from_config(cls, config):
-        config["split"] = realize(config.get("split"))
-        config["transform"] = realize(config.get("transform"))
-        config["metadata"] = pd.read_csv(config["metadata"], index_col=False)
-        return cls(**config)
 
 
 class FeatureDataset:
+    """
+    PyTorch-style dataset for a extracted features. Couples features with metadata.
+
+    Args:
+        features: list, np.array or tensor of features. Index of features should match with metadata.
+        metadata: A pandas dataframe containing features metadata.
+        col_label: Column name in the metadata containing class labels.
+        load_label: If False, \_\_getitem\_\_ returns only image instead of (image, label) tuple.
+
+    Attributes:
+        labels np.array : An integers array of ordinal encoding of labels.
+        labels_string np.array: A strings array of original labels.
+        labels_map dict: A mapping between labels and their ordinal encoding.
+        num_classes int: Return the number of unique classes in the dataset.
+    """
+
     def __init__(
         self,
-        features,
-        metadata,
-        col_label="identity",
-        load_label=True,
+        features: list | np.array | torch.Tensor,
+        metadata: pd.DataFrame,
+        col_label: str = "identity",
+        load_label: bool = True,
     ):
 
         if len(features) != len(metadata):

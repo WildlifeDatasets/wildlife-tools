@@ -5,6 +5,8 @@ from wildlife_tools.tools import realize
 
 
 class EpochCheckpoint:
+    """Save trainer checkpoint after epoch."""
+
     def __init__(self, folder=".", save_step=1):
         self.folder = folder
         self.save_step = save_step
@@ -18,6 +20,8 @@ class EpochCheckpoint:
 
 
 class EpochLog:
+    """Log epoch training data into tensorboad."""
+
     def __init__(self, folder=".", writer=None):
         if writer is None:
             writer = SummaryWriter(log_dir=folder)
