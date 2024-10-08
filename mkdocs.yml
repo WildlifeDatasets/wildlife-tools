@@ -27,6 +27,9 @@ nav:
   - Wildlife Dataset: wildlife_dataset.md
   - Train: training.md
   - Feature Extraction: features.md
-  - Similarity: similarity.md
+  - Similarity:
+    - Cosine Similarity: sim_cosine.md
+    - Local matching score: sim_local.md
+    - WildFusion: sim_wildfusion.md
   - Inference: inference.md
   - Baseline Results: baseline.md

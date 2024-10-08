@@ -14,7 +14,7 @@ This module is concerned with making predictions on unseen data, using nearest n
 ## KnnMatcher
 
 ### Reference
-::: inference.classifier.KnnMatcher
+::: inference.classifier.TopkClassifier
     options:
       show_bases: false
       show_root_toc_entry: false

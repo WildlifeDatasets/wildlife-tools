@@ -7,18 +7,21 @@ from wildlife_tools.data import FeatureDataset
 
 
 class CosineSimilarity(Similarity):
-    """
-    Calculates cosine similarity, equivalently to `sklearn.metrics.pairwise.cosine_similarity`
+    ''' Cosine similarity between query and database feature datasets. '''
 
-    Args:
-        query (FeatureDataset): Query dataset of deep features.
-        database (FeatureDataset): Database dataset of deep features.
+    def __call__(self, query: FeatureDataset, database: FeatureDataset, **kwargs) -> np.ndarray:
+        """
+        Calculates cosine similarity, equivalently to `sklearn.metrics.pairwise.cosine_similarity`
 
-    Returns:
-        dict: dictionary with `cosine` key. Value is 2D array with cosine similarity.
+        Args:
+            query (FeatureDataset): Query dataset of deep features.
+            database (FeatureDataset): Database dataset of deep features.
 
-    """
-    def __call__(self, query: FeatureDataset, database: FeatureDataset, pairs: tuple | None = None) -> np.ndarray:
+        Returns:
+            similarity (np.array): 2D numpy array with cosine similarity.
+
+        """
+
         return self.cosine_similarity(query.features, database.features)
 
 

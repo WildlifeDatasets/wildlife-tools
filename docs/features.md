@@ -29,7 +29,7 @@ features = extractor(dataset)
 
 
 
-## SIFT features
+## Local descriptors
 The `SIFTFeatures` extractor retrieves a set of SIFT descriptors for each provided image. The output is a list with a length of `n_inputs`, containing arrays. These arrays are 2D with a shape of `n_descriptors` x `128`, where the value of `n_descriptors` depends on the number of SIFT descriptors extracted for the specific image. If one or less descriptors are extracted, the value is None.  The SIFT implementation from OpenCV is used.
 
 ### Example
@@ -42,9 +42,52 @@ extractor = SIFTFeatures()
 features = extractor(dataset)
 ```
 
+## DISK
 
 ### Reference
-<!-- ::: features.sift.SIFTFeatures
+::: features.local.DiskExtractor
+    options:
+      show_symbol_type_heading: false
+      show_bases: false
+      show_root_toc_entry: false
+
+
+
+## SIFT
+
+### Reference
+::: features.local.SiftExtractor
+    options:
+      show_symbol_type_heading: false
+      show_bases: false
+      show_root_toc_entry: false
+
+
+## Superpoint
+
+### Reference
+::: features.local.SuperPointExtractor
+    options:
+      show_symbol_type_heading: false
+      show_bases: false
+      show_root_toc_entry: false
+
+
+
+## SIFT
+
+### Reference
+::: features.local.SiftExtractor
+    options:
+      show_symbol_type_heading: false
+      show_bases: false
+      show_root_toc_entry: false
+
+
+## Superpoint
+
+### Reference
+::: features.local.SuperPointExtractor
     options:
       show_symbol_type_heading: false
       show_bases: false
