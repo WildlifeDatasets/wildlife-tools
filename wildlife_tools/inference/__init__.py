@@ -1,1 +1,1 @@
-from .classifier import KnnClassifier, TopkClassifier, KnnMatcher
+from .classifier import KnnClassifier, TopkClassifier

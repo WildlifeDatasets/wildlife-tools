@@ -197,7 +197,7 @@ class FeatureDataset:
 
     def __init__(
         self,
-        features: list | np.array | torch.Tensor,
+        features: list,
         metadata: pd.DataFrame,
         col_label: str = "identity",
         load_label: bool = True,
