@@ -34,6 +34,17 @@ The `wildlife-tools` library offers a simple interface for various tasks in the 
 
 More information can be found in [Documentation](https://wildlifedatasets.github.io/wildlife-tools/)
 
+## What's New - v1.0.0
+Here’s a summary of recent updates and changes.
+
+
+- **Expanded Functionality:** Local feature matching is done using [gluefactory](https://github.com/cvg/glue-factory) 
+    - Feature extraction methods: SuperPoint, ALIKED, DISK, SIFT features
+    - Matching method: LightGlue, More efficient LoFTR
+- **New Feature:** Introduced WildFusion, calibrated score fusion for high-accuracy animal reidentification. Added calibration methods.
+- **Bug Fixes:** Resolved issues with knn and ranking inference methods and many more.
+
+
 ## Installation
 
 To install `wildlife-tools`, you can build it from scratch or use pre-build Pypi package.

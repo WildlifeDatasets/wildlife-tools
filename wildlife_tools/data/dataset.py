@@ -9,9 +9,83 @@ import pycocotools.mask as mask_coco
 from PIL import Image
 import torch
 
-class WildlifeDataset:
+
+class ImageDataset:
     """
     PyTorch-style dataset for a image datasets
+
+    Args:
+        metadata: A pandas dataframe containing image metadata.
+        root: Root directory if paths in metadata are relative. If None, absolute paths in metadata are used.
+        transform: A function that takes in an image and returns its transformed version.
+        col_path: Column name in the metadata containing image file paths.
+        col_label: Column name in the metadata containing class labels.
+        load_label: If False, \_\_getitem\_\_ returns only image instead of (image, label) tuple.
+
+    Attributes:
+        labels np.array : An integers array of ordinal encoding of labels.
+        labels_string np.array: A strings array of original labels.
+        labels_map dict: A mapping between labels and their ordinal encoding.
+        num_classes int: Return the number of unique classes in the dataset.
+    """
+
+    def __init__(
+        self,
+        metadata: pd.DataFrame,
+        root: str | None = None,
+        transform: Callable | None = None,
+        col_path: str = "path",
+        col_label: str = "identity",
+        load_label: bool = True,
+    ):
+        self.metadata = metadata.reset_index(drop=True)
+        self.root = root
+        self.transform = transform
+        self.col_path = col_path
+        self.col_label = col_label
+        self.load_label = load_label
+        self.labels, self.labels_map = pd.factorize(
+            self.metadata[self.col_label].values
+        )
+
+    @property
+    def labels_string(self):
+        return self.metadata[self.col_label].astype(str).values
+
+    @property
+    def num_classes(self):
+        return len(self.labels_map)
+
+    def __len__(self):
+        return len(self.metadata)
+
+    def get_image(self, path):
+        img = cv2.imread(path)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = Image.fromarray(img)
+        return img
+
+    def __getitem__(self, idx):
+        data = self.metadata.iloc[idx]
+        if self.root:
+            img_path = os.path.join(self.root, data[self.col_path])
+        else:
+            img_path = data[self.col_path]
+        img = self.get_image(img_path)
+
+        if self.transform:
+            img = self.transform(img)
+
+        if self.load_label:
+            return img, self.labels[idx]
+        else:
+            return img
+
+
+
+class WildlifeDataset(ImageDataset):
+    """
+    PyTorch-style dataset for a datasets from wildlife-datasets library.
 
     Args:
         metadata: A pandas dataframe containing image metadata.
@@ -51,23 +125,6 @@ class WildlifeDataset:
         self.labels, self.labels_map = pd.factorize(
             self.metadata[self.col_label].values
         )
-
-    @property
-    def labels_string(self):
-        return self.metadata[self.col_label].astype(str).values
-
-    @property
-    def num_classes(self):
-        return len(self.labels_map)
-
-    def __len__(self):
-        return len(self.metadata)
-
-    def get_image(self, path):
-        img = cv2.imread(path)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img = Image.fromarray(img)
-        return img
 
     def __getitem__(self, idx):
         data = self.metadata.iloc[idx]

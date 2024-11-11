@@ -12,8 +12,6 @@ class KnnClassifier:
 
     def __init__(self, database_labels: np.array, k: int = 1, return_scores=False):
         """
-        Initializes the KnnClassifier with database labels and parameters.
-
         Args:
             database_labels (np.array): Array containing the labels of the database.
             k (int): The number of nearest neighbors to consider.
@@ -31,12 +29,16 @@ class KnnClassifier:
         Args:
             similarity: A 2D similarity matrix with `n_query` x `n_database` shape.
 
-        Returns:            
+        Returns:
             If `return_scores` is False:
+
                 - preds: Prediction for each query.
+
             If `return_scores` is True, tuple of two arrays:
+
                 - preds: Prediction for each query.
                 - scores: The similarity scores corresponding to the predictions (mean for k > 1).
+
         """
 
         # Get ranked predictions and scores.
@@ -82,8 +84,6 @@ class TopkClassifier:
 
     def __init__(self, database_labels: np.array, k: int = 10, return_all: bool = False):
         """
-        Initializes the TopkClassifier with database labels and parameters.
-
         Args:
             database_labels (np.array): Array containing the labels of the database.
             k (int): The number of top predictions to return.
@@ -103,8 +103,11 @@ class TopkClassifier:
 
         Returns:
             If `return_all` is False, single 2D array of shape `n_query` x `k`
+
                 - preds: The top k predicted labels for each query.
+
             If `return_all` is True, tuple of three 2D arrays of shape `n_query` x `k`:
+
                 - preds: The top k predicted labels for each query.
                 - scores: The similarity scores corresponding to the top k predictions.
                 - idx: The indices of the database entries corresponding to the top k predictions.

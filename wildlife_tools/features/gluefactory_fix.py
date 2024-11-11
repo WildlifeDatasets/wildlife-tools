@@ -1,8 +1,9 @@
-'''
+"""
 Fix SIFT extractor bugs in Gluefactory.
-- Fixes forcing number of keypoints - Pending PR https://github.com/cvg/glue-factory/pull/50 
+
+- Fixes forcing number of keypoints - Pending PR https://github.com/cvg/glue-factory/pull/50
 - Fixes situation with no keypoint and descriptors for OpenCV SIFT.
-'''
+"""
 
 import numpy as np
 import torch
@@ -27,9 +28,7 @@ def extract_single_image_fix(self, image: torch.Tensor):
             detections, scores, descriptors = self.sift.extract(image_np)
         keypoints = detections[:, :2]  # Keep only (x, y).
         scales, angles = detections[:, -2:].T
-        if scores is not None and (
-            self.conf.backend == "pycolmap_cpu" or not pycolmap.has_cuda
-        ):
+        if scores is not None and (self.conf.backend == "pycolmap_cpu" or not pycolmap.has_cuda):
             # Set the scores as a combination of abs. response and scale.
             scores = np.abs(scores) * scales
     elif self.conf.backend == "opencv":
@@ -55,9 +54,7 @@ def extract_single_image_fix(self, image: torch.Tensor):
 
     # sometimes pycolmap returns points outside the image. We remove them
     if self.conf.backend.startswith("pycolmap"):
-        is_inside = (
-            pred["keypoints"] + 0.5 < np.array([image_np.shape[-2:][::-1]])
-        ).all(-1)
+        is_inside = (pred["keypoints"] + 0.5 < np.array([image_np.shape[-2:][::-1]])).all(-1)
         pred = {k: v[is_inside] for k, v in pred.items()}
 
     if self.conf.nms_radius is not None:
@@ -90,9 +87,7 @@ def extract_single_image_fix(self, image: torch.Tensor):
         )
         pred["scales"] = pad_to_length(pred["scales"], num_points, -1, mode="zeros")
         pred["oris"] = pad_to_length(pred["oris"], num_points, -1, mode="zeros")
-        pred["descriptors"] = pad_to_length(
-            pred["descriptors"], num_points, -2, mode="zeros"
-        )
+        pred["descriptors"] = pad_to_length(pred["descriptors"], num_points, -2, mode="zeros")
         if pred["keypoint_scores"] is not None:
             pred["keypoint_scores"] = pad_to_length(
                 pred["keypoint_scores"], num_points, -1, mode="zeros"
