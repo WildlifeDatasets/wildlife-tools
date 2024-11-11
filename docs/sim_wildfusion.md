@@ -1,31 +1,24 @@
 # WildFusion - calibrated score fusion
 
-`WildFusion` offers a way to combine any set of similarity scores using the mean of calibrated scores. For example, cosine similarity between deep features outputs scores in the [-1, 1] interval, while scores obtained using local feature matching range from 0 to infinity. To combine them, `WildFusion` uses calibration to convert any raw similarity score into a probability that two images represent the same identity.
+The `similarity.wildfusion` module provides a tools to combine any set of similarity scores using score calibration. For example, cosine similarity between deep features outputs scores in the [-1, 1] interval, while scores obtained using local feature matching range from 0 to infinity. To combine them, calibration is used to convert any raw similarity score into a probability that two images represent the same identity.
+
+This functionality is implemented using `WildFusion` class, which uses multiple `SimilarityPipeline` objects as building blocks, which implements pipeline of matching and calculating calibrated similarity scores. In addition, `WildFusion` class allows significant speeds up of calculation of matching scores.
 
 
-## SimilarityPipeline
-`SimilarityPipeline` serves as a building block for using similarity scores in `WildFusion`. 
-
-Specifically, given two image datasets (query and database), it performs:
-
-1. Apply image transforms.
-2. Extract features for both datasets.
-3. Compute similarity scores between query and database images.
-4. Calibrate similarity scores.
-
-### Reference
-::: similarity.wildfusion.SimilarityPipeline
+::: similarity.wildfusion
     options:
-      show_symbol_type_heading: false
-      show_bases: false
-      show_root_toc_entry: false
-      members:
-        - __call__
-        - fit_calibration
+      show_root_heading: true
+      heading_level: 2
+      filters:
+        - "!^_[^_]"
+        - "!get_feature_dataset"
+        - "!get_hits"
+        - "!get_priority_pairs"
 
 
 
-### Example
+## Examples
+### Example - SimilarityPipeline
 
 We use LightGlue matching with SuperPoint descriptors and keypoints extracted from images resized to
  512x512. The scores are calibrated using isotonic regression.
@@ -49,34 +42,14 @@ pipeline = SimilarityPipeline(
   ]),
   calibration = IsotonicCalibration()
 ),
-pipeline.fit_calibration(calibration_dataset0, calibration_dataset0)
+pipeline.fit_calibration(calibration_dataset1, calibration_dataset2)
 scores = pipeline(query, database)
 ```
 
 
-## WildFusion
-
-`WildFusion` uses mean of multiple calibrated `SimilarityPipeline` to calculate fused scores. 
-Since many local feature matching models require deep neural network inference for each query and 
-database pair, the computation quickly becomes infeasible even for moderately sized datasets.
-
-WildFusion can be used with a limited computational budget by applying it only B times per query 
-image. It uses a fast-to-compute similarity score (e.g., cosine similarity of deep features) provided 
-by the priority_matcher to construct a shortlist of the most promising matches for a given query. 
-Final ranking is then based on WildFusion scores calculated for the pairs in the shortlist.
 
 
-### Reference
-::: similarity.wildfusion.WildFusion
-    options:
-      show_symbol_type_heading: false
-      show_bases: false
-      show_root_toc_entry: false
-      members:
-        - __call__
-
-
-### Example
+### Example - WildFusion
 
 
 ```python
@@ -171,7 +144,7 @@ similarity = wildfusion(query, database)
 
 
 
-### Example - Shortlist
+### Example - WildFusion with shortlist
 Cosine similarity of MegaDescriptor features is used to construct the shortlist. Then, after 
 calibration, WildFusion is run with a budget of 100 score calculations per query image.
 

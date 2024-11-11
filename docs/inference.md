@@ -1,20 +1,9 @@
 # Inference
-This module is concerned with making predictions on unseen data, using nearest neigbour techiqnues on either features or similarity matrix.
+This `inference` module uses similarity scores to perform predictions on unseen data. This includes
+classification (`KnnClassifier` class) and ranking (`TopkClassifier` class) using using nearest neigbours.
+Similarity scores are expected to be in the form of 2D array with shape `n_query` x `n_database`.
 
-
-## KnnClassifier
-
-### Reference
-::: inference.classifier.KnnClassifier
+::: inference.classifier
     options:
-      show_bases: false
-      show_root_toc_entry: false
-
-
-## KnnMatcher
-
-### Reference
-::: inference.classifier.TopkClassifier
-    options:
-      show_bases: false
-      show_root_toc_entry: false
+      show_root_heading: true
+      heading_level: 2
