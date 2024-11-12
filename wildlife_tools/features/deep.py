@@ -1,7 +1,8 @@
 import torch
 from tqdm import tqdm
 from transformers import CLIPModel, CLIPProcessor
-from wildlife_tools.data import ImageDataset, FeatureDataset
+
+from wildlife_tools.data import FeatureDataset, ImageDataset
 
 
 class DeepFeatures:
@@ -16,14 +17,14 @@ class DeepFeatures:
         num_workers: int = 1,
         device: str = "cpu",
     ):
-        '''
+        """
         Args:
             model: Pytorch model used for the feature extraction.
             batch_size: Batch size used for the feature extraction.
             num_workers: Number of workers used for data loading.
             device: Select between cuda and cpu devices.
 
-        '''
+        """
 
         self.batch_size = batch_size
         self.num_workers = num_workers
@@ -81,7 +82,7 @@ class ClipFeatures:
         num_workers=1,
         device="cpu",
     ):
-        '''
+        """
         Args:
             model: transformer.CLIPModel. Uses VIT-L backbone by default.
             processor: transformer.CLIPProcessor. Uses VIT-L processor by default.
@@ -89,7 +90,7 @@ class ClipFeatures:
             num_workers: Number of workers used for data loading.
             device: Select between cuda and cpu devices.
 
-        '''
+        """
         if model is None:
             model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14").vision_model
 

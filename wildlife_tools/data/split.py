@@ -1,6 +1,7 @@
 import numpy as np
 
-class SplitChunk():
+
+class SplitChunk:
     """Returns split as given nth chunk of metadata from equally sized metadata chunks."""
 
     def __init__(self, chunk=1, chunk_total=1):

@@ -1,10 +1,10 @@
 import os
 import random
+
 import numpy as np
 import torch
 import torch.backends.cudnn
 from tqdm import tqdm
-
 
 
 def set_seed(seed=0):
@@ -18,17 +18,17 @@ def set_seed(seed=0):
 
 
 def set_random_states(states):
-    if 'os_rng_state' in states and states["os_rng_state"]:
+    if "os_rng_state" in states and states["os_rng_state"]:
         os.environ["PYTHONHASHSEED"] = states["os_rng_state"]
-    if 'random_rng_state' in states:
+    if "random_rng_state" in states:
         random.setstate(states["random_rng_state"])
-    if 'numpy_rng_state' in states:
+    if "numpy_rng_state" in states:
         np.random.set_state(states["numpy_rng_state"])
-    if 'torch_rng_state' in states:
+    if "torch_rng_state" in states:
         torch.set_rng_state(states["torch_rng_state"])
-    if 'torch_cuda_rng_state' in states:
+    if "torch_cuda_rng_state" in states:
         torch.cuda.set_rng_state(states["torch_cuda_rng_state"])
-    if 'torch_cuda_rng_state_all' in states:
+    if "torch_cuda_rng_state_all" in states:
         torch.cuda.set_rng_state_all(states["torch_cuda_rng_state_all"])
 
     torch.backends.cudnn.deterministic = True
@@ -36,7 +36,7 @@ def set_random_states(states):
 
 
 def get_random_states():
-    ''' Gives dictionary of random states for reproducibility. '''
+    """Gives dictionary of random states for reproducibility."""
     states = {}
     states["os_rng_state"] = os.environ.get("PYTHONHASHSEED")
     states["random_rng_state"] = random.getstate()
@@ -50,7 +50,7 @@ def get_random_states():
 
 class BasicTrainer:
     """
-    Implements basic training loop for Pytorch models. 
+    Implements basic training loop for Pytorch models.
     Checkpoints includes random states - any restarts from checkpoint preservers reproducibility.
 
     Args:
@@ -124,9 +124,7 @@ class BasicTrainer:
     def train_epoch(self, loader):
         model = self.model.train()
         losses = []
-        for i, batch in enumerate(
-            tqdm(loader, desc=f"Epoch {self.epoch}: ", mininterval=1, ncols=100)
-        ):
+        for i, batch in enumerate(tqdm(loader, desc=f"Epoch {self.epoch}: ", mininterval=1, ncols=100)):
             x, y = batch
             x, y = x.to(self.device), y.to(self.device)
 
@@ -175,4 +173,3 @@ class BasicTrainer:
             set_random_states(checkpoint["rng_states"])
         if "scheduler" in checkpoint and self.scheduler:
             self.scheduler.load_state_dict(checkpoint["scheduler"])
-

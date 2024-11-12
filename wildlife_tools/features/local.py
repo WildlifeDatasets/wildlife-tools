@@ -1,12 +1,13 @@
+import types
+
 import torch
-from tqdm import tqdm
 from gluefactory.models import get_model
 from omegaconf import OmegaConf
+from tqdm import tqdm
+
 from wildlife_tools.data import FeatureDataset, ImageDataset
 
-# Fix https://github.com/cvg/glue-factory/pull/50
-import types
-from .gluefactory_fix import extract_single_image_fix
+from .gluefactory_fix import extract_single_image_fix  # https://github.com/cvg/glue-factory/pull/50
 
 
 class GlueFactoryExtractor:
@@ -42,14 +43,13 @@ class GlueFactoryExtractor:
         self.device = device
         self.num_workers = num_workers
 
-
     def __call__(self, dataset: ImageDataset) -> FeatureDataset:
         """
         Extract clip features from input dataset and return them as a new FeatureDataset.
         Gluefactory extractors requires with 3 channel RBG tensors scaled to [0, 1].
 
         Args:
-            dataset: Extract features from this dataset. 
+            dataset: Extract features from this dataset.
         Returns:
             feature_dataset: A FeatureDataset containing the extracted features
         """

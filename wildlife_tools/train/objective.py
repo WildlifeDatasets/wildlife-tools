@@ -49,9 +49,7 @@ class TripletLoss(nn.Module):
             raise ValueError(f"Invalid distance: {distance}")
 
         self.loss = losses.TripletMarginLoss(distance=distance, margin=margin)
-        self.miner = miners.TripletMarginMiner(
-            distance=distance, type_of_triplets=mining, margin=margin
-        )
+        self.miner = miners.TripletMarginMiner(distance=distance, type_of_triplets=mining, margin=margin)
 
     def forward(self, embeddings, y):
         indices_tuple = self.miner(embeddings, y)
@@ -61,7 +59,7 @@ class TripletLoss(nn.Module):
 class SoftmaxLoss(nn.Module):
     """
     CE with single dense layer classification head.
-    
+
     Args:
         num_classes (int): Number of classes.
         embedding_size (int): Size of the input embeddings.
