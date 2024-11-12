@@ -13,7 +13,9 @@
 </p>
 
 <div align="center">
-  <p align="center">Pipeline for wildlife re-identification including dataset zoo, training tools and trained models. Usage includes classifying new images in labelled databases and clustering individuals in unlabelled databases.</p>
+  <img src="docs/resources/tools-logo.png" alt="Wildlife tools" width="300">
+  <p align="center">A toolkit for Animal Individual Identification that covers use cases such as training, feature extraction, similarity calculation, image retrieval, and classification.</p>
+
   <a href="https://wildlifedatasets.github.io/wildlife-tools/">Documentation</a>
   ·
   <a href="https://github.com/WildlifeDatasets/wildlife-tools/issues/new?assignees=aerodynamic-sauce-pan&labels=bug&projects=&template=bug_report.md&title=%5BBUG%5D">Report Bug</a>
@@ -21,7 +23,9 @@
   <a href="https://github.com/WildlifeDatasets/wildlife-tools/issues/new?assignees=aerodynamic-sauce-pan&labels=enhancement&projects=&template=enhancement.md&title=%5BEnhancement%5D">Request Feature</a>
 </div>
 
-</br>
+</br >
+
+## Our other projects
 
 | <a href="https://github.com/WildlifeDatasets/wildlife-datasets"><img src="docs/resources/datasets-logo.png" alt="Wildlife datasets" width="200"></a>  | <a href="https://huggingface.co/BVRA/MegaDescriptor-L-384"><img src="docs/resources/megadescriptor-logo.png" alt="MegaDescriptor" width="200"></a> | <a href="https://github.com/WildlifeDatasets/wildlife-tools"><img src="docs/resources/tools-logo.png" alt="Wildlife tools" width="200"></a> |
 |:--------------:|:-----------:|:------------:|
@@ -30,9 +34,20 @@
 </br>
 
 # Introduction
-The `wildlife-tools` library offers a simple interface for various tasks in the Wildlife Re-Identification domain. It covers use cases such as training, feature extraction, similarity calculation, image retrieval, and classification. It complements the `wildlife-datasets` library, which acts as dataset repository. All datasets there can be used in combination with `WildlifeDataset` component, which serves for loading extracting images and image tensors other tasks. 
+The `wildlife-tools` library offers a simple interface for various tasks in the Wildlife Re-Identification domain. It covers use cases such as training, feature extraction, similarity calculation, image retrieval, and classification. It complements the `wildlife-datasets` library, which acts as dataset repository.
 
 More information can be found in [Documentation](https://wildlifedatasets.github.io/wildlife-tools/)
+
+## What's New
+Here’s a summary of recent updates and changes.
+
+
+- **Expanded Functionality:** Local feature matching is done using [gluefactory](https://github.com/cvg/glue-factory) 
+    - Feature extraction methods: SuperPoint, ALIKED, DISK, SIFT features
+    - Matching method: LightGlue, More efficient LoFTR
+- **New Feature:** Introduced WildFusion, calibrated score fusion for high-accuracy animal reidentification. Added calibration methods.
+- **Bug Fixes:** Resolved issues with knn and ranking inference methods and many more.
+
 
 ## Installation
 
@@ -58,9 +73,9 @@ pip install -e .
 
 ## Modules in the in the `wildlife-tools`
 
-- The `data` module provides tools for creating instances of the `WildlifeDataset`.
-- The `train` module offers tools for fine-tuning feature extractors on the `WildlifeDataset`.
-- The `features` module provides tools for extracting features from the `WildlifeDataset` using various extractors.
+- The `data` module provides tools for creating instances of the `ImageDataset`.
+- The `train` module offers tools for fine-tuning feature extractors on the `ImageDataset`.
+- The `features` module provides tools for extracting features from the `ImageDataset` using various extractors.
 - The `similarity` module provides tools for constructing a similarity matrix from query and database features.
 - The `inference` module offers tools for creating predictions using the similarity matrix.
 
@@ -70,8 +85,8 @@ pip install -e .
 
 ```mermaid
   graph TD;
-      A[Data]-->|WildlifeDataset|B[Features]
-      A-->|WildlifeDataset|C;
+      A[Data]-->|ImageDataset|B[Features]
+      A-->|ImageDataset|C;
       C[Train]-->|finetuned extractor|B;
       B-->|query and database features|D[Similarity]
       D-->|similarity matrix|E[Inference]
@@ -80,24 +95,24 @@ pip install -e .
 
 
 ## Example
-### 1. Create `WildlifeDataset` 
-Using metadata from `wildlife-datasets`, create `WildlifeDataset` object for the MacaqueFaces dataset.
+### 1. Create `ImageDataset` 
+Using metadata from `wildlife-datasets`, create `ImageDataset` object for the MacaqueFaces dataset.
 
 ```Python
 from wildlife_datasets.datasets import MacaqueFaces
-from wildlife_tools.data import WildlifeDataset
+from wildlife_tools.data import ImageDataset
 import torchvision.transforms as T
 
 metadata = MacaqueFaces('datasets/MacaqueFaces')
 transform = T.Compose([T.Resize([224, 224]), T.ToTensor(), T.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))])
-dataset = WildlifeDataset(metadata.df, metadata.root, transform=transform)
+dataset = ImageDataset(metadata.df, metadata.root, transform=transform)
 ```
 
 Optionally, split metadata into subsets. In this example, query is first 100 images and rest are in database.
 
 ```Python
-dataset_database = WildlifeDataset(metadata.df.iloc[100:,:], metadata.root, transform=transform)
-dataset_query = WildlifeDataset(metadata.df.iloc[:100,:], metadata.root, transform=transform)
+dataset_database = ImageDataset(metadata.df.iloc[100:,:], metadata.root, transform=transform)
+dataset_query = ImageDataset(metadata.df.iloc[:100,:], metadata.root, transform=transform)
 ```
 
 ### 2. Extract features
@@ -149,3 +164,13 @@ If you like our package, please cite us.
     pages     = {5953-5963}
 }
 ```
+
+```
+@article{cermak2024wildfusion,
+  title={WildFusion: Individual animal identification with calibrated similarity fusion},
+  author={Cermak, Vojt{\v{e}}ch and Picek, Lukas and Adam, Luk{\'a}{\v{s}} and Neumann, Luk{\'a}{\v{s}} and Matas, Ji{\v{r}}{\'\i}},
+  journal={arXiv preprint arXiv:2408.12934},
+  year={2024}
+}
+```
+

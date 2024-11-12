@@ -1,86 +1,142 @@
 from __future__ import annotations
 
-from collections import defaultdict
-
 import numpy as np
 import pandas as pd
 import torch
 
-from wildlife_tools.similarity import CosineSimilarity
-
 
 class KnnClassifier:
     """
-    Predict query label as k labels of nearest matches in database. If there is tie at given k,
-    prediction from k-1 is used. Input is similarity matrix with `n_query` x `n_database` shape.
-
-
-    Args:
-        k: use k nearest in database for the majority voting.
-        database_labels: list of labels in database. If provided, decode predictions to database
-        (e.g. string) labels.
-    Returns:
-        1D array with length `n_query` of database labels (col index of the similarity matrix).
+    Predict query label as k labels of nearest matches in the database.
+    If there is a tie at a given k, the prediction with the best score is used.
     """
 
-    def __init__(self, k: int = 1, database_labels: np.array | None = None):
+    def __init__(self, database_labels: np.array, k: int = 1, return_scores=False):
+        """
+        Args:
+            database_labels (np.array): Array containing the labels of the database.
+            k (int): The number of nearest neighbors to consider.
+            return_scores (bool): Indicates whether to return scores along with predictions.
+        """
         self.k = k
         self.database_labels = database_labels
+        self.return_scores = return_scores
 
     def __call__(self, similarity):
-        similarity = torch.tensor(similarity, dtype=float)
-        scores, idx = similarity.topk(k=self.k, dim=1)
-        pred = self.aggregate(idx)[:, self.k - 1]
-
-        if self.database_labels is not None:
-            pred = self.database_labels[pred]
-        return pred
-
-    def aggregate(self, predictions):
         """
-        Aggregates array of nearest neighbours to single prediction for each k.
-        If there is tie at given k, prediction from k-1 is used.
+        Predicts the label for each query based on the k nearest matches in the database.
 
         Args:
-            array of with shape [n_query, k] of nearest neighbours.
+            similarity: A 2D similarity matrix with `n_query` x `n_database` shape.
+
         Returns:
-            array with predictions [n_query, k]. Column dimensions are predictions for [k=1,...,k=k]
+            If `return_scores` is False:
+
+                - preds: Prediction for each query.
+
+            If `return_scores` is True, tuple of two arrays:
+
+                - preds: Prediction for each query.
+                - scores: The similarity scores corresponding to the predictions (mean for k > 1).
+
         """
 
-        results = defaultdict(list)
-        for k in range(1, predictions.shape[1] + 1):
-            for row in predictions[:, :k]:
-                vals, counts = np.unique(row, return_counts=True)
-                best = vals[np.argmax(counts)]
+        # Get ranked predictions and scores.
+        similarity = torch.tensor(similarity, dtype=torch.float32)
+        scores, idx = similarity.topk(k=self.k, dim=1)
+        preds = self.database_labels[idx]
 
-                counts_sorted = sorted(counts)
-                if (len(counts_sorted)) > 1 and (counts_sorted[0] == counts_sorted[1]):
-                    best = None
-                results[k].append(best)
+        preds = np.array(preds)
+        scores = np.array(scores)
 
-        results = pd.DataFrame(results).T.fillna(method="ffill").T
-        return results.values
+        # Aggregate k nearest neighbors
+        data = []
+        for pred, score in zip(preds, scores):
+            vals, counts = np.unique(pred, return_counts=True)
+            winners = vals[counts.max() == counts]
+
+            # Check for ties
+            if len(winners) == 1:
+                best_pred = winners[0]
+                best_score = score[best_pred == pred].mean()
+            else:
+                is_winner = np.isin(pred, winners)
+                ties = pd.Series(score[is_winner]).groupby(pred[is_winner]).mean()
+                best_pred = ties.idxmax()
+                best_score = ties.max()
+            data.append([best_pred, best_score])
+
+        preds, scores = list(zip(*data))
+        preds = np.array(preds)
+        scores = np.array(scores)
+
+        if self.return_scores:
+            return preds, scores
+        else:
+            return preds
 
 
-class KnnMatcher:
+class TopkClassifier:
     """
-    Find nearest match to query in existing database of features.
-    Combines CosineSimilarity and KnnClassifier.
+    Predict top k query labels given nearest matches in the database.
     """
 
-    def __init__(self, database, k=1):
-        self.similarity = CosineSimilarity()
-        self.database = database
-        self.classifier = KnnClassifier(
-            database_labels=self.database.labels_string, k=k
-        )
+    def __init__(self, database_labels: np.array, k: int = 10, return_all: bool = False):
+        """
+        Args:
+            database_labels (np.array): Array containing the labels of the database.
+            k (int): The number of top predictions to return.
+            return_all (bool): Indicates whether to return scores along with predictions.
+        """
+        self.k = k
+        self.database_labels = database_labels
+        self.return_all = return_all
 
-    def __call__(self, query):
-        if isinstance(query, list):
-            query = np.concatenate(query)
+    def __call__(self, similarity):
+        """
+        Predicts the top k labels for each query based on the similarity matrix.
 
-        if not isinstance(query, np.ndarray):
-            raise ValueError("Query should be array or list of features.")
+        Args:
+            similarity: A 2D similarity matrix with `n_query` x `n_database` shape
 
-        sim_matrix = self.similarity(query, self.database.features)["cosine"]
-        return self.classifier(sim_matrix)
+        Returns:
+            If `return_all` is False, single 2D array of shape `n_query` x `k`
+
+                - preds: The top k predicted labels for each query.
+
+            If `return_all` is True, tuple of three 2D arrays of shape `n_query` x `k`:
+
+                - preds: The top k predicted labels for each query.
+                - scores: The similarity scores corresponding to the top k predictions.
+                - idx: The indices of the database entries corresponding to the top k predictions.
+        """
+
+        # Get ranked predictions, scores, and database index.
+        similarity = torch.tensor(similarity, dtype=torch.float32)
+        scores, idx = similarity.topk(k=similarity.shape[1], dim=1)
+        preds = self.database_labels[idx]
+
+        preds = np.array(preds)
+        scores = np.array(scores)
+        idx = np.array(idx)
+
+        # Collect data for first label occurrence
+        data = []
+        for j, row in enumerate(preds):
+            data_row = []
+            visited = set()
+            for i, value in enumerate(row):
+                if value not in visited:
+                    visited.add(value)
+                    data_row.append((value, scores[j, i], idx[j, i]))
+            data.append(list(zip(*data_row)))
+
+        preds, scores, idx = list(zip(*data))
+        preds = np.array(preds)[:, : self.k]
+        scores = np.array(scores)[:, : self.k]
+        idx = np.array(idx)[:, : self.k]
+
+        if self.return_all:
+            return preds, scores, idx
+        else:
+            return preds

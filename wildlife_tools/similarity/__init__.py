@@ -1,3 +1,4 @@
 from .cosine import CosineSimilarity
-from .descriptors import MatchDescriptors
-from .loftr import MatchLOFTR
+from .pairwise.lightglue import MatchLightGlue
+from .pairwise.loftr import MatchLOFTR
+from .wildfusion import SimilarityPipeline, WildFusion

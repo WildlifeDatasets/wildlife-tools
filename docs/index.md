@@ -9,8 +9,8 @@
 </p>
 
 <div align="center">
-  <img src="resources/logo-transparent.png" alt="Project logo" width="300">
-  <p align="center">A tool-kit for Wildlife Individual Identification that provides a wide variety of pre-trained models for inference and fine-tuning.</p>
+  <img src="resources/tools-logo.png" alt="Wildlife tools" width="300">
+  <p align="center">A toolkit for Animal Individual Identification that covers use cases such as training, feature extraction, similarity calculation, image retrieval, and classification.</p>
   <a href="https://wildlifedatasets.github.io/wildlife-tools/">Documentation</a>
   ·
   <a href="https://github.com/WildlifeDatasets/wildlife-tools/issues/new?assignees=aerodynamic-sauce-pan&labels=bug&projects=&template=bug_report.md&title=%5BBUG%5D">Report Bug</a>
@@ -41,9 +41,20 @@
 <h1></h1>
 
 # Introduction
-The `wildlife-tools` library offers a simple interface for various tasks in the Wildlife Re-Identification domain. It covers use cases such as training, feature extraction, similarity calculation, image retrieval, and classification. It complements the `wildlife-datasets` library, which acts as dataset repository. All datasets there can be used in combination with `WildlifeDataset` component, which serves for loading extracting images and image tensors other tasks. 
+The `wildlife-tools` library offers a simple interface for various tasks in the Wildlife Re-Identification domain. It covers use cases such as training, feature extraction, similarity calculation, image retrieval, and classification. It complements the `wildlife-datasets` library, which acts as dataset repository.
 
 More information can be found in [Documentation](https://wildlifedatasets.github.io/wildlife-tools/)
+
+## What's New
+Here’s a summary of recent updates and changes.
+
+
+- **Expanded Functionality:** Local feature matching is done using [gluefactory](https://github.com/cvg/glue-factory) 
+    - Feature extraction methods: SuperPoint, ALIKED, DISK, SIFT features
+    - Matching method: LightGlue, More efficient LoFTR
+- **New Feature:** Introduced WildFusion, calibrated score fusion for high-accuracy animal reidentification. Added calibration methods.
+- **Bug Fixes:** Resolved issues with knn and ranking inference methods and many more.
+
 
 ## Installation
 
@@ -54,7 +65,6 @@ To install `wildlife-tools`, you can build it from scratch or use pre-build Pypi
 
 ```script
 pip install wildlife-tools
-
 ```
 
 ### Building from scratch
@@ -70,9 +80,9 @@ pip install -e .
 
 ## Modules in the in the `wildlife-tools`
 
-- The `data` module provides tools for creating instances of the `WildlifeDataset`.
-- The `train` module offers tools for fine-tuning feature extractors on the `WildlifeDataset`.
-- The `features` module provides tools for extracting features from the `WildlifeDataset` using various extractors.
+- The `data` module provides tools for creating instances of the `ImageDataset`.
+- The `train` module offers tools for fine-tuning feature extractors on the `ImageDataset`.
+- The `features` module provides tools for extracting features from the `ImageDataset` using various extractors.
 - The `similarity` module provides tools for constructing a similarity matrix from query and database features.
 - The `inference` module offers tools for creating predictions using the similarity matrix.
 
@@ -82,8 +92,8 @@ pip install -e .
 
 ```mermaid
   graph TD;
-      A[Data]-->|WildlifeDataset|B[Features]
-      A-->|WildlifeDataset|C;
+      A[Data]-->|ImageDataset|B[Features]
+      A-->|ImageDataset|C;
       C[Train]-->|finetuned extractor|B;
       B-->|query and database features|D[Similarity]
       D-->|similarity matrix|E[Inference]
@@ -92,30 +102,31 @@ pip install -e .
 
 
 ## Example
-### 1. Create `WildlifeDataset` 
-Using metadata from `wildlife-datasets`, create `WildlifeDataset` object for the MacaqueFaces dataset.
+### 1. Create `ImageDataset` 
+Using metadata from `wildlife-datasets`, create `ImageDataset` object for the MacaqueFaces dataset.
 
 ```Python
 from wildlife_datasets.datasets import MacaqueFaces
-from wildlife_tools.data import WildlifeDataset
+from wildlife_tools.data import ImageDataset
 import torchvision.transforms as T
 
 metadata = MacaqueFaces('datasets/MacaqueFaces')
 transform = T.Compose([T.Resize([224, 224]), T.ToTensor(), T.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))])
-dataset = WildlifeDataset(metadata.df, metadata.root, transform=transform)
+dataset = ImageDataset(metadata.df, metadata.root, transform=transform)
 ```
 
 Optionally, split metadata into subsets. In this example, query is first 100 images and rest are in database.
 
 ```Python
-dataset_database = WildlifeDataset(metadata.df.iloc[100:,:], metadata.root, transform=transform)
-dataset_query = WildlifeDataset(metadata.df.iloc[:100,:], metadata.root, transform=transform)
+dataset_database = ImageDataset(metadata.df.iloc[100:,:], metadata.root, transform=transform)
+dataset_query = ImageDataset(metadata.df.iloc[:100,:], metadata.root, transform=transform)
 ```
 
 ### 2. Extract features
 Extract features using MegaDescriptor Tiny, downloaded from HuggingFace hub.
 
 ```Python
+import timm
 from wildlife_tools.features import DeepFeatures
 
 name = 'hf-hub:BVRA/MegaDescriptor-T-224'
@@ -138,6 +149,9 @@ similarity = similarity_function(query, database)
 Use the cosine similarity in nearest neigbour classifier and get predictions.
 
 ```Python
+import numpy as np
+from wildlife_tools.inference import KnnClassifier
+
 classifier = KnnClassifier(k=1, database_labels=dataset_database.labels_string)
 predictions = classifier(similarity['cosine'])
 accuracy = np.mean(dataset_database.labels_string == predictions)
@@ -155,5 +169,14 @@ If you like our package, please cite us.
     month     = {January},
     year      = {2024},
     pages     = {5953-5963}
+}
+```
+
+```
+@article{cermak2024wildfusion,
+  title={WildFusion: Individual animal identification with calibrated similarity fusion},
+  author={Cermak, Vojt{\v{e}}ch and Picek, Lukas and Adam, Luk{\'a}{\v{s}} and Neumann, Luk{\'a}{\v{s}} and Matas, Ji{\v{r}}{\'\i}},
+  journal={arXiv preprint arXiv:2408.12934},
+  year={2024}
 }
 ```
