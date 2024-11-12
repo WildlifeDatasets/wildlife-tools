@@ -22,7 +22,7 @@ def set_seed(seed=0, device="cuda"):
 def frame_image(img, frame_width, color=(255, 0, 0)):
     b = frame_width
     ny, nx = img.shape[0], img.shape[1]
-    framed_img = np.array(Image.new("RGB", (b+ny+b, b+nx+b), color))
+    framed_img = np.array(Image.new("RGB", (b + ny + b, b + nx + b), color))
     framed_img[b:-b, b:-b] = img
     return framed_img
 
