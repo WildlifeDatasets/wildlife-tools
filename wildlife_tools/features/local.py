@@ -1,4 +1,3 @@
-
 import types
 
 import torch
@@ -7,7 +6,7 @@ from omegaconf import OmegaConf
 from tqdm import tqdm
 from wildlife_tools.data import FeatureDataset, ImageDataset
 
-from .gluefactory_fix import extract_single_image_fix  # Fix https://github.com/cvg/glue-factory/pull/50
+from .gluefactory_fix import extract_single_image_fix  # https://github.com/cvg/glue-factory/pull/50
 
 
 class GlueFactoryExtractor:

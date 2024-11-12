@@ -68,7 +68,5 @@ line-length = 120
 
 [tool.isort]
 profile = "black"
-multi_line_output = 3
-ignore_trailing_comma = true
 line_length = 120
 skip = [".gitignore", ".dockerignore", "*.ipynb"]
