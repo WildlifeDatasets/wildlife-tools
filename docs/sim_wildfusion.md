@@ -26,11 +26,11 @@ We use LightGlue matching with SuperPoint descriptors and keypoints extracted fr
 ```Python
 import timm
 import torchvision.transforms as T
-from features.local import SuperPointExtractor
-from similarity.pairwise.lightglue import MatchLightGlue
+from wildlife_tools.features import SuperPointExtractor
+from wildlife_tools.similarity import MatchLightGlue
 
-from similarity.wildfusion import SimilarityPipeline
-from similarity.calibration import IsotonicCalibration
+from wildlife_tools.similarity.wildfusion import SimilarityPipeline
+from wildlife_tools.similarity.calibration import IsotonicCalibration
 
 
 pipeline = SimilarityPipeline(
@@ -55,14 +55,10 @@ scores = pipeline(query, database)
 ```python
 import timm
 import torchvision.transforms as T
-from features.deep import DeepFeatures
-from features.local import *
-from similarity.cosine import CosineSimilarity
-from similarity.pairwise.loftr import MatchLOFTR
-from similarity.pairwise.lightglue import MatchLightGlue
-
-from similarity.wildfusion import SimilarityPipeline, WildFusion
-from similarity.calibration import IsotonicCalibration
+from wildlife_tools.features import *
+from wildlife_tools.similarity import CosineSimilarity, MatchLOFTR, MatchLightGlue
+from wildlife_tools.similarity.wildfusion import SimilarityPipeline, WildFusion
+from wildlife_tools.similarity.calibration import IsotonicCalibration
 
 
 matchers = [

@@ -19,7 +19,7 @@ The `similarity.calibration` module offers tools to improve the interpretability
 Example of isotonic regression calibration.
 
 ```python
-from similarity.calibration import IsotonicCalibration
+from wildlife_tools.similarity.calibration import IsotonicCalibration
 
 calibration = IsotonicCalibration()
 calibration.fit([0, 0.5, 1], [0, 1, 1])
