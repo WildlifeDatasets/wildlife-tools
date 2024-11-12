@@ -61,7 +61,7 @@ class TripletLoss(nn.Module):
 class SoftmaxLoss(nn.Module):
     """
     CE with single dense layer classification head.
-    
+
     Args:
         num_classes (int): Number of classes.
         embedding_size (int): Size of the input embeddings.

@@ -14,8 +14,8 @@ try:
 except ImportError:
     pycolmap = None
 
-from gluefactory.models.utils.misc import pad_to_length
 from gluefactory.models.extractors.sift import filter_dog_point, run_opencv_sift
+from gluefactory.models.utils.misc import pad_to_length
 
 
 def extract_single_image_fix(self, image: torch.Tensor):

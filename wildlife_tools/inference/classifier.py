@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import numpy as np
 import pandas as pd
 import torch
@@ -20,7 +21,6 @@ class KnnClassifier:
         self.k = k
         self.database_labels = database_labels
         self.return_scores = return_scores
-
 
     def __call__(self, similarity):
         """
@@ -76,7 +76,6 @@ class KnnClassifier:
             return preds
 
 
-
 class TopkClassifier:
     """
     Predict top k query labels given nearest matches in the database.
@@ -92,7 +91,6 @@ class TopkClassifier:
         self.k = k
         self.database_labels = database_labels
         self.return_all = return_all
-
 
     def __call__(self, similarity):
         """
@@ -134,9 +132,9 @@ class TopkClassifier:
             data.append(list(zip(*data_row)))
 
         preds, scores, idx = list(zip(*data))
-        preds = np.array(preds)[:, :self.k]
-        scores = np.array(scores)[:, :self.k]
-        idx = np.array(idx)[:, :self.k]
+        preds = np.array(preds)[:, : self.k]
+        scores = np.array(scores)[:, : self.k]
+        idx = np.array(idx)[:, : self.k]
 
         if self.return_all:
             return preds, scores, idx

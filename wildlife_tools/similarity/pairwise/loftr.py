@@ -1,7 +1,9 @@
-from kornia.feature.loftr.loftr import *
 from copy import deepcopy
+
 import numpy as np
 import torch
+from kornia.feature.loftr.loftr import *
+
 from .base import MatchPairs
 
 

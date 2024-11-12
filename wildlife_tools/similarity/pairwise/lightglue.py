@@ -1,7 +1,7 @@
 import torch
 from gluefactory.models import get_model
 from omegaconf import OmegaConf
-import torch
+
 from .base import MatchPairs
 
 

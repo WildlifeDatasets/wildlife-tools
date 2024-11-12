@@ -25,7 +25,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install black[jupyter]==22.3.0
       - name: Analysing the code with black
-        run: black --check .
+        run: black --check --line-length 120 wildlife_tools
   isort:
     runs-on: ubuntu-latest
     steps:
@@ -40,7 +40,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install isort==5.10.1
       - name: Analysing the code with isort
-        run: isort --check .
+        run: isort --check --line-length 120 wildlife_tools
+  
   # flake8:
   #   runs-on: ubuntu-latest
   #   steps:
@@ -55,4 +56,4 @@ jobs:
   #         python -m pip install --upgrade pip
   #         pip install flake8==4.0.1 flake8-docstrings==1.6.0
   #     - name: Analysing the code with flake8
-  #       run: flake8 .
+  #       run: flake8 wildlife_tools

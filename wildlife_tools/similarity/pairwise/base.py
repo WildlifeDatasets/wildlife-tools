@@ -1,11 +1,13 @@
-from .collectors import CollectCounts
 import itertools
-import torch
-import numpy as np
-import matplotlib.pyplot as plt
+
 import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
 from tqdm import tqdm
+
 from ...data import FeatureDataset
+from .collectors import CollectCounts
 
 
 def visualise_matches(img0, keypoints0, img1, keypoints1):
@@ -109,7 +111,7 @@ class MatchPairs:
             batch_size: Number of pairs processed in one batch.
             num_workers: Number of workers used for data loading.
             tqdm_silent: If True, progress bar is disabled.
-            collector: Collector object used for storing results. 
+            collector: Collector object used for storing results.
                 By default, CollectCounts(thresholds=[0.5]) is used.
         """
 
