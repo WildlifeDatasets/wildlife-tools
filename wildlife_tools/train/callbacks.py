@@ -1,7 +1,6 @@
 import os
 from copy import deepcopy
 from torch.utils.tensorboard import SummaryWriter
-from wildlife_tools.tools import realize
 
 
 class EpochCheckpoint:
@@ -47,10 +46,3 @@ class EpochCallbacks:
         for step in self.steps:
             step(trainer=trainer, **kwargs)
 
-    @classmethod
-    def from_config(cls, config):
-        config = deepcopy(config)
-        steps = []
-        for config_step in config["steps"]:
-            steps.append(realize(config_step))
-        return cls(steps=steps)
