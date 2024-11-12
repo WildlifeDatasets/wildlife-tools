@@ -85,9 +85,7 @@ class SimilarityPipeline:
         self.calibration.fit(score.flatten(), hits.flatten())
         self.calibration_done = True
 
-    def __call__(
-        self, dataset0: ImageDataset, dataset1: ImageDataset, pairs: list | None = None
-    ) -> np.ndarray:
+    def __call__(self, dataset0: ImageDataset, dataset1: ImageDataset, pairs: list | None = None) -> np.ndarray:
         """
         Compute similarity scores between two image datasets, with optional calibration.
 
@@ -163,9 +161,7 @@ class WildFusion:
         if self.priority_pipeline is not None:
             self.priority_pipeline.fit_calibration(dataset0, dataset1)
 
-    def get_priority_pairs(
-        self, dataset0: ImageDataset, dataset1: ImageDataset, B: int
-    ) -> np.ndarray:
+    def get_priority_pairs(self, dataset0: ImageDataset, dataset1: ImageDataset, B: int) -> np.ndarray:
         """Implements shortlisting strategy for selection of most relevant pairs."""
 
         if self.priority_pipeline is None:

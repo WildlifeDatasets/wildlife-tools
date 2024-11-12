@@ -124,7 +124,10 @@ class MatchPairs:
         self.tqdm_kwargs = {"mininterval": 1, "ncols": 100, "disable": tqdm_silent}
 
     def __call__(
-        self, dataset0: FeatureDataset, dataset1: FeatureDataset, pairs: np.array | None = None
+        self,
+        dataset0: FeatureDataset,
+        dataset1: FeatureDataset,
+        pairs: np.array | None = None,
     ):
         """
         Match pairs of features from two feature datasets.

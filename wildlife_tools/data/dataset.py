@@ -142,8 +142,7 @@ class WildlifeDataset(ImageDataset):
                 rles = mask_coco.frPyObjects([segmentation], h, w)
                 segmentation = mask_coco.merge(rles)
             if isinstance(segmentation, dict) and (
-                isinstance(segmentation["counts"], list)
-                or isinstance(segmentation["counts"], np.ndarray)
+                isinstance(segmentation["counts"], list) or isinstance(segmentation["counts"], np.ndarray)
             ):
                 # Convert uncompressed RLE to compressed RLE
                 h, w = segmentation["size"]

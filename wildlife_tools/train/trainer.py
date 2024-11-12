@@ -124,9 +124,7 @@ class BasicTrainer:
     def train_epoch(self, loader):
         model = self.model.train()
         losses = []
-        for i, batch in enumerate(
-            tqdm(loader, desc=f"Epoch {self.epoch}: ", mininterval=1, ncols=100)
-        ):
+        for i, batch in enumerate(tqdm(loader, desc=f"Epoch {self.epoch}: ", mininterval=1, ncols=100)):
             x, y = batch
             x, y = x.to(self.device), y.to(self.device)
 

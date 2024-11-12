@@ -68,9 +68,7 @@ class MatchLightGlue(MatchPairs):
             output = self.model(data)
 
         data = []
-        for i, (i0, i1, scores, matches) in enumerate(
-            zip(idx0, idx1, output["scores"], output["matches"])
-        ):
+        for i, (i0, i1, scores, matches) in enumerate(zip(idx0, idx1, output["scores"], output["matches"])):
             matches = matches.cpu()
             kpts0 = data0["keypoints"][i][matches[:, 0]].cpu().numpy()
             kpts1 = data1["keypoints"][i][matches[:, 1]].cpu().numpy()

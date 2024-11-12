@@ -40,7 +40,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install isort==5.10.1
       - name: Analysing the code with isort
-        run: isort --check --line-length 120 wildlife_tools
+        run: isort --check --diff --line-length 120 wildlife_tools
   
   # flake8:
   #   runs-on: ubuntu-latest

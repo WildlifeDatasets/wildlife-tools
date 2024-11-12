@@ -33,9 +33,7 @@ def extract_single_image_fix(self, image: torch.Tensor):
             scores = np.abs(scores) * scales
     elif self.conf.backend == "opencv":
         # TODO: Check if opencv keypoints are already in corner convention
-        keypoints, scores, scales, angles, descriptors = run_opencv_sift(
-            self.sift, (image_np * 255.0).astype(np.uint8)
-        )
+        keypoints, scores, scales, angles, descriptors = run_opencv_sift(self.sift, (image_np * 255.0).astype(np.uint8))
 
     if (descriptors is None) or (descriptors.size == 0):
         descriptors = np.empty(shape=(0, 128), dtype=np.float32)
@@ -89,7 +87,5 @@ def extract_single_image_fix(self, image: torch.Tensor):
         pred["oris"] = pad_to_length(pred["oris"], num_points, -1, mode="zeros")
         pred["descriptors"] = pad_to_length(pred["descriptors"], num_points, -2, mode="zeros")
         if pred["keypoint_scores"] is not None:
-            pred["keypoint_scores"] = pad_to_length(
-                pred["keypoint_scores"], num_points, -1, mode="zeros"
-            )
+            pred["keypoint_scores"] = pad_to_length(pred["keypoint_scores"], num_points, -1, mode="zeros")
     return pred

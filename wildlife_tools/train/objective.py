@@ -49,9 +49,7 @@ class TripletLoss(nn.Module):
             raise ValueError(f"Invalid distance: {distance}")
 
         self.loss = losses.TripletMarginLoss(distance=distance, margin=margin)
-        self.miner = miners.TripletMarginMiner(
-            distance=distance, type_of_triplets=mining, margin=margin
-        )
+        self.miner = miners.TripletMarginMiner(distance=distance, type_of_triplets=mining, margin=margin)
 
     def forward(self, embeddings, y):
         indices_tuple = self.miner(embeddings, y)

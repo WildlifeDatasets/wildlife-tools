@@ -47,9 +47,7 @@ class CollectCounts:
     def init_store(self, grid_shape: tuple | None = None):
         if grid_shape is not None:
             self.grid_shape = grid_shape
-            self.data = {
-                t: np.full(grid_shape, np.nan, dtype=self.grid_dtype) for t in self.thresholds
-            }
+            self.data = {t: np.full(grid_shape, np.nan, dtype=self.grid_dtype) for t in self.thresholds}
         else:
             self.data = {"idx0": [], "idx1": []} + {t: [] for t in self.thresholds}
 
