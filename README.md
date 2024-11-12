@@ -8,9 +8,6 @@
   <a href="https://github.com/WildlifeDatasets/wildlife-tools/blob/main/LICENSE"><img src="https://img.shields.io/github/license/WildlifeDatasets/wildlife-tools" alt="License"></a>
 </p>
 
-<p align="center">
-<img src="docs/resources/tools-logo.png" alt="Wildlife tools" width="300">
-</p>
 
 <div align="center">
   <img src="docs/resources/tools-logo.png" alt="Wildlife tools" width="300">
