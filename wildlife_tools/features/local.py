@@ -4,6 +4,7 @@ import torch
 from gluefactory.models import get_model
 from omegaconf import OmegaConf
 from tqdm import tqdm
+
 from wildlife_tools.data import FeatureDataset, ImageDataset
 
 from .gluefactory_fix import extract_single_image_fix  # https://github.com/cvg/glue-factory/pull/50

@@ -1,1 +1,1 @@
-from .dataset import FeatureDatabase, FeatureDataset, WildlifeDataset, ImageDataset
+from .dataset import FeatureDatabase, FeatureDataset, ImageDataset, WildlifeDataset

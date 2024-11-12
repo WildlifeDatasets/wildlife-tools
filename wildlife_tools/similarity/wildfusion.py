@@ -1,9 +1,9 @@
 from typing import Callable
 
 import numpy as np
-import pandas as pd
 import torch
-from wildlife_tools.data import FeatureDataset, ImageDataset
+
+from ..data import FeatureDataset, ImageDataset
 
 
 def get_hits(dataset0, dataset1):

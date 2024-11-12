@@ -1,7 +1,8 @@
 import numpy as np
 import torch
 import torch.nn.functional as F
-from wildlife_tools.data import FeatureDataset
+
+from ..data import FeatureDataset
 
 
 def cosine_similarity(a, b):
