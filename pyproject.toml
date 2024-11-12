@@ -60,3 +60,5 @@ packages = [
   "wildlife_tools.train",
 ]
 
+[tool.flake8]
+max-line-length = 120

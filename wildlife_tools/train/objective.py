@@ -6,11 +6,14 @@ class ArcFaceLoss(nn.Module):
     """
     Wraps Pytorch Metric Learning ArcFaceLoss.
 
-    Default margin (in radians): 0.5
-    Default scale: 64
+    Args:
+        num_classes (int): Number of classes.
+        embedding_size (int): Size of the input embeddings.
+        margin (int): Margin for ArcFace loss (in radians).
+        scale (int): Scale parameter for ArcFace loss.
     """
 
-    def __init__(self, num_classes, embedding_size, margin=0.5, scale=64):
+    def __init__(self, num_classes: int, embedding_size: int, margin: int = 0.5, scale: int = 64):
         super().__init__()
         self.loss = losses.ArcFaceLoss(
             num_classes=num_classes,
@@ -27,11 +30,14 @@ class TripletLoss(nn.Module):
     """
     Wraps Pytorch Metric Learning TripletMarginLoss.
 
-    Mining is one of: 'all', 'hard', 'semihard'
-    Distance is one of: 'cosine', 'l2', 'l2_squared'
+    Args:
+        margin (int): Margin for triplet loss.
+        mining (str): Type of triplet mining. One of: 'all', 'hard', 'semihard'
+        distance (str): Distance metric for triplet loss. One of: 'cosine', 'l2', 'l2_squared'
+
     """
 
-    def __init__(self, margin=0.2, mining="seminard", distance="l2_squared"):
+    def __init__(self, margin: int = 0.2, mining: str = "seminard", distance: str = "l2_squared"):
         super().__init__()
         if distance == "cosine":
             distance = distances.CosineSimilarity()
@@ -53,9 +59,15 @@ class TripletLoss(nn.Module):
 
 
 class SoftmaxLoss(nn.Module):
-    """CE with single dense layer classification head."""
+    """
+    CE with single dense layer classification head.
+    
+    Args:
+        num_classes (int): Number of classes.
+        embedding_size (int): Size of the input embeddings.
+    """
 
-    def __init__(self, num_classes, embedding_size):
+    def __init__(self, num_classes: int, embedding_size: int):
         super().__init__()
         self.criterion = nn.CrossEntropyLoss()
         self.linear = nn.Linear(embedding_size, num_classes)

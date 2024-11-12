@@ -1,3 +1,9 @@
+::: data.dataset
+    options:
+      show_root_heading: true
+      heading_level: 2
+
+
 # Wildlife dataset
 
 WildlifeDataset is a class for creating Pytorch style image datasets and allows integration of datasets provided by `wildlife-datasets` library. It has implemented `__len__` and `__getattr__` methods, which allows using standard Pytorch dataloaders for training and inference.
@@ -49,9 +55,3 @@ image, label = dataset[0]
 ```
 
 
-## Reference
-::: data.dataset.WildlifeDataset
-    options:
-      show_symbol_type_heading: false
-      show_bases: false
-      show_root_toc_entry: false
