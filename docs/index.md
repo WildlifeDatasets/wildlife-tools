@@ -9,7 +9,7 @@
 </p>
 
 <div align="center">
-  <img src="resources/logo-transparent.png" alt="Project logo" width="300">
+  <img src="resources/tools-logo.png" alt="Project logo" width="300">
   <p align="center">A tool-kit for Wildlife Individual Identification that provides a wide variety of pre-trained models for inference and fine-tuning.</p>
   <a href="https://wildlifedatasets.github.io/wildlife-tools/">Documentation</a>
   ·
@@ -44,6 +44,17 @@
 The `wildlife-tools` library offers a simple interface for various tasks in the Wildlife Re-Identification domain. It covers use cases such as training, feature extraction, similarity calculation, image retrieval, and classification. It complements the `wildlife-datasets` library, which acts as dataset repository. All datasets there can be used in combination with `WildlifeDataset` component, which serves for loading extracting images and image tensors other tasks. 
 
 More information can be found in [Documentation](https://wildlifedatasets.github.io/wildlife-tools/)
+
+
+## What's New - v1.0.0
+Here’s a summary of recent updates and changes.
+
+- **Expanded Functionality:** Local feature matching is done using [gluefactory](https://github.com/cvg/glue-factory) 
+    - Feature extraction methods: SuperPoint, ALIKED, DISK, SIFT features
+    - Matching method: LightGlue, More efficient LoFTR
+- **New Feature:** Introduced WildFusion, an intuitive, calibrated score fusion for high-accuracy animal reidentification. Added calibration methods.
+- **Bug Fixes:** Resolved issues with knn and ranking inference methods and many more
+
 
 ## Installation
 
@@ -82,8 +93,8 @@ pip install -e .
 
 ```mermaid
   graph TD;
-      A[Data]-->|WildlifeDataset|B[Features]
-      A-->|WildlifeDataset|C;
+      A[Data]-->|Dataset|B[Features]
+      A-->|Dataset|C;
       C[Train]-->|finetuned extractor|B;
       B-->|query and database features|D[Similarity]
       D-->|similarity matrix|E[Inference]
@@ -138,6 +149,7 @@ similarity = similarity_function(query, database)
 Use the cosine similarity in nearest neigbour classifier and get predictions.
 
 ```Python
+from wildlife_tools.inference import KnnClassifier
 classifier = KnnClassifier(k=1, database_labels=dataset_database.labels_string)
 predictions = classifier(similarity['cosine'])
 accuracy = np.mean(dataset_database.labels_string == predictions)
@@ -149,7 +161,7 @@ If you like our package, please cite us.
 
 ```
 @InProceedings{Cermak_2024_WACV,
-    author    = {\v{C}erm\'ak, Vojt\v{e}ch and Picek, Luk\'a\v{s} and Adam, Luk\'a\v{s} and Papafitsoros, Kostas},
+    author    = {Cermak, Vojtech and Picek, Lukas and Adam, Lukas and Papafitsoros, Kostas},
     title     = {{WildlifeDatasets: An Open-Source Toolkit for Animal Re-Identification}},
     booktitle = {Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)},
     month     = {January},
