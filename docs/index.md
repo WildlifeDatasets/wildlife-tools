@@ -45,7 +45,7 @@ The `wildlife-tools` library offers a simple interface for various tasks in the 
 
 More information can be found in [Documentation](https://wildlifedatasets.github.io/wildlife-tools/)
 
-## What's New - v1.0.0
+## What's New
 Here’s a summary of recent updates and changes.
 
 
@@ -169,5 +169,14 @@ If you like our package, please cite us.
     month     = {January},
     year      = {2024},
     pages     = {5953-5963}
+}
+```
+
+```
+@article{cermak2024wildfusion,
+  title={WildFusion: Individual animal identification with calibrated similarity fusion},
+  author={Cermak, Vojt{\v{e}}ch and Picek, Lukas and Adam, Luk{\'a}{\v{s}} and Neumann, Luk{\'a}{\v{s}} and Matas, Ji{\v{r}}{\'\i}},
+  journal={arXiv preprint arXiv:2408.12934},
+  year={2024}
 }
 ```
