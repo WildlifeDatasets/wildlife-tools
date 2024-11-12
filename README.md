@@ -45,7 +45,7 @@ Here’s a summary of recent updates and changes.
 - **Expanded Functionality:** Local feature matching is done using [gluefactory](https://github.com/cvg/glue-factory) 
     - Feature extraction methods: SuperPoint, ALIKED, DISK, SIFT features
     - Matching method: LightGlue, More efficient LoFTR
-- **New Feature:** Introduced WildFusion, calibrated score fusion for high-accuracy animal reidentification. Added calibration methods.
+- **New Feature:** Introduced WildFusion (https://arxiv.org/abs/2408.12934), calibrated score fusion for high-accuracy animal reidentification. Added calibration methods.
 - **Bug Fixes:** Resolved issues with knn and ranking inference methods and many more.
 
 
