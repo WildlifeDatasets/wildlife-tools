@@ -8,9 +8,14 @@
   <a href="https://github.com/WildlifeDatasets/wildlife-tools/blob/main/LICENSE"><img src="https://img.shields.io/github/license/WildlifeDatasets/wildlife-tools" alt="License"></a>
 </p>
 
+<p align="center">
+<img src="docs/resources/tools-logo.png" alt="Wildlife tools" width="300">
+</p>
+
 <div align="center">
   <img src="docs/resources/tools-logo.png" alt="Wildlife tools" width="300">
   <p align="center">A toolkit for Animal Individual Identification that covers use cases such as training, feature extraction, similarity calculation, image retrieval, and classification.</p>
+
   <a href="https://wildlifedatasets.github.io/wildlife-tools/">Documentation</a>
   ·
   <a href="https://github.com/WildlifeDatasets/wildlife-tools/issues/new?assignees=aerodynamic-sauce-pan&labels=bug&projects=&template=bug_report.md&title=%5BBUG%5D">Report Bug</a>
@@ -168,3 +173,4 @@ If you like our package, please cite us.
   year={2024}
 }
 ```
+
