@@ -127,7 +127,7 @@ class MatchPairs:
         self,
         dataset0: FeatureDataset,
         dataset1: FeatureDataset,
-        pairs: np.array | None = None,
+        pairs: np.ndarray | None = None,
     ):
         """
         Match pairs of features from two feature datasets.

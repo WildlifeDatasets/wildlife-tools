@@ -1,6 +1,6 @@
 from tqdm import tqdm
 
-from wildlife_tools.data import FeatureDataset, ImageDataset
+from ..data import FeatureDataset, ImageDataset
 
 
 class DataToMemory:

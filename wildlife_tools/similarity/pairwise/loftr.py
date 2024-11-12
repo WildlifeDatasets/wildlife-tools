@@ -65,7 +65,7 @@ class LoFTR(Module):
             if pretrained not in urls.keys():
                 raise ValueError(f"pretrained should be None or one of {urls.keys()}")
 
-            pretrained_dict = torch.hub.load_state_dict_from_url(urls[pretrained], map_location=map_location_to_cpu)
+            pretrained_dict = torch.hub.load_state_dict_from_url(urls[pretrained], map_location=torch.device("cpu"))
             self.load_state_dict(pretrained_dict["state_dict"])
         self.eval()
 

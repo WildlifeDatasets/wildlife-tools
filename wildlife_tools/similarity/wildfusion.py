@@ -158,7 +158,7 @@ class WildFusion:
         for matcher in self.calibrated_pipelines:
             matcher.fit_calibration(dataset0, dataset1)
 
-        if self.priority_pipeline is not None:
+        if (self.priority_pipeline is not None) and (self.priority_pipeline.calibration is not None):
             self.priority_pipeline.fit_calibration(dataset0, dataset1)
 
     def get_priority_pairs(self, dataset0: ImageDataset, dataset1: ImageDataset, B: int) -> np.ndarray:

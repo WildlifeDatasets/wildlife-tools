@@ -1,10 +1,10 @@
 import os
 import random
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.backends.cudnn
-import matplotlib.pyplot as plt
 from PIL import Image
 
 
@@ -22,7 +22,7 @@ def set_seed(seed=0, device="cuda"):
 def frame_image(img, frame_width, color=(255, 0, 0)):
     b = frame_width
     ny, nx = img.shape[0], img.shape[1]
-    framed_img = np.array(Image.new('RGB', (b+ny+b, b+nx+b), color))
+    framed_img = np.array(Image.new("RGB", (b+ny+b, b+nx+b), color))
     framed_img[b:-b, b:-b] = img
     return framed_img
 
@@ -34,17 +34,17 @@ def plot_predictions(images, labels, figsize=(15, 3), frame_size=5):
         img = images[i].mul(255).add_(0.5).clamp_(0, 255).permute(1, 2, 0).to("cpu", torch.uint8).numpy()
 
         if labels[i] == labels[0]:
-            color = 'green'
+            color = "green"
         else:
-            color = 'red'
+            color = "red"
         if i == 0:
-            color = 'yellow'
+            color = "yellow"
 
         img = frame_image(img, frame_size, color=color)
         ax[i].imshow(img)
-        ax[i].axis('off')
+        ax[i].axis("off")
         if len(labels[i]) > 10:
-            label = labels[i][:10] + '...'
+            label = labels[i][:10] + "..."
         else:
             label = labels[i]
         ax[i].text(0.5, 1.05, label, transform=ax[i].transAxes, rotation=30)

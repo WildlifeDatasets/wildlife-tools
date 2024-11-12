@@ -2,7 +2,7 @@ import torch
 from tqdm import tqdm
 from transformers import CLIPModel, CLIPProcessor
 
-from wildlife_tools.data import FeatureDataset, ImageDataset
+from ..data import FeatureDataset, ImageDataset
 
 
 class DeepFeatures:
