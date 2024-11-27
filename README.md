@@ -8,9 +8,14 @@
   <a href="https://github.com/WildlifeDatasets/wildlife-tools/blob/main/LICENSE"><img src="https://img.shields.io/github/license/WildlifeDatasets/wildlife-tools" alt="License"></a>
 </p>
 
+<p align="center">
+<img src="docs/resources/tools-logo.png" alt="Wildlife tools" width="300">
+</p>
+
 <div align="center">
   <img src="docs/resources/tools-logo.png" alt="Wildlife tools" width="300">
   <p align="center">A toolkit for Animal Individual Identification that covers use cases such as training, feature extraction, similarity calculation, image retrieval, and classification.</p>
+
   <a href="https://wildlifedatasets.github.io/wildlife-tools/">Documentation</a>
   ·
   <a href="https://github.com/WildlifeDatasets/wildlife-tools/issues/new?assignees=aerodynamic-sauce-pan&labels=bug&projects=&template=bug_report.md&title=%5BBUG%5D">Report Bug</a>
@@ -40,7 +45,7 @@ Here’s a summary of recent updates and changes.
 - **Expanded Functionality:** Local feature matching is done using [gluefactory](https://github.com/cvg/glue-factory) 
     - Feature extraction methods: SuperPoint, ALIKED, DISK, SIFT features
     - Matching method: LightGlue, More efficient LoFTR
-- **New Feature:** Introduced WildFusion, calibrated score fusion for high-accuracy animal reidentification. Added calibration methods.
+- **New Feature:** Introduced WildFusion (https://arxiv.org/abs/2408.12934), calibrated score fusion for high-accuracy animal reidentification. Added calibration methods.
 - **Bug Fixes:** Resolved issues with knn and ranking inference methods and many more.
 
 
@@ -168,3 +173,4 @@ If you like our package, please cite us.
   year={2024}
 }
 ```
+
