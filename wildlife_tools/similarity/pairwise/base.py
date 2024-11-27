@@ -1,34 +1,11 @@
 import itertools
 
-import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from tqdm import tqdm
 
 from ...data import FeatureDataset
 from .collectors import CollectCounts
-
-
-def visualise_matches(img0, keypoints0, img1, keypoints1):
-    keypoints0 = [cv2.KeyPoint(int(x[0]), int(x[1]), 1) for x in keypoints0]
-    keypoints1 = [cv2.KeyPoint(int(x[0]), int(x[1]), 1) for x in keypoints1]
-
-    # Create dummy matches (DMatch objects)
-    matches = [cv2.DMatch(i, i, 0) for i in range(len(keypoints0))]
-
-    # Draw matches
-    img_matches = cv2.drawMatches(
-        img0,
-        keypoints0,
-        img1,
-        keypoints1,
-        matches,
-        None,
-        flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS,
-    )
-    plt.imshow(img_matches)
-    plt.show()
 
 
 class PairDataset(torch.utils.data.IterableDataset):
