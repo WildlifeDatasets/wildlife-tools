@@ -57,6 +57,7 @@ packages = [
   "wildlife_tools.inference",
   "wildlife_tools.features",
   "wildlife_tools.similarity",
+  "wildlife_tools.similarity.pairwise",
   "wildlife_tools.train",
 ]
 
