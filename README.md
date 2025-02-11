@@ -143,8 +143,8 @@ import numpy as np
 from wildlife_tools.inference import KnnClassifier
 
 classifier = KnnClassifier(k=1, database_labels=dataset_database.labels_string)
-predictions = classifier(similarity['cosine'])
-accuracy = np.mean(dataset_database.labels_string == predictions)
+predictions = classifier(similarity)
+accuracy = np.mean(dataset_query.labels_string == predictions)
 ```
 
 ## Citation
