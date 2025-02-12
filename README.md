@@ -52,18 +52,14 @@ Here’s a summary of recent updates and changes.
 
 ## Installation
 
-To install `wildlife-tools`, you can build it from scratch or use pre-build Pypi package.
-
-
-### Using Pypi
+Install `wildlife-tools` using `pip`
 
 ```script
-pip install wildlife-tools
+pip install git+https://github.com/WildlifeDatasets/wildlife-tools
 ```
 
-### Building from scratch
+or clone the repository using `git` and install it.
 
-Clone the repository using `git` and install it.
 ```script
 git clone git@github.com:WildlifeDatasets/wildlife-tools.git
 
