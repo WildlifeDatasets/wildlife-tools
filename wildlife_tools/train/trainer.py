@@ -127,22 +127,28 @@ class BasicTrainer:
         correct = 0
         total = 0
         train_accuracy_epoch_avg = 0
-        for i, batch in enumerate(tqdm(loader, desc=f"Epoch {self.epoch}: ", mininterval=1, ncols=100)):
-            x, y = batch
-            x, y = x.to(self.device), y.to(self.device)
+        with tqdm(loader, desc=f"Epoch {self.epoch}: ", mininterval=1, ncols=100) as pbarT:
+            for i, batch in enumerate(pbarT):
+                x, y = batch
+                x, y = x.to(self.device), y.to(self.device)
+    
+                out = model(x)
+                loss = self.objective(out, y)
+                loss.backward()
+                if (i - 1) % self.accumulation_steps == 0:
+                    self.optimizer.step()
+                    self.optimizer.zero_grad()
+    
+                losses.append(loss.detach().cpu())
+    
+                _, predicted = out.max(1)
+                total += y.size(0)
+                correct += predicted.eq(y).sum().item()
 
-            out = model(x)
-            loss = self.objective(out, y)
-            loss.backward()
-            if (i - 1) % self.accumulation_steps == 0:
-                self.optimizer.step()
-                self.optimizer.zero_grad()
+                dis_loss = loss.item()
+                accuracy = 100. * correct / total
 
-            losses.append(loss.detach().cpu())
-
-            _, predicted = out.max(1)
-            total += y.size(0)
-            correct += predicted.eq(y).sum().item()
+                pbarT.set_postfix(loss=f"{dis_loss:.4f}", accuracy=f"{accuracy:.2f}%")
 
         train_accuracy_epoch_avg = 100. * correct / total
 
