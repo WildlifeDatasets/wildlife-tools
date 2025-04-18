@@ -126,6 +126,7 @@ class BasicTrainer:
         losses = []
         correct = 0
         total = 0
+        train_accuracy_epoch_avg = 0
         for i, batch in enumerate(tqdm(loader, desc=f"Epoch {self.epoch}: ", mininterval=1, ncols=100)):
             x, y = batch
             x, y = x.to(self.device), y.to(self.device)
@@ -150,7 +151,7 @@ class BasicTrainer:
 
         # return {"train_loss_epoch_avg": np.mean(losses)}
         return {
-            "train_loss_epoch_avg": train_loss_epoch_avg,
+            "train_loss_epoch_avg": np.mean(losses),
             "train_accuracy_epoch_avg": train_accuracy_epoch_avg
         }
 
