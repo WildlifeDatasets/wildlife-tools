@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import torch.backends.cudnn
 from tqdm import tqdm
+from torch.utils.tensorboard import SummaryWriter
 
 
 def set_seed(seed=0):
@@ -76,22 +77,27 @@ class BasicTrainer:
             Number of gradient accumulation steps.
         epoch_callback:
             Callback function to be called after each epoch.
-
+        writer (SummaryWriter, optional):
+            TensorBoard SummaryWriter instance. If None, TensorBoard logging is disabled.
+        log_interval (int, default: 3):
+            Interval (in batches) at which to log training metrics to TensorBoard.
     """
 
     def __init__(
-        self,
-        dataset,
-        model,
-        objective,
-        optimizer,
-        epochs,
-        scheduler=None,
-        device="cuda",
-        batch_size=128,
-        num_workers=1,
-        accumulation_steps=1,
-        epoch_callback=None,
+            self,
+            dataset,
+            model,
+            objective,
+            optimizer,
+            epochs,
+            scheduler=None,
+            device="cuda",
+            batch_size=128,
+            num_workers=1,
+            accumulation_steps=1,
+            epoch_callback=None,
+            writer=None,
+            log_interval=3,
     ):
         self.dataset = dataset
         self.model = model.to(device)
@@ -105,6 +111,9 @@ class BasicTrainer:
         self.num_workers = num_workers
         self.accumulation_steps = accumulation_steps
         self.epoch_callback = epoch_callback
+        self.log_interval = log_interval
+        self.writer = writer
+        self.global_step = 0
 
     def train(self):
         loader = torch.utils.data.DataLoader(
@@ -131,16 +140,16 @@ class BasicTrainer:
             for i, batch in enumerate(pbarT):
                 x, y = batch
                 x, y = x.to(self.device), y.to(self.device)
-    
+
                 out = model(x)
                 loss = self.objective(out, y)
                 loss.backward()
                 if (i - 1) % self.accumulation_steps == 0:
                     self.optimizer.step()
                     self.optimizer.zero_grad()
-    
+
                 losses.append(loss.detach().cpu())
-    
+
                 _, predicted = out.max(1)
                 total += y.size(0)
                 correct += predicted.eq(y).sum().item()
@@ -150,14 +159,25 @@ class BasicTrainer:
 
                 pbarT.set_postfix(loss=f"{dis_loss:.4f}", accuracy=f"{accuracy:.2f}%")
 
+
+                if self.writer and i % self.log_interval == 0:
+                    self.global_step += 1
+                    self.writer.add_scalar('Training/Batch_Loss', dis_loss, self.global_step)
+                    self.writer.add_scalar('Training/Batch_Accuracy', accuracy, self.global_step)
+
         train_accuracy_epoch_avg = 100. * correct / total
+        train_loss_epoch_avg = np.mean(losses)
+
+
+        if self.writer:
+            self.writer.add_scalar('Training/Epoch_Loss', train_loss_epoch_avg, self.epoch)
+            self.writer.add_scalar('Training/Epoch_Accuracy', train_accuracy_epoch_avg, self.epoch)
 
         if self.scheduler:
             self.scheduler.step()
 
-        # return {"train_loss_epoch_avg": np.mean(losses)}
         return {
-            "train_loss_epoch_avg": np.mean(losses),
+            "train_loss_epoch_avg": train_loss_epoch_avg,
             "train_accuracy_epoch_avg": train_accuracy_epoch_avg
         }
 
