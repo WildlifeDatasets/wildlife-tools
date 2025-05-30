@@ -37,7 +37,7 @@ class TripletLoss(nn.Module):
 
     """
 
-    def __init__(self, margin: int = 0.2, mining: str = "seminard", distance: str = "l2_squared"):
+    def __init__(self, margin: int = 0.2, mining: str = "semihard", distance: str = "l2_squared"):
         super().__init__()
         if distance == "cosine":
             distance = distances.CosineSimilarity()
