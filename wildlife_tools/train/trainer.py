@@ -84,20 +84,20 @@ class BasicTrainer:
     """
 
     def __init__(
-            self,
-            dataset,
-            model,
-            objective,
-            optimizer,
-            epochs,
-            scheduler=None,
-            device="cuda",
-            batch_size=128,
-            num_workers=1,
-            accumulation_steps=1,
-            epoch_callback=None,
-            writer=None,
-            log_interval=3,
+        self,
+        dataset,
+        model,
+        objective,
+        optimizer,
+        epochs,
+        scheduler=None,
+        device="cuda",
+        batch_size=128,
+        num_workers=1,
+        accumulation_steps=1,
+        epoch_callback=None,
+        writer=None,
+        log_interval=3,
     ):
         self.dataset = dataset
         self.model = model.to(device)
