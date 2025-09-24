@@ -32,7 +32,7 @@
 
   <div>
     <img src="resources/datasets-logo.png" alt="Image 2" width="200" style="margin-bottom: 5px;"> <!-- Adjust margin as needed -->
-    <p><a href="https://huggingface.co/BVRA/MegaDescriptor-L-384">Wildlife Datasets</a></p>
+    <p><a href="https://github.com/WildlifeDatasets/wildlife-datasets" >Wildlife Datasets</a></p>
   </div>
 </div>
 </div>
