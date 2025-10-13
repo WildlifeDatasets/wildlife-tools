@@ -1,3 +1,4 @@
+import os
 import pytest
 import torchvision.transforms as T
 import pandas as pd
@@ -10,7 +11,9 @@ import timm
 
 @pytest.fixture(scope="session")
 def metadata():
-    return {'metadata':  pd.read_csv('TestDataset/metadata.csv'), 'root': 'TestDataset'}
+    path = os.path.dirname(__file__)
+    csv_path = os.path.join(path, 'TestDataset', 'metadata.csv')
+    return {'metadata': pd.read_csv(csv_path), 'root': os.path.join(path, 'TestDataset')}
 
 
 @pytest.fixture(scope="session")
@@ -38,7 +41,7 @@ def dataset_lightglue(metadata):
 @pytest.fixture(scope="session")
 def dataset_loftr(metadata):
     transform = T.Compose([T.Resize([224, 224]), T.Grayscale(), T.ToTensor()])
-    return ImageDataset(**metadata, transform=transform, load_label=False)
+    return ImageDataset(**metadata, transform=transform, load_label=True)
 
 
 @pytest.fixture(scope="session")

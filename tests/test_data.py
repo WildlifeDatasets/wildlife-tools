@@ -4,27 +4,35 @@ import pytest
 from wildlife_tools.data import WildlifeDataset, FeatureDataset
 from PIL.Image import Image
 
-load_options = ['full', 'full_mask', 'full_hide', 'bbox', 'bbox_mask', 'bbox_hide', 'crop_black']
+load_options_ok = ['full', 'crop_black']
+load_options_error = ['full_mask', 'full_hide', 'bbox', 'bbox_mask', 'bbox_hide']
 
 
-@pytest.mark.parametrize("img_load", load_options)
-def test_wildllife_dataset_img_load(metadata, img_load):
+@pytest.mark.parametrize("img_load", load_options_ok)
+def test_wildlife_dataset_img_load_ok(metadata, img_load):
     dataset = WildlifeDataset(**metadata, img_load=img_load)
-    assert len(dataset) == 3
+    assert len(dataset) == 4
     assert isinstance(dataset[0][0], Image)
     assert isinstance(dataset.num_classes, int)
 
 
-def test_wildllife_dataset_no_label(metadata):
+@pytest.mark.parametrize("img_load", load_options_error)
+def test_wildlife_dataset_img_load_error(metadata, img_load):
+    with pytest.raises(ValueError):
+        dataset = WildlifeDataset(**metadata, img_load=img_load)
+        dataset[0]
+
+
+def test_wildlife_dataset_no_label(metadata):
     dataset = WildlifeDataset(**metadata, load_label=False)
-    assert len(dataset) == 3
+    assert len(dataset) == 4
     assert isinstance(dataset[0], Image)
     assert isinstance(dataset.num_classes, int)
 
 
 def test_deep_feature_dataset(dataset, features_deep):
     feature_dataset = FeatureDataset(features_deep, metadata=dataset.metadata)
-    assert len(feature_dataset) == 3
+    assert len(feature_dataset) == 4
     assert all(dataset.labels_string == feature_dataset.labels_string)
     assert isinstance(dataset.num_classes, int)
 
