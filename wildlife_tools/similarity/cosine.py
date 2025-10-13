@@ -28,7 +28,7 @@ class CosineSimilarity:
             database (FeatureDataset): Database dataset of deep features.
 
         Returns:
-            similarity (np.array): 2D numpy array with cosine similarity.
+            similarity (np.ndarray): 2D numpy array with cosine similarity.
 
         """
 

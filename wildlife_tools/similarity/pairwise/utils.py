@@ -9,10 +9,10 @@ def visualise_matches(img0: Image, keypoints0: np.ndarray, img1: Image, keypoint
     Visualise matches between two images.
 
     Args:
-        img0 (np.array or PIL Image): First image.
-        keypoints0 (np.array): Keypoints in the first image.
-        img1 (np.array): Second image.
-        keypoints1 (np.array): Keypoints in the second image.
+        img0 (np.ndarray | Image): First image.
+        keypoints0 (np.ndarray): Keypoints in the first image.
+        img1 (np.ndarray | Image): Second image.
+        keypoints1 (np.ndarray): Keypoints in the second image.
         ax (matplotlib.axes.Axes, optional): Matplotlib axis to draw on. If None, a new axis is created.
     """
 

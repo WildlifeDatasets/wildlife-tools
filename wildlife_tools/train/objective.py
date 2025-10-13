@@ -9,11 +9,18 @@ class ArcFaceLoss(nn.Module):
     Args:
         num_classes (int): Number of classes.
         embedding_size (int): Size of the input embeddings.
-        margin (int): Margin for ArcFace loss (in radians).
-        scale (int): Scale parameter for ArcFace loss.
+        margin (int, optional): Margin for ArcFace loss (in radians).
+        scale (int, optional): Scale parameter for ArcFace loss.
     """
 
-    def __init__(self, num_classes: int, embedding_size: int, margin: int = 0.5, scale: int = 64):
+    def __init__(
+            self,
+            num_classes: int,
+            embedding_size: int,
+            margin: int = 0.5,
+            scale: int = 64
+        ):
+
         super().__init__()
         self.loss = losses.ArcFaceLoss(
             num_classes=num_classes,
@@ -31,13 +38,19 @@ class TripletLoss(nn.Module):
     Wraps Pytorch Metric Learning TripletMarginLoss.
 
     Args:
-        margin (int): Margin for triplet loss.
-        mining (str): Type of triplet mining. One of: 'all', 'hard', 'semihard'
-        distance (str): Distance metric for triplet loss. One of: 'cosine', 'l2', 'l2_squared'
+        margin (int, optional): Margin for triplet loss.
+        mining (str, optional): Type of triplet mining. One of: 'all', 'hard', 'semihard'
+        distance (str, optional): Distance metric for triplet loss. One of: 'cosine', 'l2', 'l2_squared'
 
     """
 
-    def __init__(self, margin: int = 0.2, mining: str = "semihard", distance: str = "l2_squared"):
+    def __init__(
+            self,
+            margin: int = 0.2,
+            mining: str = "semihard",
+            distance: str = "l2_squared"
+        ):
+
         super().__init__()
         if distance == "cosine":
             distance = distances.CosineSimilarity()
@@ -65,7 +78,12 @@ class SoftmaxLoss(nn.Module):
         embedding_size (int): Size of the input embeddings.
     """
 
-    def __init__(self, num_classes: int, embedding_size: int):
+    def __init__(
+            self,
+            num_classes: int,
+            embedding_size: int
+            ):
+        
         super().__init__()
         self.criterion = nn.CrossEntropyLoss()
         self.linear = nn.Linear(embedding_size, num_classes)

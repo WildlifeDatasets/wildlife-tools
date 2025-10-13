@@ -197,10 +197,10 @@ class WildFusion:
                                               If None, compute similarity scores for all pairs.
 
         Returns:
-            np.ndarray: 2D array of similarity scores between the query and database images.
+            score_combined (np.ndarray): 2D array of similarity scores between the query and database images.
                         If `calibration` is provided, returns the calibrated similarity scores.
-
         """
+        
         if B is not None:
             pairs = self.get_priority_pairs(dataset0, dataset1, B=B)
 

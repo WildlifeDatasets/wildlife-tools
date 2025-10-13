@@ -1,3 +1,4 @@
+import matplotlib.axes
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -17,10 +18,10 @@ class LogisticCalibration:
         Fit the logistic regression model to calibrate raw scores.
 
         Args:
-            scores (np.array): Raw uncalibrated scores.
-            hits (np.array): Ground truth binary labels.
-
+            scores (np.ndarray): Raw uncalibrated scores.
+            hits (np.ndarray): Ground truth binary labels.
         """
+        
         self.model.fit(np.atleast_2d(scores).T, hits)
 
     def predict(self, scores: np.ndarray):
@@ -28,11 +29,12 @@ class LogisticCalibration:
         Predict calibrated scores using a fitted calibration model.
 
         Args:
-            scores (np.array): Raw uncalibrated scores.
+            scores (np.ndarray): Raw uncalibrated scores.
 
         Returns:
-            prediction (np.array): Calibrated scores.
+            prediction (np.ndarray): Calibrated scores.
         """
+
         return self.model.predict_proba(np.atleast_2d(scores).T)[:, 1]
 
 
@@ -64,8 +66,8 @@ class IsotonicCalibration:
         """Fit the isotonic regression model to calibrate the scores.
 
         Args:
-            scores (np.array): Raw uncalibrated scores.
-            hits (np.array): Ground truth binary labels.
+            scores (np.ndarray): Raw uncalibrated scores.
+            hits (np.ndarray): Ground truth binary labels.
         """
 
         x = scores
@@ -87,10 +89,10 @@ class IsotonicCalibration:
         Predict calibrated scores using a fitted calibration model.
 
         Args:
-            scores (np.array): Raw uncalibrated scores.
+            scores (np.ndarray): Raw uncalibrated scores.
 
         Returns:
-            calibrated_scores (np.array): Calibrated scores.
+            calibrated_scores (np.ndarray): Calibrated scores.
         """
         x = np.float64(scores)
 
@@ -109,7 +111,7 @@ class IsotonicCalibration:
 def reliability_diagram(
     scores: np.ndarray,
     hits: np.ndarray,
-    ax=None,
+    ax: matplotlib.axes.Axes | None = None,
     skip_plot: bool = False,
     num_bins: int = 10,
     title: str = "Reliability Diagram",
@@ -119,12 +121,12 @@ def reliability_diagram(
     scores and hits.
 
     Args:
-        scores (np.array): Raw uncalibrated scores.
-        hits (np.array): Ground truth binary labels.
-        ax (matplotlib.axes.Axes): Axes to plot the diagram on. If None, a new figure is created.
-        skip_plot (bool): If True, only return ECE value.
-        num_bins (int): Number of bins to divide the scores into.
-        title (str): Title of the plot.
+        scores (np.ndarray): Raw uncalibrated scores.
+        hits (np.ndarray): Ground truth binary labels.
+        ax (matplotlib.axes.Axes, optional): Axes to plot the diagram on. If None, a new figure is created.
+        skip_plot (bool, optional): If True, only return ECE value.
+        num_bins (int, optional): Number of bins to divide the scores into.
+        title (str, optional): Title of the plot.
 
     Returns:
         ece (float): Expected Calibration Error.

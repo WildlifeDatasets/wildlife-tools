@@ -1,10 +1,11 @@
 import os
 import random
-
 import numpy as np
 import torch
 import torch.backends.cudnn
 from tqdm import tqdm
+from typing import Optional, Callable
+from ..data import ImageDataset
 
 
 def set_seed(seed=0):
@@ -54,44 +55,43 @@ class BasicTrainer:
     Checkpoints includes random states - any restarts from checkpoint preservers reproducibility.
 
     Args:
-        dataset ():
+        dataset (ImageDataset):
             Training dataset that gives (x, y) tensor pairs.
-        model (dict):
+        model (torch.nn.Module):
             Pytorch nn.Module for model / backbone.
-        objective (dict):
+        objective (torch.nn.Module):
             Pytorch nn.Module for objective / loss function.
-        optimizer:
+        optimizer (torch.optim.Optimizer):
             Pytorch optimizer.
-        scheduler (optional):
-            Pytorch scheduler.
         epochs (int):
             Number of training epochs.
-        device (str, default: 'cuda'):
+        scheduler (torch.optim.lr_scheduler._LRScheduler, optinal):
+            Pytorch scheduler.
+        device (str, optional):
             Device to be used for training.
-        batch_size (int, default: 128):
+        batch_size (int, optional):
             Training batch size.
-        num_workers (int, default: 1):
+        num_workers (int, optional):
             Number of data loading workers in torch DataLoader.
-        accumulation_steps (int, default: 1):
+        accumulation_steps (int, optional):
             Number of gradient accumulation steps.
-        epoch_callback:
+        epoch_callback (Callable, optional):
             Callback function to be called after each epoch.
-
     """
 
     def __init__(
         self,
-        dataset,
-        model,
-        objective,
-        optimizer,
-        epochs,
-        scheduler=None,
-        device="cuda",
-        batch_size=128,
-        num_workers=1,
-        accumulation_steps=1,
-        epoch_callback=None,
+        dataset: ImageDataset,
+        model: torch.nn.Module,
+        objective: torch.nn.Module,
+        optimizer: torch.optim.Optimizer,
+        epochs: int,
+        scheduler: torch.optim.lr_scheduler._LRScheduler | None= None,
+        device: str = "cuda",
+        batch_size: int = 128,
+        num_workers: int = 1,
+        accumulation_steps: int = 1,
+        epoch_callback: Optional[Callable] = None,
     ):
         self.dataset = dataset
         self.model = model.to(device)

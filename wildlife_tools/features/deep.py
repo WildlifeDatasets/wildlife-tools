@@ -1,7 +1,7 @@
 import torch
 from tqdm import tqdm
 from transformers import CLIPModel, CLIPProcessor
-
+from typing import Optional
 from ..data import FeatureDataset, ImageDataset
 
 
@@ -19,11 +19,10 @@ class DeepFeatures:
     ):
         """
         Args:
-            model: Pytorch model used for the feature extraction.
-            batch_size: Batch size used for the feature extraction.
-            num_workers: Number of workers used for data loading.
-            device: Select between cuda and cpu devices.
-
+            model (torch.nn.Module): Pytorch model used for the feature extraction.
+            batch_size (int, optional): Batch size used for the feature extraction.
+            num_workers (int, optional): Number of workers used for data loading.
+            device (str, optional): Select between cuda and cpu devices.
         """
 
         self.batch_size = batch_size
@@ -36,11 +35,10 @@ class DeepFeatures:
         Extract features from input dataset and return them as a new FeatureDataset.
 
         Args:
-            dataset: Extract features from this dataset.
-
+            dataset (ImageDataset): Extract features from this dataset.
 
         Returns:
-            feature_dataset: A FeatureDataset containing the extracted features
+            feature_dataset (FeatureDataset): A FeatureDataset containing the extracted features
         """
 
         self.model = self.model.to(self.device)
@@ -76,21 +74,21 @@ class ClipFeatures:
 
     def __init__(
         self,
-        model=None,
-        processor=None,
-        batch_size=128,
-        num_workers=1,
-        device="cpu",
+        model: Optional[CLIPModel] = None,
+        processor: Optional[CLIPProcessor] = None,
+        batch_size: int = 128,
+        num_workers: int = 1,
+        device: str = "cpu",
     ):
         """
         Args:
-            model: transformer.CLIPModel. Uses VIT-L backbone by default.
-            processor: transformer.CLIPProcessor. Uses VIT-L processor by default.
-            batch_size: Batch size used for the feature extraction.
-            num_workers: Number of workers used for data loading.
-            device: Select between cuda and cpu devices.
-
+            model (CLIPModel, optional): Uses VIT-L backbone by default.
+            processor: (CLIPProcessor, optional). Uses VIT-L processor by default.
+            batch_size (int, optional): Batch size used for the feature extraction.
+            num_workers (int, optional): Number of workers used for data loading.
+            device (str, optional): Select between cuda and cpu devices.
         """
+
         if model is None:
             model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14").vision_model
 
@@ -109,12 +107,12 @@ class ClipFeatures:
         Extract clip features from input dataset and return them as a new FeatureDataset.
 
         Args:
-            dataset: Extract features from this dataset.
-
+            dataset (ImageDataset): Extract features from this dataset.
 
         Returns:
-            feature_dataset: A FeatureDataset containing the extracted features
+            feature_dataset (FeatureDataset): A FeatureDataset containing the extracted features
         """
+
         self.model = self.model.to(self.device)
         self.model = self.model.eval()
 
