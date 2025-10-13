@@ -43,13 +43,12 @@ def test_wildlife_datasets_train2(wd_dataset_no_labels, backbone):
     params = chain(backbone.parameters(), objective.parameters())
     optimizer = SGD(params=params, lr=0.001, momentum=0.9)
 
-    trainer = BasicTrainer(
-        dataset=wd_dataset_no_labels,
-        model=backbone,
-        objective=objective,
-        optimizer=optimizer,
-        epochs=2,
-        device='cpu',
-    )
     with pytest.raises(ValueError):
-        trainer.train()
+        BasicTrainer(
+            dataset=wd_dataset_no_labels,
+            model=backbone,
+            objective=objective,
+            optimizer=optimizer,
+            epochs=2,
+            device='cpu',
+        )
