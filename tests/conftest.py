@@ -2,6 +2,7 @@ import os
 import pytest
 import torchvision.transforms as T
 import pandas as pd
+from wildlife_datasets import datasets
 from wildlife_tools.data import ImageDataset
 from wildlife_tools.features import DeepFeatures, SiftExtractor, SuperPointExtractor
 from wildlife_tools.similarity import CosineSimilarity, MatchLightGlue
@@ -19,6 +20,11 @@ def metadata():
 @pytest.fixture(scope="session")
 def array():
     return np.array([[1.0]])
+
+
+@pytest.fixture(scope="session")
+def backbone():
+    return timm.create_model('hf-hub:BVRA/MegaDescriptor-T-224', num_classes=0, pretrained=True)
 
 
 @pytest.fixture(scope="session")
@@ -45,6 +51,11 @@ def dataset_loftr(metadata):
 
 
 @pytest.fixture(scope="session")
+def extractor(backbone):
+    return DeepFeatures(backbone)
+
+
+@pytest.fixture(scope="session")
 def features_sift(dataset_lightglue):
     extractor = SiftExtractor()
     return extractor(dataset_lightglue)
@@ -57,9 +68,7 @@ def features_superpoint(dataset_lightglue):
 
 
 @pytest.fixture(scope="session")
-def features_deep(dataset_deep):
-    backbone = timm.create_model('hf-hub:BVRA/MegaDescriptor-T-224', num_classes=0, pretrained=True)
-    extractor = DeepFeatures(backbone)
+def features_deep(dataset_deep, extractor):
     return extractor(dataset_deep)
 
 
@@ -79,3 +88,15 @@ def similarity_sift(features_sift):
 def similarity_superpoint(features_superpoint):
     similarity = MatchLightGlue(features='sift', descriptor_dim=128, thresholds=[0.5])
     return similarity(features_superpoint, features_superpoint)
+
+
+@pytest.fixture(scope="session")
+def wd_dataset_labels(metadata):
+    transform = T.Compose([T.Resize([224, 224]), T.ToTensor()])
+    return datasets.WildlifeDataset(metadata['root'], metadata['metadata'], transform=transform, load_label=True, factorize_label=True)
+
+
+@pytest.fixture(scope="session")
+def wd_dataset_no_labels(metadata):
+    transform = T.Compose([T.Resize([224, 224]), T.ToTensor()])
+    return datasets.WildlifeDataset(metadata['root'], metadata['metadata'], transform=transform)
