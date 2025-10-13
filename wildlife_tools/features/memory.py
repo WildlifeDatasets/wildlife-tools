@@ -1,6 +1,6 @@
 from tqdm import tqdm
-
 from ..data import FeatureDataset, ImageDataset
+from ..tools import check_dataset_output
 
 
 class DataToMemory:
@@ -17,6 +17,7 @@ class DataToMemory:
         """Loads data from input dataset into array and returns them as a new FeatureDataset."""
 
         features = []
+        check_dataset_output(dataset, check_label=False)
         for x, _ in tqdm(dataset, mininterval=1, ncols=100):
             features.append(x)
         return FeatureDataset(

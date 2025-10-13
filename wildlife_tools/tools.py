@@ -8,6 +8,23 @@ import torch.backends.cudnn
 from PIL import Image
 
 
+def check_dataset_output(dataset, check_label=False):
+    output = dataset[0]
+    if not isinstance(output, tuple):
+        raise ValueError('''
+            Calling `dataset[0]` must returned a tuple.
+            Try to use `load_label=True` when creating the dataset.
+            ''')
+    label = output[1]
+    if check_label and (isinstance(label, str) or isinstance(label, np.str_)):
+        raise ValueError('''
+            Calling `dataset[0]` must returned a tuple,
+            where the second part (label) is an integer.
+            If you used the WildlifeDataset from wildlife-datasets,
+            try to use `factorize_label=True` when creating the dataset.
+            ''')
+
+
 def frame_image(img, frame_width, color=(255, 0, 0)):
     b = frame_width
     ny, nx = img.shape[0], img.shape[1]

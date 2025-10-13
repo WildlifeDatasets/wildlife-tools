@@ -6,6 +6,7 @@ import torch.backends.cudnn
 from tqdm import tqdm
 from typing import Optional, Callable
 from ..data import ImageDataset
+from ..tools import check_dataset_output
 
 
 def set_seed(seed=0, device="cuda"):
@@ -94,6 +95,7 @@ class BasicTrainer:
         accumulation_steps: int = 1,
         epoch_callback: Optional[Callable] = None,
     ):
+        check_dataset_output(dataset, check_label=True)
         self.dataset = dataset
         self.model = model.to(device)
         self.objective = objective.to(device)

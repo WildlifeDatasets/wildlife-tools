@@ -6,6 +6,7 @@ from omegaconf import OmegaConf
 from tqdm import tqdm
 
 from ..data import FeatureDataset, ImageDataset
+from ..tools import check_dataset_output
 from .gluefactory_fix import extract_single_image_fix  # https://github.com/cvg/glue-factory/pull/50
 
 
@@ -53,6 +54,7 @@ class GlueFactoryExtractor:
         """
 
         features = []
+        check_dataset_output(dataset, check_label=False)
         loader = torch.utils.data.DataLoader(
             dataset,
             num_workers=self.num_workers,

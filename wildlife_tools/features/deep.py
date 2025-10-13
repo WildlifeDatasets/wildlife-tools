@@ -3,6 +3,7 @@ from tqdm import tqdm
 from transformers import CLIPModel, CLIPProcessor
 from typing import Optional
 from ..data import FeatureDataset, ImageDataset
+from ..tools import check_dataset_output
 
 
 class DeepFeatures:
@@ -43,7 +44,8 @@ class DeepFeatures:
 
         self.model = self.model.to(self.device)
         self.model = self.model.eval()
-
+        
+        check_dataset_output(dataset, check_label=False)
         loader = torch.utils.data.DataLoader(
             dataset,
             num_workers=self.num_workers,
@@ -119,6 +121,7 @@ class ClipFeatures:
         # TODO: this is hacky
         dataset.transforms = None  # Reset transforms.
 
+        check_dataset_output(dataset, check_label=False)
         loader = torch.utils.data.DataLoader(
             dataset,
             num_workers=self.num_workers,
@@ -127,7 +130,7 @@ class ClipFeatures:
             collate_fn=lambda x: x,
         )
         outputs = []
-        for image in tqdm(loader, mininterval=1, ncols=100):
+        for image, _ in tqdm(loader, mininterval=1, ncols=100):
             with torch.no_grad():
                 output = self.model(self.transform(image).to(self.device)).pooler_output
                 outputs.append(output.cpu())
