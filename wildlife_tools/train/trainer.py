@@ -8,16 +8,6 @@ from typing import Optional, Callable
 from ..data import ImageDataset
 
 
-def set_seed(seed=0):
-    os.environ["PYTHONHASHSEED"] = str(seed)
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
-
-
 def set_random_states(states):
     if "os_rng_state" in states and states["os_rng_state"]:
         os.environ["PYTHONHASHSEED"] = states["os_rng_state"]
