@@ -47,7 +47,7 @@ class KnnClassifier:
         preds = self.database_labels[idx]
 
         preds = np.array(preds)
-        scores = np.array(scores)
+        scores = scores.numpy()
 
         # Aggregate k nearest neighbors
         data = []
@@ -117,8 +117,8 @@ class TopkClassifier:
         preds = self.database_labels[idx]
 
         preds = np.array(preds)
-        scores = np.array(scores)
-        idx = np.array(idx)
+        scores = scores.numpy()
+        idx = idx.numpy()
 
         # Collect data for first label occurrence
         data = []
