@@ -88,7 +88,7 @@ class BasicTrainer:
         objective: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
         epochs: int,
-        scheduler: torch.optim.lr_scheduler._LRScheduler | None= None,
+        scheduler: torch.optim.lr_scheduler._LRScheduler | None = None,
         device: str = "cuda",
         batch_size: int = 128,
         num_workers: int = 1,

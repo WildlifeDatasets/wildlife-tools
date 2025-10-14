@@ -13,13 +13,7 @@ class ArcFaceLoss(nn.Module):
         scale (int, optional): Scale parameter for ArcFace loss.
     """
 
-    def __init__(
-            self,
-            num_classes: int,
-            embedding_size: int,
-            margin: int = 0.5,
-            scale: int = 64
-        ):
+    def __init__(self, num_classes: int, embedding_size: int, margin: int = 0.5, scale: int = 64):
 
         super().__init__()
         self.loss = losses.ArcFaceLoss(
@@ -44,12 +38,7 @@ class TripletLoss(nn.Module):
 
     """
 
-    def __init__(
-            self,
-            margin: int = 0.2,
-            mining: str = "semihard",
-            distance: str = "l2_squared"
-        ):
+    def __init__(self, margin: int = 0.2, mining: str = "semihard", distance: str = "l2_squared"):
 
         super().__init__()
         if distance == "cosine":
@@ -78,12 +67,8 @@ class SoftmaxLoss(nn.Module):
         embedding_size (int): Size of the input embeddings.
     """
 
-    def __init__(
-            self,
-            num_classes: int,
-            embedding_size: int
-            ):
-        
+    def __init__(self, num_classes: int, embedding_size: int):
+
         super().__init__()
         self.criterion = nn.CrossEntropyLoss()
         self.linear = nn.Linear(embedding_size, num_classes)

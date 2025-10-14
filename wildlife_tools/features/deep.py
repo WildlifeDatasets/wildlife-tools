@@ -44,7 +44,7 @@ class DeepFeatures:
 
         self.model = self.model.to(self.device)
         self.model = self.model.eval()
-        
+
         check_dataset_output(dataset, check_label=False)
         loader = torch.utils.data.DataLoader(
             dataset,

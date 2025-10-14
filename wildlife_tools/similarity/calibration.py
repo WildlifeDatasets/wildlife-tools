@@ -21,7 +21,7 @@ class LogisticCalibration:
             scores (np.ndarray): Raw uncalibrated scores.
             hits (np.ndarray): Ground truth binary labels.
         """
-        
+
         self.model.fit(np.atleast_2d(scores).T, hits)
 
     def predict(self, scores: np.ndarray):

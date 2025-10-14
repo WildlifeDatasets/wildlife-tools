@@ -84,7 +84,7 @@ class ImageDataset:
 class WildlifeDataset(ImageDataset):
     """
     PyTorch-style dataset for a datasets from wildlife-datasets library.
-    
+
     Args:
         metadata (pd.DataFrame): A pandas dataframe containing image metadata.
         root (str | None, optional): Root directory if paths in metadata are relative. If None, absolute paths in metadata are used.
