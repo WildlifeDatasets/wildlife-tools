@@ -1,4 +1,5 @@
 from tqdm import tqdm
+
 from ..data import FeatureDataset, ImageDataset
 from ..tools import check_dataset_output
 

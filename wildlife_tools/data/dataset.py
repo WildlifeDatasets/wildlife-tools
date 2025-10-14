@@ -1,13 +1,13 @@
 import json
 import os
 import pickle
-import torch
 from typing import Callable, List
 
 import cv2
 import numpy as np
 import pandas as pd
 import pycocotools.mask as mask_coco
+import torch
 from PIL import Image
 
 

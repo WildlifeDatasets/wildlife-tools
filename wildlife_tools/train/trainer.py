@@ -1,10 +1,12 @@
 import os
 import random
+from typing import Callable, Optional
+
 import numpy as np
 import torch
 import torch.backends.cudnn
 from tqdm import tqdm
-from typing import Optional, Callable
+
 from ..data import ImageDataset
 from ..tools import check_dataset_output
 

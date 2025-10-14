@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from typing import Tuple
+
 import numpy as np
 import pandas as pd
 import torch
-from typing import Tuple
 
 
 class KnnClassifier:

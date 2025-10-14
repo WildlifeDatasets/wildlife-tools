@@ -1,7 +1,9 @@
+from typing import Optional
+
 import torch
 from tqdm import tqdm
 from transformers import CLIPModel, CLIPProcessor
-from typing import Optional
+
 from ..data import FeatureDataset, ImageDataset
 from ..tools import check_dataset_output
 

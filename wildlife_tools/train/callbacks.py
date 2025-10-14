@@ -1,6 +1,8 @@
 import os
-from torch.utils.tensorboard import SummaryWriter
 from typing import List
+
+from torch.utils.tensorboard import SummaryWriter
+
 from .trainer import BasicTrainer
 
 
