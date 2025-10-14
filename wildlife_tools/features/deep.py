@@ -120,9 +120,6 @@ class ClipFeatures:
         self.model = self.model.to(self.device)
         self.model = self.model.eval()
 
-        # TODO: this is hacky
-        dataset.transforms = None  # Reset transforms.
-
         check_dataset_output(dataset, check_label=False)
         loader = torch.utils.data.DataLoader(
             dataset,
