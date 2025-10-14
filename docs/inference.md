@@ -150,24 +150,23 @@ The following example matches all pairs by the SuperGlue matcher with SuperPoint
 
 ```python
 from wildlife_tools.features import SuperPointExtractor
-from wildlife_tools.similarity.pairwise import MatchLightGlue
-from wildlife_tools.similarity.pairwise import CollectCounts
+from wildlife_tools.similarity import MatchLightGlue, CollectCounts
 
-dataset.transform = T.Compose([T.Resize([224, 224]), T.ToTensor()])
+transform = T.Compose([T.Resize([224, 224]), T.ToTensor()])
+dataset_query.transform, dataset_database.transform = transform, transform
 extractor = SuperPointExtractor()
 matcher = MatchLightGlue(features='superpoint', collector=CollectCounts(thresholds=[0.25, 0.5, 0.75]))
 output = matcher(extractor(dataset_query), extractor(dataset_database))
-
 ```
 
 The following example matches all pairs by the LOFTR matcher and calculates similarity scores based on the count of significant matches at confidence thresholds of 0.25, 0.5, and 0.75. Note that LOFTR operates directly on image pairs and requires no feature extraction.
 
 ```python
-from wildlife_tools.similarity.pairwise import MatchLOFTR
-from wildlife_tools.similarity.pairwise import CollectCounts
+from wildlife_tools.similarity import MatchLOFTR, CollectCounts
 
-dataset.transform = T.Compose([T.Resize([224, 224]), T.ToTensor()])
-matcher = MatchLightGlue(features='superpoint', collector=CollectCounts(thresholds=[0.25, 0.5, 0.75]))
+transform = T.Compose([T.Resize([224, 224]), T.Grayscale(), T.ToTensor()])
+dataset_query.transform, dataset_database.transform = transform, transform
+matcher = MatchLOFTR(collector=CollectCounts(thresholds=[0.25, 0.5, 0.75]))
 output = matcher(dataset_query, dataset_database)
 ```
 

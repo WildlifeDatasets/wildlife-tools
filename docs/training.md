@@ -40,32 +40,31 @@ from torch.optim import SGD
 from wildlife_tools.train import ArcFaceLoss, BasicTrainer
 from wildlife_tools.train import set_seed
 
-# Download MegaDescriptor-T backbone from HuggingFace Hub
-backbone = timm.create_model('hf-hub:BVRA/MegaDescriptor-T-224', num_classes=0, pretrained=True)
+# Download MegaDescriptor-L backbone from HuggingFace Hub
+backbone = timm.create_model('hf-hub:BVRA/MegaDescriptor-L-384', num_classes=0, pretrained=True)
 
 # Arcface loss - needs backbone output size and number of classes.
+embedding_size = backbone(dataset[0][0].unsqueeze(0)).size(1)
 objective = ArcFaceLoss(
     num_classes=dataset.num_classes,
-    embedding_size=768,
+    embedding_size=embedding_size,
     margin=0.5,
     scale=64
     )
 
-# Optimize parameters in backbone and in objective using single optimizer.
 params = itertools.chain(backbone.parameters(), objective.parameters())
 optimizer = SGD(params=params, lr=0.001, momentum=0.9)
 
-set_seed(0)
 trainer = BasicTrainer(
     dataset=dataset,
     model=backbone,
     objective=objective,
     optimizer=optimizer,
-    epochs=20,
-    device='cpu',
+    epochs=1,
+    batch_size=8,
+    device='cuda',
 )
 
 trainer.train()
-
 ```
 
