@@ -28,16 +28,21 @@
 
 ## Our other projects
 
-| <a href="https://github.com/WildlifeDatasets/wildlife-datasets"><img src="https://github.com/WildlifeDatasets/wildlife-tools/raw/main/docs/resources/datasets-logo.png" alt="Wildlife datasets" width="200"></a>  | <a href="https://huggingface.co/BVRA/MegaDescriptor-L-384"><img src="https://github.com/WildlifeDatasets/wildlife-tools/raw/main/docs/resources/megadescriptor-logo.png" alt="MegaDescriptor" width="200"></a> | <a href="https://github.com/WildlifeDatasets/wildlife-tools"><img src="https://github.com/WildlifeDatasets/wildlife-tools/raw/main/docs/resources/tools-logo.png" alt="Wildlife tools" width="200"></a> |
+| <a href="https://github.com/WildlifeDatasets/wildlife-datasets"><img src="https://github.com/WildlifeDatasets/wildlife-tools/raw/main/docs/resources/datasets-logo.png" alt="WildlifeDatasets" width="200"></a>  | <a href="https://huggingface.co/BVRA/MegaDescriptor-L-384"><img src="https://github.com/WildlifeDatasets/wildlife-tools/raw/main/docs/resources/megadescriptor-logo.png" alt="MegaDescriptor" width="200"></a> | <a href="https://github.com/WildlifeDatasets/wildlife-tools"><img src="https://github.com/WildlifeDatasets/wildlife-tools/raw/main/docs/resources/wildlifereID10k-logo.png" alt="WildlifeReID-10k" width="200"></a> |
 |:--------------:|:-----------:|:------------:|
-| Datasets for identification of individual animals | Trained model for individual re&#x2011;identification  | Tools for training re&#x2011;identification models |
+| Library for handling re&#x2011;identification datasets | Trained model for individual re&#x2011;identification  | Dataset for identification of individual animals |
 
 </br>
 
 # Introduction
-The `wildlife-tools` library offers a simple interface for various tasks in the Wildlife Re-Identification domain. It covers use cases such as training, feature extraction, similarity calculation, image retrieval, and classification. It complements the `wildlife-datasets` library, which acts as dataset repository.
 
-More information can be found in [Documentation](https://wildlifedatasets.github.io/wildlife-tools/)
+The `wildlife-tools` library offers a simple interface for various tasks in the wildlife re-identification domain. Its main features are:
+
+- It covers use cases such as training, feature extraction, similarity calculation, image retrieval, and classification.
+- It provides traning codes and usage examples for our models [MegaDescriptor](./megadescriptor.md) and [WildFusion](./wildfusion.md).
+- It complements the [WildlifeDatasets](https://github.com/WildlifeDatasets/wildlife-datasets) library, which acts as dataset repository.
+
+More information can be found in the [documentation](https://wildlifedatasets.github.io/wildlife-tools/).
 
 ## What's New
 Here’s a summary of recent updates and changes.
