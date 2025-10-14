@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wildlife-tools"
-version = "1.0.1"
+version = "1.0.3"
 authors = [
   { name="Vojtěch Čermák", email="cermak.vojtech@seznam.cz" },
 ]
@@ -13,7 +13,7 @@ maintainers = [
 ]
 description = "Tools for using wildlife re-identification datasets."
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 license = {file = "LICENSE"}
 keywords = [
     "wildlife",
@@ -39,7 +39,7 @@ dependencies=[
           'tensorboard',
           'pytorch_metric_learning',
           'transformers>=4.30.2',
-          'wildlife-datasets>=0.3.4',
+          'wildlife-datasets>=1.0.7',
           'kornia>=0.6.12',
           'gluefactory @ git+https://github.com/cvg/glue-factory.git@1f56839db2242929960d70f85bfac6c19ef2821c',
 ]

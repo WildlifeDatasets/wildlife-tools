@@ -1,7 +1,6 @@
-# Baseline results
+# MegaDescriptor
 
-This section shows how the toolkit can be used in realistic pipelines for preparing data, training models and extracting features. Specifically, we present guidelines on how to replicate the main results of the accompanying paper and provide baseline results. This includes training and inference with MegaDescriptor flavours.
-
+WildlifeTools and WildlifeDatasets were used to train the MegaDescriptor model. Here, we present guidelines on how to replicate the main results of the accompanying paper and provide baseline results. This includes training and inference with MegaDescriptor flavours.
 
 ## Prepare datasets
 

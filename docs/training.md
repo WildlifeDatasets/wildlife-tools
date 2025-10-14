@@ -1,25 +1,37 @@
-# Training
+# Training ML models
+
 We provide simple trainer class for training on `WildlifeDataset` instances as well as wrappers for ArcFace and Triplet losses.
 
-
 ## Replicability
+
 The model can be trained with a specified seed to ensure replicable results by calling the `set_seed` function at the beginning of the training process. If the trainer is saved into checkpoint, the seed is stored as well, allowing for its later use in restarting the model and maintaining replicability throughout the restart.
 
 
-::: train.trainer
-    options:
-      show_root_heading: true
-      heading_level: 2
-
-
-::: train.objective
-    options:
-      show_root_heading: true
-      heading_level: 2
-
-
 ## Examples
-Fine-tuning MegaDescriptor-T from HuggingFace Hub
+
+We load the dataset as in the [feature extraction](./inference.md) section.
+
+```python
+from wildlife_datasets.datasets import MacaqueFaces 
+import torchvision.transforms as T
+
+root = "data/MacaqueFaces"
+transform = T.Compose([
+    T.Resize([384, 384]),
+    T.ToTensor(),
+    T.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+])
+
+MacaqueFaces.get_data(root)
+dataset = MacaqueFaces(
+    root,
+    transform=transform,
+    load_label=True,
+    factorize_label=True,
+)
+```
+
+Then we can finetune or train a model as follows.
 
 ```Python
 import timm
