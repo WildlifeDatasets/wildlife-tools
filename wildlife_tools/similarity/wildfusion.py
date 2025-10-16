@@ -30,7 +30,7 @@ class SimilarityPipeline:
 
     def __init__(
         self,
-        matcher: Callable | None = None,
+        matcher: Callable,
         extractor: Callable | None = None,
         calibration: Callable | None = None,
         transform: Callable | None = None,
