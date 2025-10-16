@@ -135,6 +135,7 @@ class WildFusion:
         self,
         calibrated_pipelines: list[SimilarityPipeline],
         priority_pipeline: SimilarityPipeline | None = None,
+        weight_computation: Callable | None = None,
     ):
         """
         Args:
@@ -145,6 +146,7 @@ class WildFusion:
 
         self.calibrated_pipelines = calibrated_pipelines
         self.priority_pipeline = priority_pipeline
+        self.weight_computation = weight_computation
 
     def fit_calibration(self, dataset0: ImageDataset, dataset1: ImageDataset):
         """
@@ -208,6 +210,11 @@ class WildFusion:
         for matcher in self.calibrated_pipelines:
             scores.append(matcher(dataset0, dataset1, pairs=pairs))
 
-        score_combined = np.mean(scores, axis=0)
-        score_combined = np.where(np.isnan(score_combined), -np.inf, score_combined)
+        if self.weight_computation is None:
+            scores = np.where(np.isnan(scores), -np.inf, np.array(scores))
+            score_combined = np.mean(scores, axis=0)
+        else:
+            scores = np.where(np.isnan(scores), 0, np.array(scores))
+            weights = self.weight_computation(scores, dataset0, dataset1)
+            score_combined = np.mean(scores*weights, axis=0)
         return score_combined
