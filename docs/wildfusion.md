@@ -5,15 +5,7 @@ The `similarity.wildfusion` module provides a tools to combine any set of simila
 This functionality is implemented using `WildFusion` class, which uses multiple `SimilarityPipeline` objects as building blocks, which implements pipeline of matching and calculating calibrated similarity scores. In addition, `WildFusion` class allows significant speeds up of calculation of matching scores.
 
 
-::: similarity.wildfusion
-    options:
-      show_root_heading: true
-      heading_level: 2
-      filters:
-        - "!^_[^_]"
-        - "!get_feature_dataset"
-        - "!get_hits"
-        - "!get_priority_pairs"
+
 
 
 

@@ -6,6 +6,7 @@ from omegaconf import OmegaConf
 from tqdm import tqdm
 
 from ..data import FeatureDataset, ImageDataset
+from ..tools import check_dataset_output
 from .gluefactory_fix import extract_single_image_fix  # https://github.com/cvg/glue-factory/pull/50
 
 
@@ -24,15 +25,14 @@ class GlueFactoryExtractor:
     def __init__(
         self,
         config: dict,
-        device: None | str = None,
+        device: str | None = None,
         num_workers: int = 1,
     ):
         """
         Args:
-            config: Configuration dictionary for the model.
-            device: Select between cuda and cpu devices.
-            num_workers: Number of workers used for data loading.
-
+            config (dict): Configuration dictionary for the model.
+            device (str | None, optional): Select between cuda and cpu devices.
+            num_workers (int, optional): Number of workers used for data loading.
         """
 
         config = OmegaConf.create(config)
@@ -48,11 +48,13 @@ class GlueFactoryExtractor:
         Gluefactory extractors requires with 3 channel RBG tensors scaled to [0, 1].
 
         Args:
-            dataset: Extract features from this dataset.
+            dataset (ImageDataset): Extract features from this dataset.
         Returns:
-            feature_dataset: A FeatureDataset containing the extracted features
+            feature_dataset (FeatureDataset): A FeatureDataset containing the extracted features
         """
+
         features = []
+        check_dataset_output(dataset, check_label=False)
         loader = torch.utils.data.DataLoader(
             dataset,
             num_workers=self.num_workers,
@@ -87,10 +89,10 @@ class SuperPointExtractor(GlueFactoryExtractor):
 
     def __init__(
         self,
-        detection_threshold=0.0,
-        force_num_keypoints=True,
-        max_num_keypoints=256,
-        device: None | str = None,
+        detection_threshold: float = 0.0,
+        force_num_keypoints: bool = True,
+        max_num_keypoints: int = 256,
+        device: str | None = None,
         **model_config,
     ):
         config = {
@@ -113,10 +115,10 @@ class DiskExtractor(GlueFactoryExtractor):
 
     def __init__(
         self,
-        detection_threshold=0.0,
-        force_num_keypoints=True,
-        max_num_keypoints=256,
-        device: None | str = None,
+        detection_threshold: float = 0.0,
+        force_num_keypoints: bool = True,
+        max_num_keypoints: int = 256,
+        device: str | None = None,
         **model_config,
     ):
         config = {
@@ -138,10 +140,10 @@ class AlikedExtractor(GlueFactoryExtractor):
 
     def __init__(
         self,
-        detection_threshold=0.0,
-        force_num_keypoints=True,
-        max_num_keypoints=256,
-        device: None | str = None,
+        detection_threshold: float = 0.0,
+        force_num_keypoints: bool = True,
+        max_num_keypoints: int = 256,
+        device: str | None = None,
         **model_config,
     ):
 
@@ -159,11 +161,11 @@ class SiftExtractor(GlueFactoryExtractor):
 
     def __init__(
         self,
-        backend="opencv",
-        detection_threshold=0.0,
-        force_num_keypoints=True,
-        max_num_keypoints=256,
-        device: None | str = None,
+        backend: str = "opencv",
+        detection_threshold: float = 0.0,
+        force_num_keypoints: bool = True,
+        max_num_keypoints: int = 256,
+        device: str | None = None,
         **model_config,
     ):
 

@@ -1,12 +1,13 @@
 import json
 import os
 import pickle
-from typing import Callable
+from typing import Callable, List
 
 import cv2
 import numpy as np
 import pandas as pd
 import pycocotools.mask as mask_coco
+import torch
 from PIL import Image
 
 
@@ -15,18 +16,18 @@ class ImageDataset:
     PyTorch-style dataset for a image datasets
 
     Args:
-        metadata: A pandas dataframe containing image metadata.
-        root: Root directory if paths in metadata are relative. If None, absolute paths in metadata are used.
-        transform: A function that takes in an image and returns its transformed version.
-        col_path: Column name in the metadata containing image file paths.
-        col_label: Column name in the metadata containing class labels.
-        load_label: If False, \_\_getitem\_\_ returns only image instead of (image, label) tuple.
+        metadata (pd.DataFrame): A pandas dataframe containing image metadata.
+        root (str | None, optional): Root directory if paths in metadata are relative. If None, absolute paths in metadata are used.
+        transform (Callable | None, optional): A function that takes in an image and returns its transformed version.
+        col_path (str, optional): Column name in the metadata containing image file paths.
+        col_label (str, optional): Column name in the metadata containing class labels.
+        load_label (bool, optional): If False, `__getitem__` returns only image instead of (image, label) tuple.
 
     Attributes:
-        labels np.array : An integers array of ordinal encoding of labels.
-        labels_string np.array: A strings array of original labels.
-        labels_map dict: A mapping between labels and their ordinal encoding.
-        num_classes int: Return the number of unique classes in the dataset.
+        labels (np.ndarray): An integers array of ordinal encoding of labels.
+        labels_string (np.ndarray): A strings array of original labels.
+        labels_map (dict): A mapping between labels and their ordinal encoding.
+        num_classes (int): Return the number of unique classes in the dataset.
     """
 
     def __init__(
@@ -57,13 +58,13 @@ class ImageDataset:
     def __len__(self):
         return len(self.metadata)
 
-    def get_image(self, path):
+    def get_image(self, path: str):
         img = cv2.imread(path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img = Image.fromarray(img)
         return img
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int):
         data = self.metadata.iloc[idx]
         if self.root:
             img_path = os.path.join(self.root, data[self.col_path])
@@ -85,21 +86,21 @@ class WildlifeDataset(ImageDataset):
     PyTorch-style dataset for a datasets from wildlife-datasets library.
 
     Args:
-        metadata: A pandas dataframe containing image metadata.
-        root: Root directory if paths in metadata are relative. If None, absolute paths in metadata are used.
-        transform: A function that takes in an image and returns its transformed version.
-        img_load: Method to load images.
+        metadata (pd.DataFrame): A pandas dataframe containing image metadata.
+        root (str | None, optional): Root directory if paths in metadata are relative. If None, absolute paths in metadata are used.
+        transform (Callable | None, optional): A function that takes in an image and returns its transformed version.
+        img_load (str, optional): Method to load images.
             Options: 'full', 'full_mask', 'full_hide', 'bbox', 'bbox_mask', 'bbox_hide',
                       and 'crop_black'.
-        col_path: Column name in the metadata containing image file paths.
-        col_label: Column name in the metadata containing class labels.
-        load_label: If False, \_\_getitem\_\_ returns only image instead of (image, label) tuple.
+        col_path (str, optional): Column name in the metadata containing image file paths.
+        col_label (str, optional): Column name in the metadata containing class labels.
+        load_label (bool, optional): If False, `__getitem__` returns only image instead of (image, label) tuple.
 
     Attributes:
-        labels np.array : An integers array of ordinal encoding of labels.
-        labels_string np.array: A strings array of original labels.
-        labels_map dict: A mapping between labels and their ordinal encoding.
-        num_classes int: Return the number of unique classes in the dataset.
+        labels (np.ndarray): An integers array of ordinal encoding of labels.
+        labels_string (np.ndarray): A strings array of original labels.
+        labels_map (dict): A mapping between labels and their ordinal encoding.
+        num_classes (int): Return the number of unique classes in the dataset.
     """
 
     def __init__(
@@ -121,7 +122,7 @@ class WildlifeDataset(ImageDataset):
         self.load_label = load_label
         self.labels, self.labels_map = pd.factorize(self.metadata[self.col_label].values)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int):
         data = self.metadata.iloc[idx]
         if self.root:
             img_path = os.path.join(self.root, data[self.col_path])
@@ -236,21 +237,21 @@ class FeatureDataset:
     PyTorch-style dataset for a extracted features. Couples features with metadata.
 
     Args:
-        features: list, np.array or tensor of features. Index of features should match with metadata.
-        metadata: A pandas dataframe containing features metadata.
-        col_label: Column name in the metadata containing class labels.
-        load_label: If False, \_\_getitem\_\_ returns only image instead of (image, label) tuple.
+        features (List[float] | np.ndarray | torch.Tensor): Index of features should match with metadata.
+        metadata (pd.DataFrame): A pandas dataframe containing image metadata.
+        col_label (str, optional): Column name in the metadata containing class labels.
+        load_label (bool, optional): If False, `__getitem__` returns only image instead of (image, label) tuple.
 
     Attributes:
-        labels np.array : An integers array of ordinal encoding of labels.
-        labels_string np.array: A strings array of original labels.
-        labels_map dict: A mapping between labels and their ordinal encoding.
-        num_classes int: Return the number of unique classes in the dataset.
+        labels (np.ndarray): An integers array of ordinal encoding of labels.
+        labels_string (np.ndarray): A strings array of original labels.
+        labels_map (dict): A mapping between labels and their ordinal encoding.
+        num_classes (int): Return the number of unique classes in the dataset.
     """
 
     def __init__(
         self,
-        features: list,
+        features: List[float] | np.ndarray | torch.Tensor,
         metadata: pd.DataFrame,
         col_label: str = "identity",
         load_label: bool = True,
@@ -269,7 +270,7 @@ class FeatureDataset:
     def labels_string(self):
         return self.metadata[self.col_label].astype(str).values
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int):
         if self.load_label:
             return self.features[idx], self.labels[idx]
         else:
@@ -282,7 +283,7 @@ class FeatureDataset:
     def num_classes(self):
         return len(self.labels_map)
 
-    def save(self, path):
+    def save(self, path: str):
         data = {
             "features": self.features,
             "metadata": self.metadata,
@@ -296,7 +297,7 @@ class FeatureDataset:
             pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
 
     @classmethod
-    def from_file(cls, path, **config):
+    def from_file(cls, path: str, **config):
         with open(path, "rb") as file:
             data = pickle.load(file)
         return cls(**data, **config)

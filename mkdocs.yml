@@ -4,6 +4,8 @@ repo_name: wildlife-tools
 
 theme:
   name: "material"
+  features:
+    - navigation.sections
 
 markdown_extensions:
   - pymdownx.details
@@ -29,13 +31,13 @@ plugins:
 
 nav:
   - Introduction: index.md  
-  - Datasets: dataset.md
-  - Train: training.md
-  - Feature Extraction: features.md
-  - Similarity:
-    - Global Similarity: sim_global.md
-    - Matching Similarity: sim_matching.md
-    - Calibration: sim_calibration.md
-    - WildFusion: sim_wildfusion.md
   - Inference: inference.md
-  - Baseline Results: baseline.md
+  - Training ML models: training.md
+  - Pre-trained models:
+    - MegaDescriptor: megadescriptor.md
+    - WildFusion: wildfusion.md
+  - References:
+    - Features: reference_features.md
+    - Inference: reference_inference.md
+    - Similarity: reference_similarity.md
+    - Training: reference_training.md

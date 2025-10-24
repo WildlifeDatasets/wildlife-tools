@@ -81,15 +81,14 @@ class MatchPairs:
         batch_size: int = 128,
         num_workers: int = 0,
         tqdm_silent: bool = False,
-        collector=None,
+        collector: CollectCounts = None,
     ):
         """
         Args:
-            batch_size: Number of pairs processed in one batch.
-            num_workers: Number of workers used for data loading.
-            tqdm_silent: If True, progress bar is disabled.
-            collector: Collector object used for storing results.
-                By default, CollectCounts(thresholds=[0.5]) is used.
+            batch_size (int, optional): Number of pairs processed in one batch.
+            num_workers (int, optional): Number of workers used for data loading.
+            tqdm_silent (int, bool): If True, progress bar is disabled.
+            collector (int, CollectCounts): Collector object used for storing results.
         """
 
         if collector is None:
@@ -116,9 +115,9 @@ class MatchPairs:
             pairs: Numpy array with pairs of indexes. If None, all pairs are used.
 
         Returns:
-            Exact output is determined by the used collector.
-
+            results (dict): Exact output is determined by the used collector.
         """
+
         dataset_pairs = PairDataset(dataset0, dataset1, pairs=pairs)
 
         loader_length = int(np.ceil(len(dataset_pairs) / self.batch_size))
@@ -145,7 +144,7 @@ class MatchPairs:
             batch: 4-tuple with indexes and data from PairDataset.
 
         Returns:
-            list of standartized dictionaries with keys: idx0, idx1, score, kpts0, kpts1.
-               Length of list is equal to batch size.
+            results (List[dict]): list of standartized dictionaries with keys: idx0, idx1, score, kpts0, kpts1.
+                Length of list is equal to batch size.
         """
         raise NotImplementedError

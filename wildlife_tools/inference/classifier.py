@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Tuple
+
 import numpy as np
 import pandas as pd
 import torch
@@ -11,34 +13,33 @@ class KnnClassifier:
     If there is a tie at a given k, the prediction with the best score is used.
     """
 
-    def __init__(self, database_labels: np.array, k: int = 1, return_scores=False):
+    def __init__(self, database_labels: np.ndarray, k: int = 1, return_scores: bool = False):
         """
         Args:
-            database_labels (np.array): Array containing the labels of the database.
-            k (int): The number of nearest neighbors to consider.
-            return_scores (bool): Indicates whether to return scores along with predictions.
+            database_labels (np.ndarray): Array containing the labels of the database.
+            k (int, optional): The number of nearest neighbors to consider.
+            return_scores (bool, optional): Indicates whether to return scores along with predictions.
         """
         self.k = k
         self.database_labels = database_labels
         self.return_scores = return_scores
 
-    def __call__(self, similarity):
+    def __call__(self, similarity: np.ndarray) -> np.ndarray | Tuple[np.ndarray, np.ndarray]:
         """
         Predicts the label for each query based on the k nearest matches in the database.
 
         Args:
-            similarity: A 2D similarity matrix with `n_query` x `n_database` shape.
+            similarity (np.ndarray): A 2D similarity matrix with `n_query` x `n_database` shape.
 
         Returns:
             If `return_scores` is False:
 
-                - preds: Prediction for each query.
+                - preds (np.ndarray): Prediction for each query.
 
             If `return_scores` is True, tuple of two arrays:
 
-                - preds: Prediction for each query.
-                - scores: The similarity scores corresponding to the predictions (mean for k > 1).
-
+                - preds (np.ndarray): Prediction for each query.
+                - scores (np.ndarray): The similarity scores corresponding to the predictions (mean for k > 1).
         """
 
         # Get ranked predictions and scores.
@@ -47,7 +48,7 @@ class KnnClassifier:
         preds = self.database_labels[idx]
 
         preds = np.array(preds)
-        scores = np.array(scores)
+        scores = scores.numpy()
 
         # Aggregate k nearest neighbors
         data = []
@@ -81,10 +82,10 @@ class TopkClassifier:
     Predict top k query labels given nearest matches in the database.
     """
 
-    def __init__(self, database_labels: np.array, k: int = 10, return_all: bool = False):
+    def __init__(self, database_labels: np.ndarray, k: int = 10, return_all: bool = False):
         """
         Args:
-            database_labels (np.array): Array containing the labels of the database.
+            database_labels (np.ndarray): Array containing the labels of the database.
             k (int): The number of top predictions to return.
             return_all (bool): Indicates whether to return scores along with predictions.
         """
@@ -92,23 +93,23 @@ class TopkClassifier:
         self.database_labels = database_labels
         self.return_all = return_all
 
-    def __call__(self, similarity):
+    def __call__(self, similarity: np.ndarray) -> np.ndarray | Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Predicts the top k labels for each query based on the similarity matrix.
 
         Args:
-            similarity: A 2D similarity matrix with `n_query` x `n_database` shape
+            similarity (np.ndarray): A 2D similarity matrix with `n_query` x `n_database` shape
 
         Returns:
             If `return_all` is False, single 2D array of shape `n_query` x `k`
 
-                - preds: The top k predicted labels for each query.
+                - preds (np.ndarray): The top k predicted labels for each query.
 
             If `return_all` is True, tuple of three 2D arrays of shape `n_query` x `k`:
 
-                - preds: The top k predicted labels for each query.
-                - scores: The similarity scores corresponding to the top k predictions.
-                - idx: The indices of the database entries corresponding to the top k predictions.
+                - preds (np.ndarray): The top k predicted labels for each query.
+                - scores (np.ndarray): The similarity scores corresponding to the top k predictions.
+                - idx (np.ndarray): The indices of the database entries corresponding to the top k predictions.
         """
 
         # Get ranked predictions, scores, and database index.
@@ -117,8 +118,8 @@ class TopkClassifier:
         preds = self.database_labels[idx]
 
         preds = np.array(preds)
-        scores = np.array(scores)
-        idx = np.array(idx)
+        scores = scores.numpy()
+        idx = idx.numpy()
 
         # Collect data for first label occurrence
         data = []

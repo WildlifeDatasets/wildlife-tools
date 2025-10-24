@@ -1,20 +1,25 @@
 import os
 import random
+from typing import Callable, Optional
 
 import numpy as np
 import torch
 import torch.backends.cudnn
 from tqdm import tqdm
 
+from ..data import ImageDataset
+from ..tools import check_dataset_output
 
-def set_seed(seed=0):
+
+def set_seed(seed=0, device="cuda"):
     os.environ["PYTHONHASHSEED"] = str(seed)
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+    if device == "cuda":
+        torch.cuda.manual_seed(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
 
 
 def set_random_states(states):
@@ -54,45 +59,45 @@ class BasicTrainer:
     Checkpoints includes random states - any restarts from checkpoint preservers reproducibility.
 
     Args:
-        dataset ():
+        dataset (ImageDataset):
             Training dataset that gives (x, y) tensor pairs.
-        model (dict):
+        model (torch.nn.Module):
             Pytorch nn.Module for model / backbone.
-        objective (dict):
+        objective (torch.nn.Module):
             Pytorch nn.Module for objective / loss function.
-        optimizer:
+        optimizer (torch.optim.Optimizer):
             Pytorch optimizer.
-        scheduler (optional):
-            Pytorch scheduler.
         epochs (int):
             Number of training epochs.
-        device (str, default: 'cuda'):
+        scheduler (torch.optim.lr_scheduler._LRScheduler, optinal):
+            Pytorch scheduler.
+        device (str, optional):
             Device to be used for training.
-        batch_size (int, default: 128):
+        batch_size (int, optional):
             Training batch size.
-        num_workers (int, default: 1):
+        num_workers (int, optional):
             Number of data loading workers in torch DataLoader.
-        accumulation_steps (int, default: 1):
+        accumulation_steps (int, optional):
             Number of gradient accumulation steps.
-        epoch_callback:
+        epoch_callback (Callable, optional):
             Callback function to be called after each epoch.
-
     """
 
     def __init__(
         self,
-        dataset,
-        model,
-        objective,
-        optimizer,
-        epochs,
-        scheduler=None,
-        device="cuda",
-        batch_size=128,
-        num_workers=1,
-        accumulation_steps=1,
-        epoch_callback=None,
+        dataset: ImageDataset,
+        model: torch.nn.Module,
+        objective: torch.nn.Module,
+        optimizer: torch.optim.Optimizer,
+        epochs: int,
+        scheduler: torch.optim.lr_scheduler._LRScheduler | None = None,
+        device: str = "cuda",
+        batch_size: int = 128,
+        num_workers: int = 1,
+        accumulation_steps: int = 1,
+        epoch_callback: Optional[Callable] = None,
     ):
+        check_dataset_output(dataset, check_label=True)
         self.dataset = dataset
         self.model = model.to(device)
         self.objective = objective.to(device)
