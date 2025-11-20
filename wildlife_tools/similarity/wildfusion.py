@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, List, Tuple
 
 import numpy as np
 import torch
@@ -173,13 +173,21 @@ class WildFusion:
         if (self.priority_pipeline is not None) and (self.priority_pipeline.calibration is not None):
             self.priority_pipeline.fit_calibration(dataset0, dataset1)
 
-    def get_priority_pairs(self, dataset0: ImageDataset, dataset1: ImageDataset, B: int) -> np.ndarray:
+    def get_priority_pairs(
+            self,
+            dataset0: ImageDataset,
+            dataset1: ImageDataset,
+            B: int,
+            ignore_pairs: List[Tuple[int, int]] = []
+            ) -> np.ndarray:
         """Implements shortlisting strategy for selection of most relevant pairs."""
 
         if self.priority_pipeline is None:
             raise ValueError("Priority matcher is not assigned.")
 
         priority = self.priority_pipeline(dataset0, dataset1)
+        for i, j in ignore_pairs:
+            priority[i,j] = -np.inf
         _, idx1 = torch.topk(torch.tensor(priority), min(B, priority.shape[1]))
         idx0 = np.indices(idx1.numpy().shape)[0]
         grid_indices = np.stack([idx0.flatten(), idx1.flatten()]).T
@@ -191,6 +199,7 @@ class WildFusion:
         dataset1: ImageDataset,
         pairs: list | None = None,
         B: int = None,
+        ignore_pairs: List[Tuple[int, int]] = []
     ):
         """
         Compute fused similarity scores between two images datasets using multiple calibrated
@@ -214,7 +223,7 @@ class WildFusion:
         """
 
         if B is not None:
-            pairs = self.get_priority_pairs(dataset0, dataset1, B=B)
+            pairs = self.get_priority_pairs(dataset0, dataset1, B=B, ignore_pairs=ignore_pairs)
 
         scores = []
         for matcher in self.calibrated_pipelines:
