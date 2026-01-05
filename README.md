@@ -85,17 +85,16 @@ pip install -e ".[cuda]"
 
 ### 2. Train, test and deploy your re-identification model
 
-# TODO Dans tools, Créer un script qui train, test (et vérifie que la métrique est bonne, sinon warning) et deploy
+You can now launch the training, testing and deployment processes with the following commands:
 
-# TODO créer des notebooks aussi!
-
-# Pour warning
-
-- Si precision < 0.5: Did not converge, make sure your subjects are visually different enough
-- Si precision < 0.7: Did not optimized well, make sure your subjects are visually different enough
-- Si precision < 0.8: Did not optimized perfectly, can you gather more data?
+```script
+cd ./tools
+python train_test_deploy.py
+```
 
 ### 3 Move your deployed checkpoints to your PrecisionTrack deployment directory
+
+Once done, simply move the newly generated deployed checkpoints to your PrecisionTrack's [deploying_directory](https://github.com/VincentCoulombe/precision_track/tree/main/configs)
 
 ## Citation
 
