@@ -1,160 +1,103 @@
 <p align="center">
-  <a href="https://github.com/WildlifeDatasets/wildlife-tools/issues"><img src="https://img.shields.io/github/issues/WildlifeDatasets/wildlife-tools" alt="GitHub issues"></a>
-  <a href="https://github.com/WildlifeDatasets/wildlife-tools/pulls"><img src="https://img.shields.io/github/issues-pr/WildlifeDatasets/wildlife-tools" alt="GitHub pull requests"></a>
-  <a href="https://github.com/WildlifeDatasets/wildlife-tools/graphs/contributors"><img src="https://img.shields.io/github/contributors/WildlifeDatasets/wildlife-tools" alt="GitHub contributors"></a>
-  <a href="https://github.com/WildlifeDatasets/wildlife-tools/network/members"><img src="https://img.shields.io/github/forks/WildlifeDatasets/wildlife-tools" alt="GitHub forks"></a>
-  <a href="https://github.com/WildlifeDatasets/wildlife-tools/stargazers"><img src="https://img.shields.io/github/stars/WildlifeDatasets/wildlife-tools" alt="GitHub stars"></a>
-  <a href="https://github.com/WildlifeDatasets/wildlife-tools/watchers"><img src="https://img.shields.io/github/watchers/WildlifeDatasets/wildlife-tools" alt="GitHub watchers"></a>
-  <a href="https://github.com/WildlifeDatasets/wildlife-tools/blob/main/LICENSE"><img src="https://img.shields.io/github/license/WildlifeDatasets/wildlife-tools" alt="License"></a>
+<img src="./docs/resources/precision_track.png" alt="PrecisionTrack" width="200">
+<span style="font-size: 32px; margin: 0 20px; vertical-align: top;">+</span>
+<img src="https://github.com/WildlifeDatasets/wildlife-tools/raw/main/docs/resources/tools-logo.png" alt="Wildlife tools" width="150">
 </p>
-
-
-<p align="center">
-<img src="https://github.com/WildlifeDatasets/wildlife-tools/raw/main/docs/resources/tools-logo.png" alt="Wildlife tools" width="300">
-</p>
-
 
 <div align="center">
-  <p align="center">A toolkit for Animal Individual Identification that covers use cases such as training, feature extraction, similarity calculation, image retrieval, and classification.</p>
+  <p align="center"><span style="font-size: 16;">A Python toolkit for training custom animal re-identification models. Seamlessly integrate with PrecisionTrack to enable appearance-based identity tracking for any species in your behavioral studies.</span></p>
 
-  <a href="https://wildlifedatasets.github.io/wildlife-tools/">Documentation</a>
-  ·
-  <a href="https://github.com/WildlifeDatasets/wildlife-tools/issues/new?assignees=aerodynamic-sauce-pan&labels=bug&projects=&template=bug_report.md&title=%5BBUG%5D">Report Bug</a>
-  ·
-  <a href="https://github.com/WildlifeDatasets/wildlife-tools/issues/new?assignees=aerodynamic-sauce-pan&labels=enhancement&projects=&template=enhancement.md&title=%5BEnhancement%5D">Request Feature</a>
+<p align="center"><span style="font-size: 16;"><a href="https://wildlifedatasets.github.io/wildlife-tools/">Documentation</a></span></p>
+
 </div>
 
-</br >
+## Introduction
 
-## Our other projects
+**PrecisionTrack ReID** bridges the gap between [wildlife-tools](https://wildlifedatasets.github.io/wildlife-tools/) and [PrecisionTrack](https://github.com/VincentCoulombe/precision_track/tree/main), enabling researchers to train species-specific re-identification models and deploy them for automated identity tracking in behavioral studies.
 
-| <a href="https://github.com/WildlifeDatasets/wildlife-datasets"><img src="https://github.com/WildlifeDatasets/wildlife-tools/raw/main/docs/resources/datasets-logo.png" alt="WildlifeDatasets" width="200"></a>  | <a href="https://huggingface.co/BVRA/MegaDescriptor-L-384"><img src="https://github.com/WildlifeDatasets/wildlife-tools/raw/main/docs/resources/megadescriptor-logo.png" alt="MegaDescriptor" width="200"></a> | <a href="https://github.com/WildlifeDatasets/wildlife-tools"><img src="https://github.com/WildlifeDatasets/wildlife-tools/raw/main/docs/resources/wildlifereID10k-logo.png" alt="WildlifeReID-10k" width="200"></a> |
-|:--------------:|:-----------:|:------------:|
-| Library for handling re&#x2011;identification datasets | Trained model for individual re&#x2011;identification  | Dataset for identification of individual animals |
+### Key Features
 
-</br>
-
-# Introduction
-
-The `wildlife-tools` library offers a simple interface for various tasks in the wildlife re-identification domain. Its main features are:
-
-- It covers use cases such as training, feature extraction, similarity calculation, image retrieval, and classification.
-- It provides traning codes and usage examples for our models [MegaDescriptor](./megadescriptor.md) and [WildFusion](./wildfusion.md).
-- It complements the [WildlifeDatasets](https://github.com/WildlifeDatasets/wildlife-datasets) library, which acts as dataset repository.
+- **End-to-end workflow**: Train, validate, and deploy custom re-identification models
+- **Species-agnostic**: Works with any visually distinguishable animal species
+- **Seamless integration**: Trained models can be directly imported into PrecisionTrack's tracking pipeline
+- **Built on wildlife-tools**: Leverages state-of-the-art models like [MegaDescriptor](https://huggingface.co/BVRA/MegaDescriptor-T-224) and [CLIP](https://github.com/openai/CLIP)
+- **Dataset compatibility**: Works seamlessly with [WildlifeDatasets](https://github.com/WildlifeDatasets/wildlife-datasets)
 
 More information can be found in the [documentation](https://wildlifedatasets.github.io/wildlife-tools/).
 
-## What's New
-Here’s a summary of recent updates and changes.
-
-
-- **Expanded Functionality:** Local feature matching is done using [gluefactory](https://github.com/cvg/glue-factory) 
-    - Feature extraction methods: SuperPoint, ALIKED, DISK, SIFT features
-    - Matching method: LightGlue, More efficient LoFTR
-- **New Feature:** Introduced WildFusion (https://arxiv.org/abs/2408.12934), calibrated score fusion for high-accuracy animal reidentification. Added calibration methods.
-- **Bug Fixes:** Resolved issues with knn and ranking inference methods and many more.
-
-
 ## Installation
 
-Install `wildlife-tools` using `pip`
+1. Create a python virtual environment
 
 ```script
-pip install git+https://github.com/WildlifeDatasets/wildlife-tools
+conda create -n precision_track_reid python==3.11
 ```
 
-or clone the repository using `git` and install it.
+2. Activate your python virtual environment
 
 ```script
-git clone git@github.com:WildlifeDatasets/wildlife-tools.git
+conda activate precision_track_reid
+```
 
-cd wildlife-tools
+3. Install using `pip`
+
+```script
+pip install git+https://github.com/VincentCoulombe/precision_track-ReID
+```
+
+To install with CUDA support (includes TensorRT and PyCUDA):
+
+```script
+pip install "git+https://github.com/VincentCoulombe/precision_track-ReID[cuda]"
+```
+
+3. Or clone the repository using `git` and install it.
+
+```script
+git clone https://github.com/VincentCoulombe/precision_track-ReID.git
+
+cd precision_track-ReID
 pip install -e .
 ```
 
+To install with CUDA support:
 
-## Modules in the in the `wildlife-tools`
-
-- The `data` module provides tools for creating instances of the `ImageDataset`.
-- The `train` module offers tools for fine-tuning feature extractors on the `ImageDataset`.
-- The `features` module provides tools for extracting features from the `ImageDataset` using various extractors.
-- The `similarity` module provides tools for constructing a similarity matrix from query and database features.
-- The `inference` module offers tools for creating predictions using the similarity matrix.
-
-
-
-## Relations between modules:
-
-```mermaid
-  graph TD;
-      A[Data]-->|ImageDataset|B[Features]
-      A-->|ImageDataset|C;
-      C[Train]-->|finetuned extractor|B;
-      B-->|query and database features|D[Similarity]
-      D-->|similarity matrix|E[Inference]
+```script
+pip install -e ".[cuda]"
 ```
 
+## How to use
 
+### 1. Format your dataset's file Tree
 
-## Example
-### 1. Create `ImageDataset` 
-Using metadata from `wildlife-datasets`, create `ImageDataset` object for the MacaqueFaces dataset.
-
-```Python
-from wildlife_datasets.datasets import MacaqueFaces
-from wildlife_tools.data import ImageDataset
-import torchvision.transforms as T
-
-metadata = MacaqueFaces('datasets/MacaqueFaces')
-transform = T.Compose([T.Resize([224, 224]), T.ToTensor(), T.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))])
-dataset = ImageDataset(metadata.df, metadata.root, transform=transform)
+```bash
+<Your dataset root directory>/
+  ├── <Your first identifiant>/
+  │ ├── image1.png # NOTE: Your images can have any name and extensions
+  │ ├── image2.png
+  │ ├── etc...
+  ├── <Your second identifiant>/
+  │ ├── image1.png # NOTE: Your images can have any name and extensions
+  │ ├── image2.png
+  │ ├── etc...
+  ├── <Etc...>/
 ```
 
-Optionally, split metadata into subsets. In this example, query is first 100 images and rest are in database.
+### 2. Train, test and deploy your re-identification model
 
-```Python
-dataset_database = ImageDataset(metadata.df.iloc[100:,:], metadata.root, transform=transform)
-dataset_query = ImageDataset(metadata.df.iloc[:100,:], metadata.root, transform=transform)
-```
+# TODO Dans tools, Créer un script qui train, test (et vérifie que la métrique est bonne, sinon warning) et deploy
 
-### 2. Extract features
-Extract features using MegaDescriptor Tiny, downloaded from HuggingFace hub.
+# TODO créer des notebooks aussi!
 
-```Python
-import timm
-from wildlife_tools.features import DeepFeatures
+# Pour warning
 
-name = 'hf-hub:BVRA/MegaDescriptor-T-224'
-extractor = DeepFeatures(timm.create_model(name, num_classes=0, pretrained=True))
-query, database = extractor(dataset_query), extractor(dataset_database)
-```
+- Si precision < 0.5: Did not converge, make sure your subjects are visually different enough
+- Si precision < 0.7: Did not optimized well, make sure your subjects are visually different enough
+- Si precision < 0.8: Did not optimized perfectly, can you gather more data?
 
-### 3. Calculate similarity
-Calculate cosine similarity between query and database deep features.
-
-```Python
-from wildlife_tools.similarity import CosineSimilarity
-
-similarity_function = CosineSimilarity()
-similarity = similarity_function(query, database)
-```
-
-
-### 4. Evaluate
-Use the cosine similarity in nearest neigbour classifier and get predictions.
-
-```Python
-import numpy as np
-from wildlife_tools.inference import KnnClassifier
-
-classifier = KnnClassifier(k=1, database_labels=dataset_database.labels_string)
-predictions = classifier(similarity)
-accuracy = np.mean(dataset_query.labels_string == predictions)
-```
+### 3 Move your deployed checkpoints to your PrecisionTrack deployment directory
 
 ## Citation
-
-If you like our package, please cite us.
 
 ```
 @InProceedings{Cermak_2024_WACV,
@@ -167,12 +110,10 @@ If you like our package, please cite us.
 }
 ```
 
-```
-@article{cermak2024wildfusion,
-  title={WildFusion: Individual animal identification with calibrated similarity fusion},
-  author={Cermak, Vojt{\v{e}}ch and Picek, Lukas and Adam, Luk{\'a}{\v{s}} and Neumann, Luk{\'a}{\v{s}} and Matas, Ji{\v{r}}{\'\i}},
-  journal={arXiv preprint arXiv:2408.12934},
-  year={2024}
+```latex
+@misc{precision_track2025,
+    title={PrecisionTrack: A Platform for Automated Long-Term Social Behavior Analysis in Naturalized Environments},
+    author={Coulombe & al},
+    year={2025}
 }
 ```
-

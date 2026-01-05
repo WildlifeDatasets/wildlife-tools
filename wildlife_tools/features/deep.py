@@ -55,7 +55,7 @@ class DeepFeatures:
             shuffle=False,
         )
         outputs = []
-        for image, _ in tqdm(loader, mininterval=1, ncols=100):
+        for image, _ in loader:
             with torch.no_grad():
                 output = self.model(image.to(self.device))
                 outputs.append(output.cpu())

@@ -3,24 +3,9 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "wildlife-tools"
-version = "1.0.3"
-authors = [
-  { name="Vojtěch Čermák", email="cermak.vojtech@seznam.cz" },
-]
-maintainers = [
-  { name="Vojtěch Čermák", email="cermak.vojtech@seznam.cz" },
-]
-description = "Tools for using wildlife re-identification datasets."
 readme = "README.md"
 requires-python = ">=3.10"
 license = {file = "LICENSE"}
-keywords = [
-    "wildlife",
-    "re-identification",
-    "datasets",
-    "machine learning"
-]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -42,12 +27,19 @@ dependencies=[
           'wildlife-datasets>=1.0.7',
           'kornia>=0.6.12',
           'gluefactory @ git+https://github.com/cvg/glue-factory.git@1f56839db2242929960d70f85bfac6c19ef2821c',
+          'onnx==1.17.0',
+          'onnxconverter-common==1.14.0',
+]
+
+[project.optional-dependencies]
+cuda = [
+    "tensorrt==10.11.0.33",
+    "pycuda==2025.1.1",
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/WildlifeDatasets/wildlife-tools"
+"Homepage" = "https://github.com/VincentCoulombe/precision_track-ReID"
 "Documentation" = "https://wildlifedatasets.github.io/wildlife-tools/"
-"Bug Tracker" = "https://github.com/WildlifeDatasets/wildlife-tools/issues"
 
 
 [tool.setuptools]
@@ -59,6 +51,7 @@ packages = [
   "wildlife_tools.similarity",
   "wildlife_tools.similarity.pairwise",
   "wildlife_tools.train",
+  "wildlife_tools.fork_additions",
 ]
 
 [tool.flake8]

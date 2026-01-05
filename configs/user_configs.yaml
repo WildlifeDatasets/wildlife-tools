@@ -1,0 +1,19 @@
+# ================================
+# General on/off options
+# ================================
+train: true
+test: true
+deploy: true
+
+# ================================
+# General directories and paths
+# ================================
+dataset_directory: "../../datasets/MICE/re-id/v3/"
+
+# ================================
+# Training parameters
+# ================================
+batch_size: 80
+epochs: 100
+val_split: 0.2
+seed: 42
