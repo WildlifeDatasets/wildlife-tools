@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from ..data import FeatureDataset
 
 
-def cosine_similarity(a, b):
+def cosine_similarity(a, b, to_numpy=True):
     """
     Calculate cosine similarity between two sets of vectors.
     Pytorch Equivalent to `sklearn.metrics.pairwise.cosine_similarity`.
@@ -13,7 +13,10 @@ def cosine_similarity(a, b):
 
     a, b = torch.tensor(a), torch.tensor(b)
     similarity = torch.matmul(F.normalize(a), F.normalize(b).T)
-    return similarity.numpy()
+    if to_numpy:
+        return similarity.numpy()
+    else:
+        return similarity
 
 
 class CosineSimilarity:

@@ -10,3 +10,7 @@
 *old
 .idea
 *site
+*.pth
+*.onnx
+*.engine
+./work_dir

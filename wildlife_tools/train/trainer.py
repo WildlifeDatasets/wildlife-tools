@@ -99,7 +99,9 @@ class BasicTrainer:
         check_dataset_output(dataset, check_label=True)
         self.dataset = dataset
         self.model = model.to(device)
-        self.objective = objective.to(device)
+        if hasattr(objective, "to"):
+            self.objective = objective.to(device)
+        self.objective = objective
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.epochs = epochs

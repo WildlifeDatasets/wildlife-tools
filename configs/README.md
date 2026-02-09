@@ -43,6 +43,14 @@ This README explains all configuration options available in `user_configs.yaml` 
   - Convert to FP16 precision if supported by GPU hardware (compute capability >= 7.0)
   - Optionally create a TensorRT engine if CUDA is available and TensorRT is installed
 
+## Classification parameters
+
+### `num_classes`
+
+- **Type**: Int
+- **Default**: `5`
+- **Description**: The number of distinct subjects you wish the model to learn to re-identify
+
 ## General Directories and Paths
 
 ### `dataset_directory`
@@ -55,6 +63,12 @@ This README explains all configuration options available in `user_configs.yaml` 
   - Have write permissions for saving model checkpoints, confusion matrices, and deployed models
 
 **Note**: The pipeline will automatically create a `labels.csv` file if one doesn't exist. If you want to regenerate the labels file, simply delete the existing one.
+
+### `save_directory`
+
+- **Type**: String (path)
+- **Default**: `"../work_dir/training_runs/"`
+- **Description**: The training runs root directory, this is were your `deployed checkpoints` and your `confusion matrix` will be saved.
 
 ## Training Parameters
 

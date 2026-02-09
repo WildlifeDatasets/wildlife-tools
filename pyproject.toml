@@ -4,6 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 readme = "README.md"
+version = "1.0.0"
+name = "precision_track_re_identification"
 requires-python = ">=3.10"
 license = {file = "LICENSE"}
 classifiers = [
@@ -33,8 +35,9 @@ dependencies=[
 
 [project.optional-dependencies]
 cuda = [
-    "tensorrt==10.11.0.33",
     "pycuda==2025.1.1",
+    "tensorrt==10.11.0.33",
+    "onnxruntime-gpu[cuda,cudnn]==1.22.0",
 ]
 
 [project.urls]

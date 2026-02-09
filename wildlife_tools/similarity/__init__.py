@@ -1,4 +1,4 @@
-from .cosine import CosineSimilarity
+from .cosine import CosineSimilarity, cosine_similarity
 from .pairwise.collectors import CollectAll, CollectCounts, CollectCountsRansac
 from .pairwise.lightglue import MatchLightGlue
 from .pairwise.loftr import MatchLOFTR

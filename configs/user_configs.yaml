@@ -6,9 +6,15 @@ test: true
 deploy: true
 
 # ================================
+# Classification parameters
+# ================================
+num_classes: 5
+
+# ================================
 # General directories and paths
 # ================================
-dataset_directory: "../../datasets/MICE/re-id/v3/"
+dataset_directory: "../../datasets/camille/re-id/"
+save_directory: "../work_dir/training_runs/"
 
 # ================================
 # Training parameters
