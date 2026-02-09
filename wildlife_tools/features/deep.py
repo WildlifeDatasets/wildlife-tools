@@ -4,11 +4,10 @@ import torch
 from tqdm import tqdm
 from transformers import CLIPModel, CLIPProcessor
 
-from ..data import FeatureDataset, ImageDataset
-from ..tools import check_dataset_output
+from ..data import FeatureCacheMixin
 
 
-class DeepFeatures:
+class DeepFeatures(FeatureCacheMixin):
     """
     Extracts features using forward pass of pytorch model.
     """
@@ -19,6 +18,7 @@ class DeepFeatures:
         batch_size: int = 128,
         num_workers: int = 1,
         device: str = "cpu",
+        cache_path: Optional[str] = None,
     ):
         """
         Args:
@@ -26,48 +26,19 @@ class DeepFeatures:
             batch_size (int, optional): Batch size used for the feature extraction.
             num_workers (int, optional): Number of workers used for data loading.
             device (str, optional): Select between cuda and cpu devices.
+            cache_path (str, optional): Path for cached results. No caching for None.
         """
 
+        super().__init__(cache_path)
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.device = device
         self.model = model
 
-    def __call__(self, dataset: ImageDataset) -> FeatureDataset:
-        """
-        Extract features from input dataset and return them as a new FeatureDataset.
-
-        Args:
-            dataset (ImageDataset): Extract features from this dataset.
-
-        Returns:
-            feature_dataset (FeatureDataset): A FeatureDataset containing the extracted features
-        """
-
-        self.model = self.model.to(self.device)
-        self.model = self.model.eval()
-
-        check_dataset_output(dataset, check_label=False)
-        loader = torch.utils.data.DataLoader(
-            dataset,
-            num_workers=self.num_workers,
-            batch_size=self.batch_size,
-            shuffle=False,
-        )
-        outputs = []
-        for image, _ in tqdm(loader, mininterval=1, ncols=100):
-            with torch.no_grad():
-                output = self.model(image.to(self.device))
-                outputs.append(output.cpu())
-
-        self.model = self.model.to("cpu")
-        features = torch.cat(outputs).numpy()
-
-        return FeatureDataset(
-            metadata=dataset.metadata,
-            features=features,
-            col_label=dataset.col_label,
-        )
+    def forward_batch(self, batch):
+        with torch.no_grad():
+            images, _ = batch
+            return self.model(images.to(self.device)).cpu()
 
 
 class ClipFeatures:
@@ -83,6 +54,7 @@ class ClipFeatures:
         batch_size: int = 128,
         num_workers: int = 1,
         device: str = "cpu",
+        cache_path: Optional[str] = None,
     ):
         """
         Args:
@@ -91,8 +63,10 @@ class ClipFeatures:
             batch_size (int, optional): Batch size used for the feature extraction.
             num_workers (int, optional): Number of workers used for data loading.
             device (str, optional): Select between cuda and cpu devices.
+            cache_path (str, optional): Path for cached results. No caching for None.
         """
 
+        super().__init__(cache_path)
         if model is None:
             model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14").vision_model
 
@@ -106,37 +80,16 @@ class ClipFeatures:
         self.device = device
         self.transform = lambda x: processor(images=x, return_tensors="pt")["pixel_values"]
 
-    def __call__(self, dataset: ImageDataset) -> FeatureDataset:
-        """
-        Extract clip features from input dataset and return them as a new FeatureDataset.
+    def forward_batch(self, batch):
+        with torch.no_grad():
+            images, _ = batch
+            return self.model(self.transform(images).to(self.device)).pooler_output.cpu()
 
-        Args:
-            dataset (ImageDataset): Extract features from this dataset.
-
-        Returns:
-            feature_dataset (FeatureDataset): A FeatureDataset containing the extracted features
-        """
-
-        self.model = self.model.to(self.device)
-        self.model = self.model.eval()
-
-        check_dataset_output(dataset, check_label=False)
-        loader = torch.utils.data.DataLoader(
+    def make_loader(self, dataset, batch_size, num_workers):
+        return torch.utils.data.DataLoader(
             dataset,
-            num_workers=self.num_workers,
-            batch_size=self.batch_size,
+            batch_size=batch_size,
+            num_workers=num_workers,
             shuffle=False,
             collate_fn=lambda x: x,
-        )
-        outputs = []
-        for image, _ in tqdm(loader, mininterval=1, ncols=100):
-            with torch.no_grad():
-                output = self.model(self.transform(image).to(self.device)).pooler_output
-                outputs.append(output.cpu())
-        features = torch.cat(outputs).numpy()
-
-        return FeatureDataset(
-            metadata=dataset.metadata,
-            features=features,
-            col_label=dataset.col_label,
         )
