@@ -9,10 +9,24 @@ from .dataset import FeatureDataset, ImageDataset
 from ..tools import check_dataset_output
 
 
-class BatchRunner(ABC):
+class CacheMixin(ABC):
+    def __init__(self, cache_path=None):
+        self.cache_path = Path(cache_path) if cache_path is not None else None
+
     @abstractmethod
     def process_batch(self, batch):
         pass
+
+    def _load_cache(self):
+        if self.cache_path is not None and self.cache_path.exists():
+            with open(self.cache_path, "rb") as f:
+                return pickle.load(f)
+        return {}
+
+    def _save_cache(self, cache):
+        if self.cache_path is not None:
+            with open(self.cache_path, "wb") as f:
+                pickle.dump(cache, f)
 
     def get_key(self, dataset, index):
         return dataset.metadata["image_id"][index]
@@ -25,23 +39,9 @@ class BatchRunner(ABC):
             shuffle=False,
         )
 
-    def run_batches(self, dataset, batch_size, num_workers):
-        loader = self.make_loader(dataset, batch_size, num_workers)
-
-        outputs = []
-        for batch in tqdm(loader, mininterval=1, ncols=100):
-            out = self.process_batch(batch)
-            if out is not None:
-                outputs.append(out)
-
-        return outputs
 
 
-
-class FeatureCacheMixin(BatchRunner):
-    def __init__(self, cache_path=None):
-        self.cache_path = Path(cache_path) if cache_path is not None else None
-
+class FeatureCacheMixin(CacheMixin):
     @abstractmethod
     def forward_batch(self, batch):
         pass
@@ -67,17 +67,6 @@ class FeatureCacheMixin(BatchRunner):
             features=features,
             col_label=dataset.col_label,
         )
-
-    def _load_cache(self):
-        if self.cache_path is not None and self.cache_path.exists():
-            with open(self.cache_path, "rb") as f:
-                return pickle.load(f)
-        return {}
-
-    def _save_cache(self, cache):
-        if self.cache_path is not None:
-            with open(self.cache_path, "wb") as f:
-                pickle.dump(cache, f)
 
     def extract_with_cache(self, dataset, batch_size, num_workers):
         # Handle the case when cache is not required
