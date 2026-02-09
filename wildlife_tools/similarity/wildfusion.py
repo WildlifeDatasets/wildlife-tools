@@ -1,4 +1,4 @@
-from typing import Callable, List, Tuple
+from typing import Callable, List, Optional, Tuple
 
 import numpy as np
 import torch
@@ -178,7 +178,7 @@ class WildFusion:
             dataset0: ImageDataset,
             dataset1: ImageDataset,
             B: int,
-            ignore_pairs: List[Tuple[int, int]] = []
+            ignore_pairs: Optional[List[Tuple[int, int]]] = None
             ) -> np.ndarray:
         """Implements shortlisting strategy for selection of most relevant pairs."""
 
@@ -186,11 +186,13 @@ class WildFusion:
             raise ValueError("Priority matcher is not assigned.")
 
         priority = self.priority_pipeline(dataset0, dataset1)
-        for i, j in ignore_pairs:
-            priority[i,j] = -np.inf
+        if ignore_pairs:
+            ignore_pairs = np.array(ignore_pairs)
+            priority[ignore_pairs[:,0], ignore_pairs[:,1]] = -np.inf
         _, idx1 = torch.topk(torch.tensor(priority), min(B, priority.shape[1]))
         idx0 = np.indices(idx1.numpy().shape)[0]
-        grid_indices = np.stack([idx0.flatten(), idx1.flatten()]).T
+        idx_keep = priority[idx0.flatten(), idx1.flatten()] > -np.inf
+        grid_indices = np.stack([idx0.flatten(), idx1.flatten()]).T[idx_keep]
         return grid_indices
 
     def __call__(
