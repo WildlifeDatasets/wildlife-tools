@@ -53,7 +53,7 @@ class GlueFactoryExtractor(FeatureCacheMixin):
             output = self.model({"image": image})
             output = {k: v.squeeze(0).cpu() for k, v in output.items()}
             output["image_size"] = torch.tensor(image.shape[2:])
-        return [output]
+        return output
   
 
 class SuperPointExtractor(GlueFactoryExtractor):

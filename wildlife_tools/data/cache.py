@@ -68,6 +68,9 @@ class FeatureCacheMixin(CacheMixin):
             col_label=dataset.col_label,
         )
 
+    def cat_features(self, feats):
+        return feats
+    
     def extract_with_cache(self, dataset, batch_size, num_workers):
         # Handle the case when cache is not required
         if self.cache_path is None:
@@ -75,7 +78,7 @@ class FeatureCacheMixin(CacheMixin):
             feats = []
             for batch in tqdm(loader, mininterval=1, ncols=100):
                 feats.append(self.process_batch(batch))
-            return torch.cat(feats).numpy()
+            return self.cat_features(feats)
 
         # Load the cache and determine the missing entries
         cache = self._load_cache()
@@ -100,7 +103,7 @@ class FeatureCacheMixin(CacheMixin):
             self._save_cache(cache)
 
         # Remove potentially 
-        return np.stack([cache[k] for k in keys])
+        return self.cat_features([cache[k] for k in keys])
 
     def process_batch(self, batch):
         return self.forward_batch(batch)

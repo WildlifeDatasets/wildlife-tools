@@ -35,6 +35,9 @@ class DeepFeatures(FeatureCacheMixin):
         self.device = device
         self.model = model
 
+    def cat_features(self, feats):
+        return torch.cat(feats).numpy()
+    
     def forward_batch(self, batch):
         with torch.no_grad():
             images, _ = batch
@@ -80,6 +83,9 @@ class ClipFeatures:
         self.device = device
         self.transform = lambda x: processor(images=x, return_tensors="pt")["pixel_values"]
 
+    def cat_features(self, feats):
+        return torch.cat(feats).numpy()
+    
     def forward_batch(self, batch):
         with torch.no_grad():
             images, _ = batch
