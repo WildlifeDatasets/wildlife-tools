@@ -27,7 +27,7 @@ class GlueFactoryExtractor(FeatureCacheMixin):
         config: dict,
         device: str | None = None,
         num_workers: int = 1,
-        cache_part: Optional[str] = None,
+        cache_path: Optional[str] = None,
     ):
         """
         Args:
@@ -37,7 +37,7 @@ class GlueFactoryExtractor(FeatureCacheMixin):
             cache_path (str, optional): Path for cached results. No caching for None.
         """
 
-        super().__init__(cache_part=cache_part)
+        super().__init__(cache_path=cache_path)
         config = OmegaConf.create(config)
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
