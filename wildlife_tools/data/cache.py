@@ -100,7 +100,7 @@ class FeatureCacheMixin(BatchRunner):
 
             # Load the missing entries
             ptr = 0
-            for batch in loader:
+            for batch in tqdm(loader, mininterval=1, ncols=100):
                 feats = self.forward_batch(batch)
 
                 for j in range(len(feats)):
