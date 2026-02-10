@@ -41,7 +41,7 @@ class DeepFeatures(FeatureCacheMixin):
 
     def cat_features_model(self, feats):
         return torch.cat(feats).numpy()
-    
+
     def forward_batch(self, batch):
         with torch.no_grad():
             images, _ = batch
@@ -92,7 +92,7 @@ class ClipFeatures(FeatureCacheMixin):
 
     def cat_features_model(self, feats):
         return torch.cat(feats).numpy()
-    
+
     def forward_batch(self, batch):
         with torch.no_grad():
             images, _ = batch

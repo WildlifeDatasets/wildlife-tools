@@ -40,7 +40,6 @@ class CacheMixin(ABC):
         )
 
 
-
 class FeatureCacheMixin(CacheMixin):
     @abstractmethod
     def forward_batch(self, batch):
@@ -73,7 +72,7 @@ class FeatureCacheMixin(CacheMixin):
 
     def cat_features_model(self, feats):
         return feats
-    
+
     def extract_with_cache(self, dataset, batch_size, num_workers):
         # Handle the case when cache is not required
         if self.cache_path is None:
@@ -87,7 +86,7 @@ class FeatureCacheMixin(CacheMixin):
         cache = self._load_cache()
         keys = [self.get_key(dataset, i) for i in range(len(dataset))]
         missing = [i for i, k in enumerate(keys) if k not in cache]
-        
+
         if missing:
             # Define loader on the missing entries
             subset = torch.utils.data.Subset(dataset, missing)
@@ -105,7 +104,7 @@ class FeatureCacheMixin(CacheMixin):
             # Save the cache including the missing entries
             self._save_cache(cache)
 
-        # Remove potentially 
+        # Remove potentially
         return self.cat_features_dictionary([cache[k] for k in keys])
 
     def process_batch(self, batch):

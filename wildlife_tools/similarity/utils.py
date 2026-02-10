@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def aggregate_rows_per_encounter(similarity, encounters_id):
     if similarity.shape[0] != len(encounters_id):
         raise ValueError("Length of encounters_id must match number of similarity rows.")
