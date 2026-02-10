@@ -1,5 +1,6 @@
 from typing import Optional
 
+import numpy as np
 import torch
 from tqdm import tqdm
 from transformers import CLIPModel, CLIPProcessor
@@ -35,7 +36,10 @@ class DeepFeatures(FeatureCacheMixin):
         self.device = device
         self.model = model
 
-    def cat_features(self, feats):
+    def cat_features_dictionary(self, feats):
+        return np.stack(feats, axis=0)
+
+    def cat_features_model(self, feats):
         return torch.cat(feats).numpy()
     
     def forward_batch(self, batch):
@@ -44,7 +48,7 @@ class DeepFeatures(FeatureCacheMixin):
             return self.model(images.to(self.device)).cpu()
 
 
-class ClipFeatures:
+class ClipFeatures(FeatureCacheMixin):
     """
     Extract features using CLIP model (https://arxiv.org/pdf/2103.00020.pdf).
     Uses raw images of input ImageDataset (i.e. dataset.transform = None)
@@ -83,7 +87,10 @@ class ClipFeatures:
         self.device = device
         self.transform = lambda x: processor(images=x, return_tensors="pt")["pixel_values"]
 
-    def cat_features(self, feats):
+    def cat_features_dictionary(self, feats):
+        return np.stack(feats, axis=0)
+
+    def cat_features_model(self, feats):
         return torch.cat(feats).numpy()
     
     def forward_batch(self, batch):

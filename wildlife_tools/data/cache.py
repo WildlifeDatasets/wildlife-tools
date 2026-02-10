@@ -68,7 +68,10 @@ class FeatureCacheMixin(CacheMixin):
             col_label=dataset.col_label,
         )
 
-    def cat_features(self, feats):
+    def cat_features_dictionary(self, feats):
+        return feats
+
+    def cat_features_model(self, feats):
         return feats
     
     def extract_with_cache(self, dataset, batch_size, num_workers):
@@ -78,7 +81,7 @@ class FeatureCacheMixin(CacheMixin):
             feats = []
             for batch in tqdm(loader, mininterval=1, ncols=100):
                 feats.append(self.process_batch(batch))
-            return self.cat_features(feats)
+            return self.cat_features_model(feats)
 
         # Load the cache and determine the missing entries
         cache = self._load_cache()
@@ -103,7 +106,7 @@ class FeatureCacheMixin(CacheMixin):
             self._save_cache(cache)
 
         # Remove potentially 
-        return self.cat_features([cache[k] for k in keys])
+        return self.cat_features_dictionary([cache[k] for k in keys])
 
     def process_batch(self, batch):
         return self.forward_batch(batch)

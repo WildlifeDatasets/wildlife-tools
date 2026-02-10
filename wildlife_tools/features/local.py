@@ -46,14 +46,18 @@ class GlueFactoryExtractor(FeatureCacheMixin):
         self.num_workers = num_workers
         self.batch_size = 1
 
+    def cat_features_model(self, feats):
+        return [x for sub in feats for x in sub]
+
     def forward_batch(self, batch):
+        # Batch has always size 1
         image, _ = batch
         image = image.to(self.device)
         with torch.inference_mode():
             output = self.model({"image": image})
             output = {k: v.squeeze(0).cpu() for k, v in output.items()}
             output["image_size"] = torch.tensor(image.shape[2:])
-        return output
+        return [output]
   
 
 class SuperPointExtractor(GlueFactoryExtractor):
