@@ -1,10 +1,10 @@
 import types
+from typing import Optional
 
 import torch
 from gluefactory.models import get_model
 from omegaconf import OmegaConf
 from tqdm import tqdm
-from typing import Optional
 
 from ..data import FeatureCacheMixin
 from .gluefactory_fix import extract_single_image_fix  # https://github.com/cvg/glue-factory/pull/50

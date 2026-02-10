@@ -1,12 +1,13 @@
-from abc import ABC, abstractmethod
-import numpy as np
 import pickle
-import torch
+from abc import ABC, abstractmethod
 from pathlib import Path
+
+import numpy as np
+import torch
 from tqdm import tqdm
 
-from .dataset import FeatureDataset, ImageDataset
 from ..tools import check_dataset_output
+from .dataset import FeatureDataset, ImageDataset
 
 
 class CacheMixin(ABC):
