@@ -36,13 +36,13 @@ class DeepFeatures(FeatureCacheMixin):
         self.device = device
         self.model = model
 
-    def cat_features_dictionary(self, feats):
+    def cat_features_dictionary(self, feats: list[np.ndarray]) -> np.ndarray:
         return np.stack(feats, axis=0)
 
-    def cat_features_model(self, feats):
+    def cat_features_model(self, feats: list[torch.Tensor]) -> np.ndarray:
         return torch.cat(feats).numpy()
 
-    def forward_batch(self, batch):
+    def forward_batch(self, batch: tuple[torch.Tensor, torch.Tensor]) -> torch.Tensor:
         with torch.no_grad():
             images, _ = batch
             return self.model(images.to(self.device)).cpu()

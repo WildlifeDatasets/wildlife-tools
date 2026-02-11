@@ -1,8 +1,10 @@
+from typing import Generic, Iterable, Optional, TypeVar, Union
+from collections.abc import Sequence
+
 import pickle
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-import numpy as np
 import torch
 from tqdm import tqdm
 
@@ -10,29 +12,41 @@ from ..tools import check_dataset_output
 from .dataset import FeatureDataset, ImageDataset
 
 
-class CacheMixin(ABC):
-    def __init__(self, cache_path=None):
+TBatch = tuple[torch.Tensor, torch.Tensor]
+TDict = TypeVar("TDict") # np.ndarray | dict
+TFeature = TypeVar("TFeature", bound=Sequence) # np.ndarray | list[dict]
+TModel = TypeVar("TModel", bound=Sequence) # torch.Tensor | list[dict]
+
+
+class CacheMixin(ABC, Generic[TModel]):
+    def __init__(self, cache_path: Optional[str] = None):
         self.cache_path = Path(cache_path) if cache_path is not None else None
 
     @abstractmethod
-    def process_batch(self, batch):
+    def process_batch(self, batch: TBatch) -> TModel:
         pass
 
-    def _load_cache(self):
+    def _load_cache(self) -> dict:
         if self.cache_path is not None and self.cache_path.exists():
             with open(self.cache_path, "rb") as f:
                 return pickle.load(f)
         return {}
 
-    def _save_cache(self, cache):
+    def _save_cache(self, cache: dict) -> None:
         if self.cache_path is not None:
             with open(self.cache_path, "wb") as f:
                 pickle.dump(cache, f)
 
-    def get_key(self, dataset, index):
+    def get_key(self, dataset: ImageDataset, index: int) -> Union[str, int]:
         return dataset.metadata["image_id"][index]
 
-    def make_loader(self, dataset, batch_size, num_workers):
+    def make_loader(
+            self,
+            dataset: ImageDataset,
+            batch_size: int,
+            num_workers: int
+            ) -> torch.utils.data.DataLoader :
+        
         return torch.utils.data.DataLoader(
             dataset,
             batch_size=batch_size,
@@ -41,9 +55,17 @@ class CacheMixin(ABC):
         )
 
 
-class FeatureCacheMixin(CacheMixin):
+class FeatureCacheMixin(CacheMixin, Generic[TDict, TFeature, TModel]):
     @abstractmethod
-    def forward_batch(self, batch):
+    def cat_features_dictionary(self, feats: list[TDict]) -> TFeature:
+        pass
+
+    @abstractmethod
+    def cat_features_model(self, feats: list[TModel]) -> TFeature:
+        pass
+
+    @abstractmethod
+    def forward_batch(self, batch: TBatch) -> TModel:
         pass
 
     def __call__(self, dataset: ImageDataset) -> FeatureDataset:
@@ -68,13 +90,13 @@ class FeatureCacheMixin(CacheMixin):
             col_label=dataset.col_label,
         )
 
-    def cat_features_dictionary(self, feats):
-        return feats
-
-    def cat_features_model(self, feats):
-        return feats
-
-    def extract_with_cache(self, dataset, batch_size, num_workers):
+    def extract_with_cache(
+            self,
+            dataset: ImageDataset,
+            batch_size: int,
+            num_workers: int
+            ) -> TFeature:
+        
         # Handle the case when cache is not required
         if self.cache_path is None:
             loader = self.make_loader(dataset, batch_size, num_workers)
@@ -108,10 +130,10 @@ class FeatureCacheMixin(CacheMixin):
         # Remove potentially
         return self.cat_features_dictionary([cache[k] for k in keys])
 
-    def process_batch(self, batch):
+    def process_batch(self, batch: TBatch) -> TModel:
         return self.forward_batch(batch)
 
-    def prune_cache(self, valid_keys):
+    def prune_cache(self, valid_keys: Iterable) -> None:
         cache = self._load_cache()
         cache = {k: cache[k] for k in valid_keys}
         self._save_cache(cache)

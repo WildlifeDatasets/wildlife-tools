@@ -46,10 +46,13 @@ class GlueFactoryExtractor(FeatureCacheMixin):
         self.num_workers = num_workers
         self.batch_size = 1
 
-    def cat_features_model(self, feats):
+    def cat_features_dictionary(self, feats: list[dict]) -> list[dict]:
+        return feats
+
+    def cat_features_model(self, feats: list[list[dict]]) -> list[dict]:
         return [x for sub in feats for x in sub]
 
-    def forward_batch(self, batch):
+    def forward_batch(self, batch: tuple[torch.Tensor, torch.Tensor]) -> list[dict]:
         # Batch has always size 1
         image, _ = batch
         image = image.to(self.device)
