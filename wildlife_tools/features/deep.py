@@ -35,7 +35,7 @@ class DeepFeatures(FeatureCacheMixin):
             num_workers=num_workers,
             device=device,
             cache_path=cache_path,
-            )
+        )
         self.model = model
 
     def cat_features_dictionary(self, feats: list[np.ndarray]) -> np.ndarray:
@@ -80,7 +80,7 @@ class ClipFeatures(FeatureCacheMixin):
             num_workers=num_workers,
             device=device,
             cache_path=cache_path,
-            )
+        )
         if model is None:
             model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14").vision_model
 

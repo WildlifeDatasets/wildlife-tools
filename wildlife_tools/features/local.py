@@ -41,7 +41,7 @@ class GlueFactoryExtractor(FeatureCacheMixin):
             num_workers=num_workers,
             device=device,
             cache_path=cache_path,
-            )
+        )
 
         config = OmegaConf.create(config)
         self.model = get_model(config.name)(config)

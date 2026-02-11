@@ -1,9 +1,8 @@
-from typing import Generic, Iterable, Optional, TypeVar, Union
-from collections.abc import Sequence
-
 import pickle
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from pathlib import Path
+from typing import Generic, Iterable, Optional, TypeVar, Union
 
 import torch
 from tqdm import tqdm
@@ -11,21 +10,20 @@ from tqdm import tqdm
 from ..tools import check_dataset_output
 from .dataset import FeatureDataset, ImageDataset
 
-
 TBatch = tuple[torch.Tensor, torch.Tensor]
-TDict = TypeVar("TDict") # np.ndarray | dict
-TFeature = TypeVar("TFeature", bound=Sequence) # np.ndarray | list[dict]
-TModel = TypeVar("TModel", bound=Sequence) # torch.Tensor | list[dict]
+TDict = TypeVar("TDict")  # np.ndarray | dict
+TFeature = TypeVar("TFeature", bound=Sequence)  # np.ndarray | list[dict]
+TModel = TypeVar("TModel", bound=Sequence)  # torch.Tensor | list[dict]
 
 
 class CacheMixin(ABC, Generic[TModel]):
     def __init__(
-            self,
-            batch_size: int = 128,
-            num_workers: int = 1,
-            device: Optional[str] = "cpu",
-            cache_path: Optional[str] = None,
-            ):
+        self,
+        batch_size: int = 128,
+        num_workers: int = 1,
+        device: Optional[str] = "cpu",
+        cache_path: Optional[str] = None,
+    ):
 
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -53,11 +51,8 @@ class CacheMixin(ABC, Generic[TModel]):
     def get_key(self, dataset: ImageDataset, index: int) -> Union[str, int]:
         return dataset.metadata["image_id"][index]
 
-    def make_loader(
-            self,
-            dataset: ImageDataset
-            ) -> torch.utils.data.DataLoader :
-        
+    def make_loader(self, dataset: ImageDataset) -> torch.utils.data.DataLoader:
+
         return torch.utils.data.DataLoader(
             dataset,
             batch_size=self.batch_size,
@@ -102,7 +97,7 @@ class FeatureCacheMixin(CacheMixin, Generic[TDict, TFeature, TModel]):
         )
 
     def extract_with_cache(self, dataset: ImageDataset) -> TFeature:
-        
+
         # Handle the case when cache is not required
         if self.cache_path is None:
             loader = self.make_loader(dataset)
