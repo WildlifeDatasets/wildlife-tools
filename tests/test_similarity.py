@@ -15,8 +15,8 @@ def test_match_loftr(dataset_loftr):
 
 
 # Compatibility with wildlife-datasets
-def test_wildlife_datasets_similarity(wd_dataset_labels, extractor):
-    features = extractor(wd_dataset_labels)
+def test_wildlife_datasets_similarity(wd_dataset_deep, extractor):
+    features = extractor(wd_dataset_deep)
     method = CosineSimilarity()
     output = method(features, features)
     assert output.shape == (4, 4)

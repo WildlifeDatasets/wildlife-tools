@@ -50,12 +50,12 @@ def test_sift_feature_dataset_save_load(dataset, features_sift):
 
 
 # Compatibility with wildlife-datasets
-def test_wildlife_datasets_load1(wd_dataset_labels):
-    assert len(wd_dataset_labels) == 4
-    assert isinstance(wd_dataset_labels[0][0], Tensor)
-    assert isinstance(wd_dataset_labels.num_classes, int)
+def test_wildlife_datasets_load1(wd_dataset_deep):
+    assert len(wd_dataset_deep) == 4
+    assert isinstance(wd_dataset_deep[0][0], Tensor)
+    assert isinstance(wd_dataset_deep.num_classes, int)
 
 
-def test_wildlife_datasets_load2(wd_dataset_no_labels):
-    assert len(wd_dataset_no_labels) == 4
-    assert isinstance(wd_dataset_no_labels[0], Tensor)
+def test_wildlife_datasets_load2(wd_dataset_deep_no_labels):
+    assert len(wd_dataset_deep_no_labels) == 4
+    assert isinstance(wd_dataset_deep_no_labels[0], Tensor)

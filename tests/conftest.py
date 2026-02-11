@@ -1,3 +1,5 @@
+import multiprocessing as mp
+mp.set_start_method("spawn", force=True)
 import os
 import pytest
 import torchvision.transforms as T
@@ -51,8 +53,19 @@ def dataset_loftr(metadata):
 
 
 @pytest.fixture(scope="session")
+def cache_dir(tmp_path_factory):
+    return tmp_path_factory.mktemp("cache")
+
+
+@pytest.fixture(scope="session")
 def extractor(backbone):
     return DeepFeatures(backbone)
+
+
+@pytest.fixture(scope="session")
+def extractor_cached(backbone, cache_dir):
+    cache_path = cache_dir / "features_deep.pkl"
+    return DeepFeatures(backbone, cache_path=cache_path)
 
 
 @pytest.fixture(scope="session")
@@ -91,12 +104,17 @@ def similarity_superpoint(features_superpoint):
 
 
 @pytest.fixture(scope="session")
-def wd_dataset_labels(metadata):
+def wd_dataset(metadata):
+    return datasets.WildlifeDataset(metadata['root'], metadata['metadata'], load_label=True, factorize_label=True)
+
+
+@pytest.fixture(scope="session")
+def wd_dataset_deep(metadata):
     transform = T.Compose([T.Resize([224, 224]), T.ToTensor()])
     return datasets.WildlifeDataset(metadata['root'], metadata['metadata'], transform=transform, load_label=True, factorize_label=True)
 
 
 @pytest.fixture(scope="session")
-def wd_dataset_no_labels(metadata):
+def wd_dataset_deep_no_labels(metadata):
     transform = T.Compose([T.Resize([224, 224]), T.ToTensor()])
     return datasets.WildlifeDataset(metadata['root'], metadata['metadata'], transform=transform)
