@@ -69,6 +69,17 @@ def extractor_cached(backbone, cache_dir):
 
 
 @pytest.fixture(scope="session")
+def extractor_sift():
+    return SiftExtractor()
+
+
+@pytest.fixture(scope="session")
+def extractor_sift_cached(cache_dir):
+    cache_path = cache_dir / "features_sift.pkl"
+    return SiftExtractor(cache_path=cache_path)
+
+
+@pytest.fixture(scope="session")
 def features_sift(dataset_lightglue):
     extractor = SiftExtractor()
     return extractor(dataset_lightglue)
