@@ -30,10 +30,12 @@ class DeepFeatures(FeatureCacheMixin):
             cache_path (str, optional): Path for cached results. No caching for None.
         """
 
-        super().__init__(cache_path)
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.device = device
+        super().__init__(
+            batch_size=batch_size,
+            num_workers=num_workers,
+            device=device,
+            cache_path=cache_path,
+            )
         self.model = model
 
     def cat_features_dictionary(self, feats: list[np.ndarray]) -> np.ndarray:
@@ -73,7 +75,12 @@ class ClipFeatures(FeatureCacheMixin):
             cache_path (str, optional): Path for cached results. No caching for None.
         """
 
-        super().__init__(cache_path)
+        super().__init__(
+            batch_size=batch_size,
+            num_workers=num_workers,
+            device=device,
+            cache_path=cache_path,
+            )
         if model is None:
             model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14").vision_model
 
@@ -82,9 +89,6 @@ class ClipFeatures(FeatureCacheMixin):
 
         self.model = model
         self.processor = processor
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.device = device
         self.transform = lambda x: processor(images=x, return_tensors="pt")["pixel_values"]
 
     def cat_features_dictionary(self, feats):
@@ -98,11 +102,11 @@ class ClipFeatures(FeatureCacheMixin):
             images, _ = batch
             return self.model(self.transform(images).to(self.device)).pooler_output.cpu()
 
-    def make_loader(self, dataset, batch_size, num_workers):
+    def make_loader(self, dataset):
         return torch.utils.data.DataLoader(
             dataset,
-            batch_size=batch_size,
-            num_workers=num_workers,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
             shuffle=False,
             collate_fn=lambda x: x,
         )

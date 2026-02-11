@@ -4,7 +4,6 @@ from typing import Optional
 import torch
 from gluefactory.models import get_model
 from omegaconf import OmegaConf
-from tqdm import tqdm
 
 from ..data import FeatureCacheMixin
 from .gluefactory_fix import extract_single_image_fix  # https://github.com/cvg/glue-factory/pull/50
@@ -25,7 +24,7 @@ class GlueFactoryExtractor(FeatureCacheMixin):
     def __init__(
         self,
         config: dict,
-        device: str | None = None,
+        device: Optional[str] = None,
         num_workers: int = 1,
         cache_path: Optional[str] = None,
     ):
@@ -37,14 +36,15 @@ class GlueFactoryExtractor(FeatureCacheMixin):
             cache_path (str, optional): Path for cached results. No caching for None.
         """
 
-        super().__init__(cache_path=cache_path)
+        super().__init__(
+            batch_size=1,
+            num_workers=num_workers,
+            device=device,
+            cache_path=cache_path,
+            )
+
         config = OmegaConf.create(config)
-        if device is None:
-            device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = get_model(config.name)(config)
-        self.device = device
-        self.num_workers = num_workers
-        self.batch_size = 1
 
     def cat_features_dictionary(self, feats: list[dict]) -> list[dict]:
         return feats
@@ -76,7 +76,7 @@ class SuperPointExtractor(GlueFactoryExtractor):
         detection_threshold: float = 0.0,
         force_num_keypoints: bool = True,
         max_num_keypoints: int = 256,
-        device: str | None = None,
+        device: Optional[str] = None,
         cache_path: Optional[str] = None,
         **model_config,
     ):
@@ -103,7 +103,7 @@ class DiskExtractor(GlueFactoryExtractor):
         detection_threshold: float = 0.0,
         force_num_keypoints: bool = True,
         max_num_keypoints: int = 256,
-        device: str | None = None,
+        device: Optional[str] = None,
         cache_path: Optional[str] = None,
         **model_config,
     ):
@@ -129,7 +129,7 @@ class AlikedExtractor(GlueFactoryExtractor):
         detection_threshold: float = 0.0,
         force_num_keypoints: bool = True,
         max_num_keypoints: int = 256,
-        device: str | None = None,
+        device: Optional[str] = None,
         cache_path: Optional[str] = None,
         **model_config,
     ):
@@ -152,7 +152,7 @@ class SiftExtractor(GlueFactoryExtractor):
         detection_threshold: float = 0.0,
         force_num_keypoints: bool = True,
         max_num_keypoints: int = 256,
-        device: str | None = None,
+        device: Optional[str] = None,
         cache_path: Optional[str] = None,
         **model_config,
     ):

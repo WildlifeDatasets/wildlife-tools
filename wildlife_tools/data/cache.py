@@ -19,7 +19,20 @@ TModel = TypeVar("TModel", bound=Sequence) # torch.Tensor | list[dict]
 
 
 class CacheMixin(ABC, Generic[TModel]):
-    def __init__(self, cache_path: Optional[str] = None):
+    def __init__(
+            self,
+            batch_size: int = 128,
+            num_workers: int = 1,
+            device: Optional[str] = "cpu",
+            cache_path: Optional[str] = None,
+            ):
+
+        if device is None:
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+        self.device = device
         self.cache_path = Path(cache_path) if cache_path is not None else None
 
     @abstractmethod
@@ -42,15 +55,13 @@ class CacheMixin(ABC, Generic[TModel]):
 
     def make_loader(
             self,
-            dataset: ImageDataset,
-            batch_size: int,
-            num_workers: int
+            dataset: ImageDataset
             ) -> torch.utils.data.DataLoader :
         
         return torch.utils.data.DataLoader(
             dataset,
-            batch_size=batch_size,
-            num_workers=num_workers,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
             shuffle=False,
         )
 
@@ -81,7 +92,7 @@ class FeatureCacheMixin(CacheMixin, Generic[TDict, TFeature, TModel]):
 
         check_dataset_output(dataset, check_label=False)
         self.model = self.model.to(self.device).eval()
-        features = self.extract_with_cache(dataset, self.batch_size, self.num_workers)
+        features = self.extract_with_cache(dataset)
         self.model = self.model.to("cpu")
 
         return FeatureDataset(
@@ -90,16 +101,11 @@ class FeatureCacheMixin(CacheMixin, Generic[TDict, TFeature, TModel]):
             col_label=dataset.col_label,
         )
 
-    def extract_with_cache(
-            self,
-            dataset: ImageDataset,
-            batch_size: int,
-            num_workers: int
-            ) -> TFeature:
+    def extract_with_cache(self, dataset: ImageDataset) -> TFeature:
         
         # Handle the case when cache is not required
         if self.cache_path is None:
-            loader = self.make_loader(dataset, batch_size, num_workers)
+            loader = self.make_loader(dataset)
             feats = []
             for batch in tqdm(loader, mininterval=1, ncols=100):
                 feats.append(self.process_batch(batch))
@@ -113,7 +119,7 @@ class FeatureCacheMixin(CacheMixin, Generic[TDict, TFeature, TModel]):
         if missing:
             # Define loader on the missing entries
             subset = torch.utils.data.Subset(dataset, missing)
-            loader = self.make_loader(subset, batch_size, num_workers)
+            loader = self.make_loader(subset)
 
             # Load the missing entries
             ptr = 0
