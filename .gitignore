@@ -13,4 +13,5 @@
 *.pth
 *.onnx
 *.engine
-./work_dir
+./work_dir/*
+./checkpoints/*
