@@ -31,6 +31,7 @@ dependencies=[
           'gluefactory @ git+https://github.com/cvg/glue-factory.git@1f56839db2242929960d70f85bfac6c19ef2821c',
           'onnx==1.17.0',
           'onnxconverter-common==1.14.0',
+          'plotext'
 ]
 
 [project.optional-dependencies]

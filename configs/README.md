@@ -57,12 +57,46 @@ This README explains all configuration options available in `user_configs.yaml` 
 
 - **Type**: String (path)
 - **Default**: `"../../datasets/MICE/re-id/v3/"`
-- **Description**: Root directory containing your re-identification dataset. This directory should:
-  - Contain image files organized by individual identity
-  - Either have an existing `labels.csv` file or allow the pipeline to generate one automatically
-  - Have write permissions for saving model checkpoints, confusion matrices, and deployed models
+- **Description**: Root directory containing your MOT dataset. This directory should:
+  - Contain a `./bboxes` and a `./videos` sub directory.
+  - Your `metadata` .json file.
 
-**Note**: The pipeline will automatically create a `labels.csv` file if one doesn't exist. If you want to regenerate the labels file, simply delete the existing one.
+**Note**: The pipeline will automatically create a crops and saved them in the `<dataset_directory>/crops/` directory. The system will also save a `labels.csv` for each phase (train and val) **if one doesn't exist**. If you want to regenerate your dataset, simply delete the `<dataset_directory>/crops/` directory.
+
+### `metadata`
+
+- **Type**: String (path)
+- **Default**: `"re_id_mapping.json"`
+- **Description**: Path to your metadata `.json` file that maps identities between each of yours MOT bounding box files to your defined class identifiants. Here's an example:
+
+```json
+{
+	"classes": ["Horizontal", "Vertical", "Top", "Top_twice", "Full"],
+	"gt_mosaic": [
+		[0, 4],
+		[0, 1],
+		[0, 3],
+		[0, 5],
+		[0, 2]
+	],
+	"mosaic_2025-12-22T09_08_33": [
+		[0, 2],
+		[0, -1], // NOTE set to -1 if absent from the .csv file
+		[0, 6],
+		[0, 5],
+		[0, 4]
+	]
+}
+```
+
+**Structure:**
+
+- **`classes`**: A list of your dataset's identity names (e.g., individual animal names or IDs).
+- **Video entries** (e.g., `gt_mosaic`, `mosaic_2025-12-22T09_08_33`): Each key corresponds to a video name and contains mappings between the MOT bounding box file columns:
+  - The first value in each pair corresponds to the **label column** (2nd column in the MOT `bboxes.csv` files)
+  - The second value corresponds to the **instance ID column** (3rd column in the MOT `bboxes.csv` files)
+
+This mapping allows the network to associate each unique IDS (a combination of the label and the instance ID of each subjects) of your MOT bounding box files with your defined identities in the `classes` list.
 
 ### `save_directory`
 

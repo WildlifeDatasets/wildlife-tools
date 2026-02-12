@@ -13,13 +13,15 @@ num_classes: 5
 # ================================
 # General directories and paths
 # ================================
-dataset_directory: "../../datasets/camille/re-id/"
+dataset_directory: "../../datasets/stripedmice/mot/"
+metadata: "re_id_mapping.json"
+
 save_directory: "../work_dir/training_runs/"
 
 # ================================
 # Training parameters
 # ================================
 batch_size: 80
-epochs: 100
+epochs: 150
 val_split: 0.2
 seed: 42

@@ -68,22 +68,59 @@ pip install -e ".[cuda]"
 
 ## How to use
 
-### 1. Format your dataset's file Tree
+### 1. Create your metadata file
+
+Path to your metadata `.json` file that maps identities between each of yours MOT bounding box files to your defined class identifiants. Here's an example:
+
+```json
+{
+	"classes": ["Horizontal", "Vertical", "Top", "Top_twice", "Full"],
+	"gt_mosaic": [
+		[0, 4],
+		[0, 1],
+		[0, 3],
+		[0, 5],
+		[0, 2]
+	],
+	"mosaic_2025-12-22T09_08_33": [
+		[0, 2],
+		[0, -1], // NOTE set to -1 if absent from the .csv file
+		[0, 6],
+		[0, 5],
+		[0, 4]
+	]
+}
+```
+
+**Structure:**
+
+- **`classes`**: A list of your dataset's identity names (e.g., individual animal names or IDs).
+- **Video entries** (e.g., `gt_mosaic`, `mosaic_2025-12-22T09_08_33`): Each key corresponds to a video name and contains mappings between the MOT bounding box file columns:
+  - The first value in each pair corresponds to the **label column** (2nd column in the MOT `bboxes.csv` files)
+  - The second value corresponds to the **instance ID column** (3rd column in the MOT `bboxes.csv` files)
+
+This mapping allows the network to associate each unique IDS (a combination of the label and the instance ID of each subjects) of your MOT bounding box files with your defined identities in the `classes` list.
+
+### 2. Format your dataset's file Tree
+
+Format your `dataset_directory` so it has the following structure.
 
 ```bash
 <Your dataset root directory>/
-  ├── <Your first identifiant>/
-  │ ├── image1.png # NOTE: Your images can have any name and extensions
-  │ ├── image2.png
+  ├── bboxes/
+  │ ├── video1.csv # NOTE: Your bounding bboxes can have any name and extensions
+  │ ├── video2.csv
   │ ├── etc...
-  ├── <Your second identifiant>/
-  │ ├── image1.png # NOTE: Your images can have any name and extensions
-  │ ├── image2.png
+  ├── videos/
+  │ ├── video1.mp4 # NOTE: Your videos must match their correspondig bboxes files.
+  │ ├── video2.mp4
   │ ├── etc...
-  ├── <Etc...>/
+  ├── <your metadata file>/ # NOTE This is the metadata file from step 1.
 ```
 
-### 2. Train, test and deploy your re-identification model
+**Note**: The pipeline will automatically create a crops and saved them in the `<dataset_directory>/crops/` directory. The system will also save a `labels.csv` for each phase (train and val) **if one doesn't exist**. If you want to regenerate your dataset, simply delete the `<dataset_directory>/crops/` directory.
+
+### 3. Train, test and deploy your re-identification model
 
 You can now launch the training, testing and deployment processes with the following commands:
 
@@ -92,7 +129,7 @@ cd ./tools
 python train_test_deploy.py
 ```
 
-### 3 Move your deployed checkpoints to your PrecisionTrack deployment directory
+### 4. Move your deployed checkpoints to your PrecisionTrack deployment directory
 
 Once done, simply move the newly generated deployed checkpoints to your PrecisionTrack's [deploying_directory](https://github.com/VincentCoulombe/precision_track/tree/main/configs)
 

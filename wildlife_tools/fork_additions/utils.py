@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import plotext as plt
 
 
 def print_info(msg):
@@ -55,8 +56,8 @@ def warn_confused_pairs(confusion_matrix: np.ndarray, class_names=None, threshol
                 total_correct = nb_true_positives_i + nb_true_positives_j
                 confusion_rate = total_confusion / total_correct
 
-                i_to_j_rate = i_predicted_as_j / nb_true_positives_i
-                j_to_i_rate = j_predicted_as_i / nb_true_positives_j
+                i_to_j_rate = i_predicted_as_j / total_correct + i_predicted_as_j
+                j_to_i_rate = j_predicted_as_i / total_correct + j_predicted_as_i
 
                 if confusion_rate > threshold:
                     msg += f"\t-'{class_names[i]}' is confused as '{class_names[j]}' {i_to_j_rate:.1%} of the time, while '{class_names[j]}' is confused as '{class_names[i]}' {j_to_i_rate:.1%} of the time.\n"
@@ -69,3 +70,48 @@ def warn_confused_pairs(confusion_matrix: np.ndarray, class_names=None, threshol
         print_warning(msg)
 
     return warned_pairs
+
+
+def print_counts(counts: list, labels: list, phase: str = ""):
+    plt.bar([str(i) for i in labels], [int(c) for c in counts])
+    plt.xlabel("Identity")
+    plt.ylabel("Count")
+    plt.title(f"Identity Distribution ({phase})")
+    plt.show()
+    plt.clear_figure()
+
+
+def calculate_overlaps(b1, b2):
+    """
+    Calculate IoU (Intersection over Union) between two bounding boxes in xywh format.
+
+    Args:
+        b1: tuple/list (x, y, w, h) - first bounding box
+        b2: tuple/list (x, y, w, h) - second bounding box
+
+    Returns:
+        float: IoU value between 0 and 1
+    """
+    x1, y1, w1, h1 = b1
+    x2, y2, w2, h2 = b2
+
+    b1_x2, b1_y2 = x1 + w1, y1 + h1
+    b2_x2, b2_y2 = x2 + w2, y2 + h2
+
+    inter_x1 = max(x1, x2)
+    inter_y1 = max(y1, y2)
+    inter_x2 = min(b1_x2, b2_x2)
+    inter_y2 = min(b1_y2, b2_y2)
+
+    inter_w = max(0, inter_x2 - inter_x1)
+    inter_h = max(0, inter_y2 - inter_y1)
+    inter_area = inter_w * inter_h
+
+    b1_area = w1 * h1
+    b2_area = w2 * h2
+    union_area = b1_area + b2_area - inter_area
+
+    if union_area == 0:
+        return 0.0
+
+    return inter_area / union_area

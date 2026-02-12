@@ -114,7 +114,7 @@ class ClassificationTrainerWithValidation(TrainerWithValidation):
         num_workers=1,
         accumulation_steps=1,
         epoch_callback=None,
-        val_interval=5,
+        val_interval=1,
     ):
 
         super().__init__(
@@ -150,7 +150,7 @@ class ClassificationTrainerWithValidation(TrainerWithValidation):
         num_batches = 0
 
         with torch.no_grad():
-            for x, y in val_dataloader:
+            for x, y, _ in val_dataloader:
                 x, y = x.to(self.device), y.to(self.device)
 
                 _, logits = self.model(x)

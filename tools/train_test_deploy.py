@@ -1,5 +1,4 @@
 from itertools import chain
-import pandas as pd
 import os
 import torchvision.transforms as T
 from torch.optim.lr_scheduler import LambdaLR, CosineAnnealingLR, SequentialLR
@@ -23,31 +22,32 @@ from wildlife_tools.fork_additions import (
 
 
 def train(config):
-    labels_path = config.labels_path
-    metadata = pd.read_csv(labels_path)
     dataset = BalancedImageDataset(
-        metadata=metadata.query('split == "train"'),
+        metadata=config.metadata,
         root=config.dataset_directory,
+        phase="train",
         transform=config.train_transforms,
+        max_length=2000,
+        select_every=1,
     )
     n_training_dataset = dataset.num_classes
     training_label_map = dataset.labels_map
 
     val_dataset = NumpyDataset(
-        metadata=metadata.query('split == "val"'),
+        phase="val",
+        metadata=config.metadata,
         root=config.dataset_directory,
         transform=config.test_transforms,
         img_size=config.img_size,
+        max_length=2000,
+        select_every=10,
+        return_isolation=True,
     )
-    n_validation_dataset = val_dataset.num_classes
     validation_label_map = dataset.labels_map
 
     assert (
-        n_training_dataset == n_validation_dataset
-    ), f"The training dataset has {n_training_dataset} distinct classes and the validation dataset has {n_validation_dataset} distinct classes: {n_training_dataset} != {n_validation_dataset}."
-    assert (
         config.num_classes == n_training_dataset
-    ), f"The 'user_configs.yaml file has num_classes set to {config.num_classes}, but the datasets contain {n_training_dataset} distinct classes.'"
+    ), f"The 'user_configs.yaml file has num_classes set to {config.num_classes}, but the training dataset contain {n_training_dataset} distinct classes.'"
     for v_lbl in validation_label_map:
         assert (
             v_lbl in training_label_map
@@ -55,9 +55,7 @@ def train(config):
 
     with open(os.path.join(config.save_directory, "re-identification_metadata.yaml"), "w") as f:
         yaml.dump(
-            dict(
-                input_shape=[224, 224], nb_features=config.model_config.n_embd, identities=training_label_map.tolist()
-            ),
+            dict(input_shape=[224, 224], nb_features=config.model_config.n_embd, identities=training_label_map),
             f,
         )
 
@@ -87,8 +85,7 @@ def train(config):
         scheduler=scheduler,
         batch_size=config.batch_size,
         accumulation_steps=160 // config.batch_size,
-        # num_workers=2,
-        num_workers=0,
+        num_workers=2,
         epochs=epochs,
         device=config.device,
     )
@@ -100,10 +97,9 @@ def train(config):
 def test(config):
     ckpt_path = os.path.abspath(os.path.join(config.save_directory, "precision_track_re-identificator.pth"))
     model = PtReIDModel(config=config.model_config, checkpoint=ckpt_path)
-    metadata = pd.read_csv(config.labels_path, index_col=0)
 
-    test_metrics(config, model, metadata)
-    test_classification(config, model, metadata)
+    # test_metrics(config, model)
+    test_classification(config, model)
 
     print_info("Done testing.")
 

@@ -1,6 +1,6 @@
 ,Full,Horizontal,Top,Top_twice,Vertical
-Full,50,0,1,0,2
-Horizontal,0,32,0,1,0
-Top,1,2,36,1,0
-Top_twice,0,2,2,41,1
-Vertical,4,0,1,0,44
+Full,220,4,18,16,33
+Horizontal,7,247,18,19,13
+Top,30,40,173,7,12
+Top_twice,20,13,28,228,13
+Vertical,33,12,17,17,193

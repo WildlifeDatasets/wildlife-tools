@@ -1,9 +1,9 @@
 identities:
-- Horizontal
-- Vertical
-- Top
 - Top_twice
+- Vertical
 - Full
+- Top
+- Horizontal
 input_shape:
 - 224
 - 224
