@@ -1,6 +1,7 @@
 import json
 import os
 import pickle
+from collections.abc import Sequence
 from typing import Callable, List
 
 import cv2
@@ -237,7 +238,7 @@ class FeatureDataset:
     PyTorch-style dataset for a extracted features. Couples features with metadata.
 
     Args:
-        features (List[float] | np.ndarray | torch.Tensor): Index of features should match with metadata.
+        features (Sequence): Index of features should match with metadata.
         metadata (pd.DataFrame): A pandas dataframe containing image metadata.
         col_label (str, optional): Column name in the metadata containing class labels.
         load_label (bool, optional): If False, `__getitem__` returns only image instead of (image, label) tuple.
@@ -251,7 +252,7 @@ class FeatureDataset:
 
     def __init__(
         self,
-        features: List[float] | np.ndarray | torch.Tensor,
+        features: Sequence,
         metadata: pd.DataFrame,
         col_label: str = "identity",
         load_label: bool = True,
