@@ -46,7 +46,7 @@ class CacheMixin(ABC, Generic[TModel]):
     def _save_cache(self, cache: dict) -> None:
         if self.cache_path is not None:
             with open(self.cache_path, "wb") as f:
-                pickle.dump(cache, f)
+                pickle.dump(cache, f, protocol=pickle.HIGHEST_PROTOCOL)
 
     def get_key(self, dataset: ImageDataset, index: int) -> Union[str, int]:
         return dataset.metadata["image_id"][index]

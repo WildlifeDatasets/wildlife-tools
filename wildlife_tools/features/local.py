@@ -46,6 +46,17 @@ class GlueFactoryExtractor(FeatureCacheMixin):
         config = OmegaConf.create(config)
         self.model = get_model(config.name)(config)
 
+    def _save_cache(self, cache: dict) -> None:
+        filtered = {}
+        for k, v in cache.items():
+            filtered[k] = {
+                "keypoints": v["keypoints"].clone(),
+                "keypoint_scores": v["keypoint_scores"].clone(),
+                "descriptors": v["descriptors"].clone(),
+                "image_size": v["image_size"].clone(),
+            }
+        super()._save_cache(filtered)
+    
     def cat_features_dictionary(self, feats: list[dict]) -> list[dict]:
         return feats
 
