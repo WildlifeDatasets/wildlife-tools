@@ -56,7 +56,7 @@ class GlueFactoryExtractor(FeatureCacheMixin):
                 "image_size": v["image_size"].clone(),
             }
         super()._save_cache(filtered)
-    
+
     def cat_features_dictionary(self, feats: list[dict]) -> list[dict]:
         return feats
 
