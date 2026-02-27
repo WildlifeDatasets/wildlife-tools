@@ -38,16 +38,8 @@ class CacheMixin(ABC, Generic[TModel]):
     def process_batch(self, batch: TBatch) -> TModel:
         pass
 
-    def _load_cache(self) -> dict:
-        if self.cache_path is not None and self.cache_path.exists():
-            with open(self.cache_path, "rb") as f:
-                return pickle.load(f)
-        return {}
-
-    def _save_cache(self, cache: dict) -> None:
-        if self.cache_path is not None:
-            with open(self.cache_path, "wb") as f:
-                pickle.dump(cache, f, protocol=pickle.HIGHEST_PROTOCOL)
+    def _save_entry(self, txn: lmdb.Transaction, key: bytes, entry) -> None:
+        txn.put(key, pickle.dumps(entry, protocol=pickle.HIGHEST_PROTOCOL))
 
     def get_key(self, dataset: ImageDataset, index: int) -> str:
         return str(dataset.metadata["image_id"][index])
@@ -144,7 +136,7 @@ class FeatureCacheMixin(CacheMixin, Generic[TDict, TFeature, TModel]):
                 with env.begin(write=True) as txn:
                     for j in range(len(feats)):
                         key = keys[missing[ptr]].encode()
-                        txn.put(key, pickle.dumps(feats[j], protocol=pickle.HIGHEST_PROTOCOL))
+                        self._save_entry(txn, key, feats[j])
                         ptr += 1
 
         # Read all features back in order
@@ -162,8 +154,3 @@ class FeatureCacheMixin(CacheMixin, Generic[TDict, TFeature, TModel]):
 
     def process_batch(self, batch: TBatch) -> TModel:
         return self.forward_batch(batch)
-
-    def prune_cache(self, valid_keys: Iterable) -> None:
-        cache = self._load_cache()
-        cache = {k: cache[k] for k in valid_keys}
-        self._save_cache(cache)
