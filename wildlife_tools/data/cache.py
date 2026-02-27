@@ -4,6 +4,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Generic, Iterable, Optional, TypeVar, Union
 
+import lmdb
 import torch
 from tqdm import tqdm
 
@@ -48,8 +49,8 @@ class CacheMixin(ABC, Generic[TModel]):
             with open(self.cache_path, "wb") as f:
                 pickle.dump(cache, f, protocol=pickle.HIGHEST_PROTOCOL)
 
-    def get_key(self, dataset: ImageDataset, index: int) -> Union[str, int]:
-        return dataset.metadata["image_id"][index]
+    def get_key(self, dataset: ImageDataset, index: int) -> str:
+        return str(dataset.metadata["image_id"][index])
 
     def make_loader(self, dataset: ImageDataset) -> torch.utils.data.DataLoader:
 
@@ -96,6 +97,18 @@ class FeatureCacheMixin(CacheMixin, Generic[TDict, TFeature, TModel]):
             col_label=dataset.col_label,
         )
 
+    def _open_env(self) -> lmdb.Environment:
+        assert self.cache_path is not None
+        Path(self.cache_path).mkdir(parents=True, exist_ok=True)
+        return lmdb.open(
+            str(self.cache_path),
+            map_size=1 << 40,
+            subdir=True,
+            lock=True,
+            readahead=False,
+            meminit=False,
+        )
+
     def extract_with_cache(self, dataset: ImageDataset) -> TFeature:
 
         # Handle the case when cache is not required
@@ -106,10 +119,16 @@ class FeatureCacheMixin(CacheMixin, Generic[TDict, TFeature, TModel]):
                 feats.append(self.process_batch(batch))
             return self.cat_features_model(feats)
 
-        # Load the cache and determine the missing entries
-        cache = self._load_cache()
+        # Load the cache
+        env = self._open_env()
         keys = [self.get_key(dataset, i) for i in range(len(dataset))]
-        missing = [i for i, k in enumerate(keys) if k not in cache]
+
+        # Determine missing entries
+        missing = []
+        with env.begin() as txn:
+            for i, k in enumerate(keys):
+                if txn.get(k.encode()) is None:
+                    missing.append(i)
 
         if missing:
             # Define loader on the missing entries
@@ -121,15 +140,25 @@ class FeatureCacheMixin(CacheMixin, Generic[TDict, TFeature, TModel]):
             for batch in tqdm(loader, mininterval=1, ncols=100):
                 feats = self.forward_batch(batch)
 
-                for j in range(len(feats)):
-                    cache[keys[missing[ptr]]] = feats[j]
-                    ptr += 1
+                # Write the batch
+                with env.begin(write=True) as txn:
+                    for j in range(len(feats)):
+                        key = keys[missing[ptr]].encode()
+                        txn.put(key, pickle.dumps(feats[j], protocol=pickle.HIGHEST_PROTOCOL))
+                        ptr += 1
 
-            # Save the cache including the missing entries
-            self._save_cache(cache)
+        # Read all features back in order
+        outputs = []
+        with env.begin() as txn:
+            for k in keys:
+                val = txn.get(k.encode())
+                outputs.append(pickle.loads(val))
 
-        # Remove potentially
-        return self.cat_features_dictionary([cache[k] for k in keys])
+        # Close the cache
+        env.close()
+
+        # Merge the extracted features
+        return self.cat_features_dictionary(outputs)
 
     def process_batch(self, batch: TBatch) -> TModel:
         return self.forward_batch(batch)
