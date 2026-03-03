@@ -22,6 +22,6 @@ save_directory: "../work_dir/training_runs/"
 # Training parameters
 # ================================
 batch_size: 80
-epochs: 150
+epochs: 200
 val_split: 0.2
 seed: 42

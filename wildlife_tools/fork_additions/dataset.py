@@ -144,8 +144,7 @@ class BalancedImageDataset:
 
                             cv2.imwrite(output_path, crop)
 
-                            # Calculate isolation status if needed
-                            isolation_status = True  # Default: isolated
+                            isolation_status = True
                             if self.return_isolation:
                                 # Enlarge current bbox by 10%
                                 enlarged_w = w * 1.1
@@ -157,7 +156,7 @@ class BalancedImageDataset:
                                 # Check overlap with all other bboxes in the frame
                                 for other_row in frame_bboxes.itertuples(index=False):
                                     if other_row.instance_id == row.instance_id and other_row.class_id == row.class_id:
-                                        continue  # Skip self
+                                        continue
                                     other_bbox = (
                                         int(other_row.x),
                                         int(other_row.y),

@@ -5,6 +5,45 @@ from typing import Dict, List, Optional, Tuple
 import cv2
 import numpy as np
 import pandas as pd
+from scipy.optimize import linear_sum_assignment
+
+from wildlife_tools.fork_additions import ONNXDetector
+
+
+def filter_matches(x, y, cost_matrix, thresh):
+    num_matches = 0
+    for i in range(len(x)):
+        if cost_matrix[x[i], y[i]] <= thresh:
+            num_matches += 1
+
+    if num_matches == 0:
+        return np.empty(0), np.empty(0)
+
+    thr_x = np.empty(num_matches, dtype=np.float64)
+    thr_y = np.empty(num_matches, dtype=np.float64)
+    index = 0
+    for i in range(len(x)):
+        if cost_matrix[x[i], y[i]] <= thresh:
+            thr_x[index] = x[i]
+            thr_y[index] = y[i]
+            index += 1
+
+    return thr_x, thr_y
+
+
+def linear_assignment(cost_matrix, thresh=None):
+    if cost_matrix.size == 0:
+        return (
+            np.empty(0),
+            np.empty(0),
+        )
+    x, y = linear_sum_assignment(cost_matrix)
+    if thresh is None:
+        return x, y
+    elif isinstance(thresh, float):
+        return filter_matches(x, y, cost_matrix, thresh)
+    else:
+        TypeError(f"thresh must be one of [NoneType, float, np.ndarray]. Not, {type(thresh)}.")
 
 
 def enlarge_bbox(x: float, y: float, w: float, h: float, factor: float = 0.1) -> Tuple[float, float, float, float]:
@@ -44,33 +83,71 @@ def compute_iou(box1: Tuple[float, float, float, float], box2: Tuple[float, floa
     return intersection_area / union_area
 
 
-def filter_non_overlapping(
-    detections: List[Tuple[int, float, float, float, float]], enlarge_factor: float = 0.1
-) -> List[Tuple[int, float, float, float, float]]:
-    if len(detections) <= 1:
-        return detections
+class DetectionFilter:
+    def __init__(
+        self,
+        model: dict,
+        iou_thresh=0.1,
+        sample_every=30,
+        conf_thresh=0.75,
+    ):
+        self.model = ONNXDetector(**model)
+        self.iou_thresh = iou_thresh
+        self.sample_every = sample_every
+        self.conf_thresh = conf_thresh
+        self.last_sampled = {}  # track_id -> last frame number
+        self.current_frame = 0
 
-    # Enlarge all bounding boxes
-    enlarged = []
-    for track_id, x, y, w, h in detections:
-        enlarged_bbox = enlarge_bbox(x, y, w, h, enlarge_factor)
-        enlarged.append((track_id, x, y, w, h, enlarged_bbox))
+    def __call__(self, frame, detections):
+        self.current_frame += 1
 
-    # Check for overlaps
-    non_overlapping = []
-    for i, (track_id, x, y, w, h, enlarged_bbox) in enumerate(enlarged):
-        has_overlap = False
-        for j, (_, _, _, _, _, other_bbox) in enumerate(enlarged):
-            if i != j:
-                iou = compute_iou(enlarged_bbox, other_bbox)
-                if iou > 0:
-                    has_overlap = True
-                    break
+        if len(detections) == 0:
+            return detections
 
-        if not has_overlap:
-            non_overlapping.append((track_id, x, y, w, h))
+        # 1. Run detector on frame to get predicted detections with confidence scores
+        predictions = self.model(frame)[0]["pred_instances"]
 
-    return non_overlapping
+        bboxes = predictions["bboxes"]
+        scores = predictions["scores"]
+
+        if len(bboxes) == 0:
+            return []
+
+        # 2. Build IoU cost matrix (1 - IoU for minimization in linear assignment)
+        num_gts = len(detections)
+        num_preds = len(bboxes)
+        cost_matrix = np.zeros((num_gts, num_preds))
+
+        for i, (track_id, x, y, w, h) in enumerate(detections):
+            for j, pred in enumerate(bboxes):
+                iou = compute_iou((x, y, w, h), (pred[0].item(), pred[1].item(), pred[2].item(), pred[3].item()))
+                cost_matrix[i, j] = 1 - iou
+
+        # 3. Match ground truths to predictions with IoU threshold
+        # Using (1 - iou_thresh) as cost threshold since cost = 1 - IoU
+        matched_gts, matched_preds = linear_assignment(cost_matrix, thresh=1 - self.iou_thresh)
+
+        # 4. Filter detections based on confidence and sampling interval
+        filtered_detections = []
+        for gt_idx, pred_idx in zip(matched_gts, matched_preds):
+            track_id, x, y, w, h = detections[int(gt_idx)]
+            pred_conf = scores[int(pred_idx)]
+
+            # Check confidence threshold
+            if pred_conf < self.conf_thresh:
+                continue
+
+            # Check sampling interval - only keep if enough frames have passed
+            if track_id in self.last_sampled:
+                frames_since_last = self.current_frame - self.last_sampled[track_id]
+                if frames_since_last < self.sample_every:
+                    continue
+
+            # This detection passes all filters
+            filtered_detections.append((track_id, x, y, w, h))
+            self.last_sampled[track_id] = self.current_frame
+
+        return filtered_detections
 
 
 def crop_bbox(frame: np.ndarray, x: float, y: float, w: float, h: float, enlarge_factor: float = 0.1) -> np.ndarray:
@@ -148,12 +225,12 @@ def build_instance_to_class(mapping: Dict[str, List], video_stem: str) -> Option
     return instance_to_class
 
 
-def extract_reid_crops(
+def extract_crops(
+    model: dict,
     video_path: str,
     mot_path: str,
     output_dir: str,
     sample_interval: int = 10,
-    enlarge_factor: float = 0.1,
     acknowledge_classes: bool = True,
     instance_to_class: Optional[Dict[str, str]] = None,
 ):
@@ -188,9 +265,10 @@ def extract_reid_crops(
     tracks_grouped = tracks_df.groupby("frame_id")
 
     frame_count = 0
-    sampled_frames = 0
     saved_crops = 0
     crops_per_id = {}
+
+    detection_filer = DetectionFilter(model=model, sample_every=sample_interval)
 
     while True:
         ret, frame = cap.read()
@@ -199,20 +277,15 @@ def extract_reid_crops(
 
         frame_count += 1
 
-        if (frame_count - 1) % sample_interval != 0:
-            continue
-
-        sampled_frames += 1
-
         if frame_count not in tracks_grouped.groups:
             continue
 
         frame_detections = tracks_grouped.get_group(frame_count)
         detections = list(frame_detections[["instance", "x", "y", "w", "h"]].itertuples(index=False, name=None))
 
-        non_overlapping = filter_non_overlapping(detections, enlarge_factor)
+        confident_detections = detection_filer(frame, detections)
 
-        for track_id, x, y, w, h in non_overlapping:
+        for track_id, x, y, w, h in confident_detections:
             if instance_to_class is not None:
                 if str(track_id) not in instance_to_class:
                     continue
@@ -222,7 +295,7 @@ def extract_reid_crops(
             id_dir = output_root / dir_name
             id_dir.mkdir(exist_ok=True)
 
-            crop = crop_bbox(frame, x, y, w, h, enlarge_factor)
+            crop = crop_bbox(frame, x, y, w, h, 0.0)
 
             if crop.size == 0 or crop.shape[0] < 10 or crop.shape[1] < 10:
                 continue
@@ -232,13 +305,13 @@ def extract_reid_crops(
             cv2.imwrite(str(crop_path), crop)
 
             saved_crops += 1
-            crops_per_id[track_id] = crops_per_id.get(track_id, 0) + 1
+            crops_per_id[dir_name] = crops_per_id.get(dir_name, 0) + 1
 
     cap.release()
 
     print(f"Extraction of video:{video_name} complete! The results are saved at: '{output_dir}'")
     print(f"Total frames processed: {frame_count}")
-    print(f"Sampled frames: {sampled_frames}")
+    print(f"Sampled frames: {frame_count}")
     print(f"Total crops saved: {saved_crops}")
     print(f"Number of identities: {len(crops_per_id)}")
     print("\nCrops per identity:")
@@ -253,18 +326,40 @@ def extract_reid_crops(
 
 
 def find_matching_pairs(input_dir: str) -> List[Tuple[Path, Path]]:
-    """Find matching video/bbox pairs from a directory with 'videos/' and 'bboxes/' subdirectories.
+    """Find matching video/bbox pairs from the 'train' split of a MOT dataset directory.
 
-    Files are matched by stem name (e.g. videos/clip1.mp4 <-> bboxes/clip1.csv).
+    Expects the following structure:
+        <input_dir>/
+            videos/
+                train/   <- video files here (e.g. clip1.mp4)
+            bboxes/
+                train/   <- CSV bbox files here (e.g. clip1.csv)
+
+    Files are matched by stem name (e.g. videos/train/clip1.mp4 <-> bboxes/train/clip1.csv).
     """
-    input_path = Path(input_dir)
-    videos_dir = input_path / "videos"
-    bboxes_dir = input_path / "bboxes"
+    EXPECTED_LAYOUT = (
+        "\n\nExpected MOT dataset layout:\n"
+        "  <input_dir>/\n"
+        "      videos/\n"
+        "          train/    <- video clips (.mp4, .avi, ...)\n"
+        "          val/      <- (optional)\n"
+        "      bboxes/\n"
+        "          train/    <- CSV bbox files matching video stems\n"
+        "          val/      <- (optional)\n"
+    )
 
+    input_path = Path(input_dir)
+    videos_dir = input_path / "videos" / "train"
+    bboxes_dir = input_path / "bboxes" / "train"
+
+    if not (input_path / "videos").is_dir():
+        raise FileNotFoundError(f"Missing 'videos/' directory in: {input_dir}{EXPECTED_LAYOUT}")
     if not videos_dir.is_dir():
-        raise FileNotFoundError(f"Expected 'videos' subdirectory at: {videos_dir}")
+        raise FileNotFoundError(f"Missing 'videos/train/' split directory in: {input_dir}{EXPECTED_LAYOUT}")
+    if not (input_path / "bboxes").is_dir():
+        raise FileNotFoundError(f"Missing 'bboxes/' directory in: {input_dir}{EXPECTED_LAYOUT}")
     if not bboxes_dir.is_dir():
-        raise FileNotFoundError(f"Expected 'bboxes' subdirectory at: {bboxes_dir}")
+        raise FileNotFoundError(f"Missing 'bboxes/train/' split directory in: {input_dir}{EXPECTED_LAYOUT}")
 
     video_extensions = {".mp4", ".avi", ".mov", ".mkv", ".wmv", ".flv", ".webm"}
     videos_by_stem = {}
@@ -291,8 +386,9 @@ def find_matching_pairs(input_dir: str) -> List[Tuple[Path, Path]]:
 
     if not matched:
         raise FileNotFoundError(
-            f"No matching video/CSV pairs found in {input_dir}. "
-            "Ensure files in 'videos/' and 'bboxes/' share the same stem name."
+            f"No matching video/CSV pairs found under {videos_dir} and {bboxes_dir}. "
+            f"Ensure files in 'videos/train/' and 'bboxes/train/' share the same stem name."
+            f"{EXPECTED_LAYOUT}"
         )
 
     return matched
@@ -303,7 +399,7 @@ def main():
         description="Extract re-ID crops from MOT tracking data", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
-        "input_dir",
+        "mot_dataset_dir",
         type=str,
         help="Directory containing 'videos/' and 'bboxes/' subdirectories "
         "with matching file stems, OR a path to a single video file (requires --mot-path)",
@@ -312,9 +408,6 @@ def main():
         "-o", "--output-dir", type=str, default="./reid_dataset", help="Output directory for re-ID dataset"
     )
     parser.add_argument("-n", "--sample-interval", type=int, default=30, help="Sample every N frames")
-    parser.add_argument(
-        "-e", "--enlarge-factor", type=float, default=0.0, help="Factor by which to enlarge bboxes (0.1 = 10%%)"
-    )
     parser.add_argument(
         "-m",
         "--mapping",
@@ -326,14 +419,14 @@ def main():
 
     args = parser.parse_args()
 
-    input_dir = Path(args.input_dir)
+    input_dir = Path(args.mot_dataset_dir)
 
     mapping = None
     if args.mapping is not None:
         mapping = load_label_mapping(args.mapping)
 
     assert input_dir.is_dir()
-    pairs = find_matching_pairs(args.input_dir)
+    pairs = find_matching_pairs(args.mot_dataset_dir)
     print(f"Found {len(pairs)} matching video/CSV pair(s)\n")
     for i, (video_path, mot_path) in enumerate(pairs, 1):
         print(f"[{i}/{len(pairs)}] Processing: {video_path.name}")
@@ -350,12 +443,15 @@ def main():
                 sample_entry = mapping[video_path.stem][0]
                 acknowledge_classes = isinstance(sample_entry, list)
 
-        extract_reid_crops(
+        extract_crops(
+            model=dict(
+                input_shapes=[(640, 640)],
+                checkpoint=args.detector_checkpoint,
+            ),
             video_path=str(video_path),
             mot_path=str(mot_path),
             output_dir=args.output_dir,
             sample_interval=args.sample_interval,
-            enlarge_factor=args.enlarge_factor,
             acknowledge_classes=acknowledge_classes,
             instance_to_class=instance_map,
         )

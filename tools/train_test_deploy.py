@@ -55,12 +55,14 @@ def train(config):
 
     with open(os.path.join(config.save_directory, "re-identification_metadata.yaml"), "w") as f:
         yaml.dump(
-            dict(input_shape=[224, 224], nb_features=config.model_config.n_embd, identities=training_label_map),
+            dict(input_shape=[224, 224], nb_features=config.model_config.n_output_embd, identities=training_label_map),
             f,
         )
 
     model = PtReIDModel(config.model_config, pretrained=True)
-    objective = ArcFaceWithCrossEntropyLoss(num_classes=dataset.num_classes, embedding_size=768, margin=0.5, scale=64)
+    objective = ArcFaceWithCrossEntropyLoss(
+        num_classes=dataset.num_classes, embedding_size=config.model_config.n_output_embd, margin=0.5, scale=64
+    )
 
     params = chain(model.parameters(), objective.arcface_loss.parameters())
     optimizer = SGD(params=params, lr=0.001, momentum=0.9)
@@ -98,7 +100,7 @@ def test(config):
     ckpt_path = os.path.abspath(os.path.join(config.save_directory, "precision_track_re-identificator.pth"))
     model = PtReIDModel(config=config.model_config, checkpoint=ckpt_path)
 
-    # test_metrics(config, model)
+    test_metrics(config, model)
     test_classification(config, model)
 
     print_info("Done testing.")
@@ -159,6 +161,7 @@ def main():
     config.model_config = Dict(
         dict(
             n_embd=768,
+            n_output_embd=16,
             n_layers=1,
             n_classes=config.num_classes,
             dropout=0.0,

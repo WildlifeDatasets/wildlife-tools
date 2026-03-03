@@ -3,13 +3,13 @@ import pandas as pd
 import os
 from sklearn.metrics import confusion_matrix, f1_score
 
-from wildlife_tools.features import DeepFeatures
 from wildlife_tools.similarity import CosineSimilarity
 from wildlife_tools.inference import KnnClassifier
 from wildlife_tools.fork_additions import (
     warn_confused_pairs,
     print_info,
     NumpyDataset,
+    ForkedDeepFeatures,
 )
 
 
@@ -18,30 +18,36 @@ def test_metrics(config, model):
     model.return_logits = False
     model.return_features = True
 
-    extractor = DeepFeatures(model, device=config.device, batch_size=30)
+    extractor = ForkedDeepFeatures(model, device=config.device, batch_size=30)
 
-    database = NumpyDataset(
-        phase="train",
-        metadata=config.metadata,
-        root=config.dataset_directory,
-        transform=config.test_transforms,
-        img_size=config.img_size,
-        max_length=2000,
-        select_every=10,
+    database = extractor(
+        NumpyDataset(
+            metadata=config.metadata,
+            img_size=config.img_size,
+            root=config.dataset_directory,
+            transform=config.test_transforms,
+            max_length=20000,
+            select_every=10,
+            phase="train",
+            return_isolation=True,
+        )
     )
 
-    query = NumpyDataset(
-        phase="val",
-        metadata=config.metadata,
-        root=config.dataset_directory,
-        transform=config.test_transforms,
-        img_size=config.img_size,
-        max_length=2000,
-        select_every=10,
+    query = extractor(
+        NumpyDataset(
+            metadata=config.metadata,
+            img_size=config.img_size,
+            root=config.dataset_directory,
+            transform=config.test_transforms,
+            max_length=2000,
+            select_every=10,
+            phase="val",
+            return_isolation=True,
+        )
     )
 
     matcher = CosineSimilarity()
-    similarity = matcher(query=extractor(query), database=extractor(database))
+    similarity = matcher(query=query, database=database)
     preds = KnnClassifier(k=1, database_labels=database.labels_string)(similarity)
 
     unique_labels = sorted(set(query.labels_string) | set(preds))
@@ -50,6 +56,13 @@ def test_metrics(config, model):
 
     f1 = f1_score(query.labels_string, preds, average="weighted")
     print_info(f"Metric: F1 Score (weighted): {f1:.4f}")
+
+    isolated_similarities = similarity[query.isolations]
+    isolated_preds = KnnClassifier(k=1, database_labels=database.labels_string)(isolated_similarities)
+    isolated_labels_string = query.labels_string[query.isolations]
+
+    f1 = f1_score(isolated_labels_string, isolated_preds, average="weighted")
+    print_info(f"Metric (isolated only): F1 Score (weighted): {f1:.4f}")
 
     warn_confused_pairs(conf_matrix, unique_labels)
     out_path = os.path.abspath(os.path.join(config.save_directory, "metrics_confusion_matrix.csv"))
