@@ -1,16 +1,15 @@
 import types
+from typing import Optional
 
 import torch
 from gluefactory.models import get_model
 from omegaconf import OmegaConf
-from tqdm import tqdm
 
-from ..data import FeatureDataset, ImageDataset
-from ..tools import check_dataset_output
+from ..data import FeatureCacheMixin
 from .gluefactory_fix import extract_single_image_fix  # https://github.com/cvg/glue-factory/pull/50
 
 
-class GlueFactoryExtractor:
+class GlueFactoryExtractor(FeatureCacheMixin):
     """
     Base class for Gluefactory extractors.
 
@@ -25,58 +24,54 @@ class GlueFactoryExtractor:
     def __init__(
         self,
         config: dict,
-        device: str | None = None,
+        device: Optional[str] = None,
         num_workers: int = 1,
+        cache_path: Optional[str] = None,
     ):
         """
         Args:
             config (dict): Configuration dictionary for the model.
             device (str | None, optional): Select between cuda and cpu devices.
             num_workers (int, optional): Number of workers used for data loading.
+            cache_path (str, optional): Path for cached results. No caching for None.
         """
+
+        super().__init__(
+            batch_size=1,
+            num_workers=num_workers,
+            device=device,
+            cache_path=cache_path,
+        )
 
         config = OmegaConf.create(config)
-        if device is None:
-            device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = get_model(config.name)(config)
-        self.device = device
-        self.num_workers = num_workers
 
-    def __call__(self, dataset: ImageDataset) -> FeatureDataset:
-        """
-        Extract clip features from input dataset and return them as a new FeatureDataset.
-        Gluefactory extractors requires with 3 channel RBG tensors scaled to [0, 1].
+    def _save_cache(self, cache: dict) -> None:
+        filtered = {}
+        for k, v in cache.items():
+            filtered[k] = {
+                "keypoints": v["keypoints"].clone(),
+                "keypoint_scores": v["keypoint_scores"].clone(),
+                "descriptors": v["descriptors"].clone(),
+                "image_size": v["image_size"].clone(),
+            }
+        super()._save_cache(filtered)
 
-        Args:
-            dataset (ImageDataset): Extract features from this dataset.
-        Returns:
-            feature_dataset (FeatureDataset): A FeatureDataset containing the extracted features
-        """
+    def cat_features_dictionary(self, feats: list[dict]) -> list[dict]:
+        return feats
 
-        features = []
-        check_dataset_output(dataset, check_label=False)
-        loader = torch.utils.data.DataLoader(
-            dataset,
-            num_workers=self.num_workers,
-            batch_size=1,
-            shuffle=False,
-        )
+    def cat_features_model(self, feats: list[list[dict]]) -> list[dict]:
+        return [x for sub in feats for x in sub]
 
-        self.model.to(self.device)
-        for image, _ in tqdm(loader, mininterval=1, ncols=100):
-            image = image.to(self.device)
-            with torch.inference_mode():
-                output = self.model({"image": image})
-                output = {k: v.squeeze(0).cpu() for k, v in output.items()}
-                output["image_size"] = torch.tensor(image.shape[2:])
-            features.append(output)
-
-        self.model.to("cpu")
-        return FeatureDataset(
-            metadata=dataset.metadata,
-            features=features,
-            col_label=dataset.col_label,
-        )
+    def forward_batch(self, batch: tuple[torch.Tensor, torch.Tensor]) -> list[dict]:
+        # Batch has always size 1
+        image, _ = batch
+        image = image.to(self.device)
+        with torch.inference_mode():
+            output = self.model({"image": image})
+            output = {k: v.squeeze(0).cpu() for k, v in output.items()}
+            output["image_size"] = torch.tensor(image.shape[2:])
+        return [output]
 
 
 class SuperPointExtractor(GlueFactoryExtractor):
@@ -92,7 +87,8 @@ class SuperPointExtractor(GlueFactoryExtractor):
         detection_threshold: float = 0.0,
         force_num_keypoints: bool = True,
         max_num_keypoints: int = 256,
-        device: str | None = None,
+        device: Optional[str] = None,
+        cache_path: Optional[str] = None,
         **model_config,
     ):
         config = {
@@ -102,7 +98,7 @@ class SuperPointExtractor(GlueFactoryExtractor):
             "force_num_keypoints": force_num_keypoints,
             "max_num_keypoints": max_num_keypoints,
         } | model_config
-        super().__init__(config, device=device)
+        super().__init__(config, device=device, cache_path=cache_path)
 
 
 class DiskExtractor(GlueFactoryExtractor):
@@ -118,7 +114,8 @@ class DiskExtractor(GlueFactoryExtractor):
         detection_threshold: float = 0.0,
         force_num_keypoints: bool = True,
         max_num_keypoints: int = 256,
-        device: str | None = None,
+        device: Optional[str] = None,
+        cache_path: Optional[str] = None,
         **model_config,
     ):
         config = {
@@ -127,7 +124,7 @@ class DiskExtractor(GlueFactoryExtractor):
             "force_num_keypoints": force_num_keypoints,
             "max_num_keypoints": max_num_keypoints,
         } | model_config
-        super().__init__(config, device=device)
+        super().__init__(config, device=device, cache_path=cache_path)
 
 
 class AlikedExtractor(GlueFactoryExtractor):
@@ -143,7 +140,8 @@ class AlikedExtractor(GlueFactoryExtractor):
         detection_threshold: float = 0.0,
         force_num_keypoints: bool = True,
         max_num_keypoints: int = 256,
-        device: str | None = None,
+        device: Optional[str] = None,
+        cache_path: Optional[str] = None,
         **model_config,
     ):
 
@@ -153,7 +151,7 @@ class AlikedExtractor(GlueFactoryExtractor):
             "force_num_keypoints": force_num_keypoints,
             "max_num_keypoints": max_num_keypoints,
         } | model_config
-        super().__init__(config, device=device)
+        super().__init__(config, device=device, cache_path=cache_path)
 
 
 class SiftExtractor(GlueFactoryExtractor):
@@ -165,7 +163,8 @@ class SiftExtractor(GlueFactoryExtractor):
         detection_threshold: float = 0.0,
         force_num_keypoints: bool = True,
         max_num_keypoints: int = 256,
-        device: str | None = None,
+        device: Optional[str] = None,
+        cache_path: Optional[str] = None,
         **model_config,
     ):
 
@@ -176,7 +175,7 @@ class SiftExtractor(GlueFactoryExtractor):
             "force_num_keypoints": force_num_keypoints,
             "max_num_keypoints": max_num_keypoints,
         } | model_config
-        super().__init__(config)
+        super().__init__(config, cache_path=cache_path)
 
         # Fix extract_single_image method.
         self.model.extract_single_image = types.MethodType(extract_single_image_fix, self.model)

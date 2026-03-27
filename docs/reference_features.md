@@ -1,4 +1,4 @@
-# Reference reatures
+# Reference features
 
 ::: features.deep
     options:
