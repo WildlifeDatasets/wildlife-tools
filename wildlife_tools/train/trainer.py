@@ -129,18 +129,25 @@ class BasicTrainer:
     def train_epoch(self, loader):
         model = self.model.train()
         losses = []
+        last_i = -1
         for i, batch in enumerate(tqdm(loader, desc=f"Epoch {self.epoch}: ", mininterval=1, ncols=100)):
+            last_i = i
             x, y = batch
             x, y = x.to(self.device), y.to(self.device)
 
             out = model(x)
             loss = self.objective(out, y)
-            loss.backward()
-            if (i - 1) % self.accumulation_steps == 0:
+            loss_scaled = loss / self.accumulation_steps    # Loss scaling
+            loss_scaled.backward()
+            if (i + 1) % self.accumulation_steps == 0:
                 self.optimizer.step()
                 self.optimizer.zero_grad()
 
             losses.append(loss.detach().cpu())
+        
+        if last_i >= 0 and (last_i + 1) % self.accumulation_steps != 0: # Update leftover gradients at end of epoch
+            self.optimizer.step()
+            self.optimizer.zero_grad()
 
         if self.scheduler:
             self.scheduler.step()
