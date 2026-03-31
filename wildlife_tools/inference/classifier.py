@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Tuple
-
 import numpy as np
 import pandas as pd
 import torch
@@ -24,7 +22,7 @@ class KnnClassifier:
         self.database_labels = database_labels
         self.return_scores = return_scores
 
-    def __call__(self, similarity: np.ndarray) -> np.ndarray | Tuple[np.ndarray, np.ndarray]:
+    def __call__(self, similarity: np.ndarray) -> np.ndarray | tuple[np.ndarray, np.ndarray]:
         """
         Predicts the label for each query based on the k nearest matches in the database.
 
@@ -93,7 +91,7 @@ class TopkClassifier:
         self.database_labels = database_labels
         self.return_all = return_all
 
-    def __call__(self, similarity: np.ndarray) -> np.ndarray | Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def __call__(self, similarity: np.ndarray) -> np.ndarray | tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Predicts the top k labels for each query based on the similarity matrix.
 

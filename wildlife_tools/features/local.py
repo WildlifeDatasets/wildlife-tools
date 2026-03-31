@@ -1,5 +1,4 @@
 import types
-from typing import Optional
 
 import lmdb
 import torch
@@ -25,9 +24,9 @@ class GlueFactoryExtractor(FeatureCacheMixin):
     def __init__(
         self,
         config: dict,
-        device: Optional[str] = None,
+        device: str | None = None,
         num_workers: int = 1,
-        cache_path: Optional[str] = None,
+        cache_path: str | None = None,
     ):
         """
         Args:
@@ -86,8 +85,8 @@ class SuperPointExtractor(GlueFactoryExtractor):
         detection_threshold: float = 0.0,
         force_num_keypoints: bool = True,
         max_num_keypoints: int = 256,
-        device: Optional[str] = None,
-        cache_path: Optional[str] = None,
+        device: str | None = None,
+        cache_path: str | None = None,
         **model_config,
     ):
         config = {
@@ -113,8 +112,8 @@ class DiskExtractor(GlueFactoryExtractor):
         detection_threshold: float = 0.0,
         force_num_keypoints: bool = True,
         max_num_keypoints: int = 256,
-        device: Optional[str] = None,
-        cache_path: Optional[str] = None,
+        device: str | None = None,
+        cache_path: str | None = None,
         **model_config,
     ):
         config = {
@@ -139,8 +138,8 @@ class AlikedExtractor(GlueFactoryExtractor):
         detection_threshold: float = 0.0,
         force_num_keypoints: bool = True,
         max_num_keypoints: int = 256,
-        device: Optional[str] = None,
-        cache_path: Optional[str] = None,
+        device: str | None = None,
+        cache_path: str | None = None,
         **model_config,
     ):
 
@@ -162,8 +161,8 @@ class SiftExtractor(GlueFactoryExtractor):
         detection_threshold: float = 0.0,
         force_num_keypoints: bool = True,
         max_num_keypoints: int = 256,
-        device: Optional[str] = None,
-        cache_path: Optional[str] = None,
+        device: str | None = None,
+        cache_path: str | None = None,
         **model_config,
     ):
 

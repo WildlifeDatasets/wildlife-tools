@@ -1,12 +1,13 @@
-
 import os
+
 import pytest
-from wildlife_tools.data import WildlifeDataset, FeatureDataset
 from PIL.Image import Image
 from torch import Tensor
 
-load_options_ok = ['full', 'crop_black']
-load_options_error = ['full_mask', 'full_hide', 'bbox', 'bbox_mask', 'bbox_hide']
+from wildlife_tools.data import FeatureDataset, WildlifeDataset
+
+load_options_ok = ["full", "crop_black"]
+load_options_error = ["full_mask", "full_hide", "bbox", "bbox_mask", "bbox_hide"]
 
 
 @pytest.mark.parametrize("img_load", load_options_ok)
@@ -40,13 +41,12 @@ def test_deep_feature_dataset(dataset, features_deep):
 
 def test_sift_feature_dataset_save_load(dataset, features_sift):
     a = FeatureDataset(features_sift, metadata=dataset.metadata)
-    a.save('test.pkl')
-    b = FeatureDataset.from_file('test.pkl')
-
+    a.save("test.pkl")
+    b = FeatureDataset.from_file("test.pkl")
 
     assert a.metadata.equals(b.metadata)
     assert len(a.features) == len(b.features)
-    os.remove('test.pkl')
+    os.remove("test.pkl")
 
 
 # Compatibility with wildlife-datasets

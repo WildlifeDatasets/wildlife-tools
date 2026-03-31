@@ -53,7 +53,7 @@ def resize_dataset(dataset_factory, new_root, size, img_load="bbox", unique_path
 
 def save_dataframe(dataset_factory, new_root):
     df_simplified = dataset_factory.df[["image_id", "identity", "path"]]
-    assert type(df_simplified.index) == pd.RangeIndex
+    assert isinstance(df_simplified.index, pd.RangeIndex)
     df_simplified.to_csv(os.path.join(new_root, "annotations.csv"))
 
 
@@ -66,9 +66,7 @@ def prepare_sea_turtle_id_heads(root, new_root="data/SeaTurtleIDHeads", size=256
 
 def prepare_zebra_fish(root, new_root="data/AAUZebraFish", size=256):
     dataset_factory = datasets.AAUZebraFish(root)
-    resize_dataset(
-        dataset_factory, new_root, size=size, img_load="bbox", unique_path=True
-    )
+    resize_dataset(dataset_factory, new_root, size=size, img_load="bbox", unique_path=True)
     save_dataframe(dataset_factory, new_root)
 
 
@@ -92,9 +90,7 @@ def prepare_giraffes(root, new_root="data/Giraffes", size=256):
 
 def prepare_hyena_id_2022(root, new_root="data/HyenaID2022", size=256):
     dataset_factory = datasets.HyenaID2022(root)
-    resize_dataset(
-        dataset_factory, new_root, size=size, img_load="bbox", unique_path=True
-    )
+    resize_dataset(dataset_factory, new_root, size=size, img_load="bbox", unique_path=True)
     save_dataframe(dataset_factory, new_root)
 
 
@@ -125,9 +121,7 @@ def prepare_aerial_cattle_2017(root, new_root="data/AerialCattle2017", size=256)
 
 def prepare_giraffe_zebra_id(root, new_root="data/GiraffeZebraID", size=256):
     dataset_factory = datasets.GiraffeZebraID(root)
-    resize_dataset(
-        dataset_factory, new_root, size=size, img_load="bbox", unique_path=True
-    )
+    resize_dataset(dataset_factory, new_root, size=size, img_load="bbox", unique_path=True)
     df = dataset_factory.df[["image_id", "identity", "path", "date"]]
     df.to_csv(os.path.join(new_root, "annotations.csv"))
 
@@ -158,9 +152,7 @@ def prepare_cows2021(root, new_root="data/Cows2021", size=256):
 
 def prepare_leopard_id_2022(root, new_root="data/LeopardID2022", size=256):
     dataset_factory = datasets.LeopardID2022(root)
-    resize_dataset(
-        dataset_factory, new_root, size=size, img_load="bbox", unique_path=True
-    )
+    resize_dataset(dataset_factory, new_root, size=size, img_load="bbox", unique_path=True)
     save_dataframe(dataset_factory, new_root)
 
 
@@ -213,9 +205,7 @@ def prepare_beluga_id(root, new_root="data/BelugaID", size=256):
     df.to_csv(os.path.join(new_root, "annotations.csv"))
 
 
-def prepare_bird_individual_id(
-    root, new_root="data/BirdIndividualID", size=256, segmented=True
-):
+def prepare_bird_individual_id(root, new_root="data/BirdIndividualID", size=256, segmented=True):
     if segmented:
         root = root + "Segmented"
     dataset_factory = datasets.BirdIndividualIDSegmented(root)
@@ -239,17 +229,13 @@ def prepare_friesian_cattle_2015(root, new_root="data/FriesianCattle2015", size=
 
 def prepare_atrw(root, new_root="data/ATRW", size=256):
     dataset_factory = datasets.ATRW(root)
-    resize_dataset(
-        dataset_factory, new_root, size=size, img_load="full", unique_path=True
-    )
+    resize_dataset(dataset_factory, new_root, size=size, img_load="full", unique_path=True)
     save_dataframe(dataset_factory, new_root)
 
 
 def prepare_ndd20(root, new_root="data/NDD20", size=256):
     dataset_factory = datasets.NDD20(root)
-    resize_dataset(
-        dataset_factory, new_root, size=size, img_load="full", unique_path=True
-    )
+    resize_dataset(dataset_factory, new_root, size=size, img_load="full", unique_path=True)
     save_dataframe(dataset_factory, new_root)
 
 
@@ -278,9 +264,7 @@ def prepare_smalst(root, new_root="data/SMALST", size=256):
 
         # Crop black parts and resize
         y_nonzero, x_nonzero, _ = np.nonzero(img)
-        img = img.crop(
-            (np.min(x_nonzero), np.min(y_nonzero), np.max(x_nonzero), np.max(y_nonzero))
-        )
+        img = img.crop((np.min(x_nonzero), np.min(y_nonzero), np.max(x_nonzero), np.max(y_nonzero)))
         img = T.Resize(size=size)(img)
 
         # Save image

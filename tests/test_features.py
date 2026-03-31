@@ -1,5 +1,6 @@
-import pytest
 import numpy as np
+import pytest
+
 from wildlife_tools.data import FeatureDataset
 from wildlife_tools.features import DataToMemory
 
@@ -12,7 +13,7 @@ def check_sift_features(features0, features1):
 
 def test_features_deep(dataset_deep, extractor):
     output = extractor(dataset_deep)
-    assert type(output) == FeatureDataset
+    assert isinstance(output, FeatureDataset)
     assert len(output) == len(dataset_deep)
     assert len(output[0][0]) == 768
 
@@ -34,8 +35,8 @@ def test_deep_features_cached_split(wd_dataset_deep, extractor_cached):
     n = len(wd_dataset_deep)
 
     features_all = extractor_cached(wd_dataset_deep)
-    dataset0 = wd_dataset_deep.get_subset(range(0,m))
-    dataset1 = wd_dataset_deep.get_subset(range(m,n))
+    dataset0 = wd_dataset_deep.get_subset(range(0, m))
+    dataset1 = wd_dataset_deep.get_subset(range(m, n))
     features0 = extractor_cached(dataset0)
     features1 = extractor_cached(dataset1)
     assert np.array_equal(features0.features, features_all.features[:m])
@@ -53,8 +54,8 @@ def test_sift_features_cached_split(wd_dataset, extractor_sift_cached):
     n = len(wd_dataset)
 
     features_all = extractor_sift_cached(wd_dataset)
-    dataset0 = wd_dataset.get_subset(range(0,m))
-    dataset1 = wd_dataset.get_subset(range(m,n))
+    dataset0 = wd_dataset.get_subset(range(0, m))
+    dataset1 = wd_dataset.get_subset(range(m, n))
     features0 = extractor_sift_cached(dataset0)
     features1 = extractor_sift_cached(dataset1)
     check_sift_features(features0.features, features_all.features[:m])
@@ -64,7 +65,7 @@ def test_sift_features_cached_split(wd_dataset, extractor_sift_cached):
 # Compatibility with wildlife-datasets
 def test_wildlife_datasets_features1(wd_dataset_deep, extractor):
     features = extractor(wd_dataset_deep)
-    assert type(features) == FeatureDataset
+    assert isinstance(features, FeatureDataset)
     assert len(features) == len(wd_dataset_deep)
     assert len(features[0][0]) == 768
 

@@ -1,5 +1,4 @@
 import os
-from typing import List
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -38,7 +37,7 @@ class EpochLog:
 class EpochCallbacks:
     """Returns sequence of epoch callbacks."""
 
-    def __init__(self, steps: List[int]):
+    def __init__(self, steps: list[int]):
         self.steps = steps
 
     def __call__(self, trainer: BasicTrainer, **kwargs):
