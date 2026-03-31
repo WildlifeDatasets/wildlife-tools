@@ -4,7 +4,6 @@ from itertools import chain
 from torch.optim import SGD
 
 
-
 def test_basic_trainer(dataset_deep, backbone):
     objective = ArcFaceLoss(num_classes=dataset_deep.num_classes, embedding_size=768, margin=0.5, scale=64)
     params = chain(backbone.parameters(), objective.parameters())
@@ -16,7 +15,7 @@ def test_basic_trainer(dataset_deep, backbone):
         objective=objective,
         optimizer=optimizer,
         epochs=2,
-        device='cpu',
+        device="cpu",
     )
     trainer.train()
 
@@ -33,7 +32,7 @@ def test_wildlife_datasets_train1(wd_dataset_deep, backbone):
         objective=objective,
         optimizer=optimizer,
         epochs=2,
-        device='cpu',
+        device="cpu",
     )
     trainer.train()
 
@@ -50,5 +49,5 @@ def test_wildlife_datasets_train2(wd_dataset_deep_no_labels, backbone):
             objective=objective,
             optimizer=optimizer,
             epochs=2,
-            device='cpu',
+            device="cpu",
         )

@@ -137,15 +137,15 @@ class BasicTrainer:
 
             out = model(x)
             loss = self.objective(out, y)
-            loss_scaled = loss / self.accumulation_steps    # Loss scaling
+            loss_scaled = loss / self.accumulation_steps  # Loss scaling
             loss_scaled.backward()
             if (i + 1) % self.accumulation_steps == 0:
                 self.optimizer.step()
                 self.optimizer.zero_grad()
 
             losses.append(loss.detach().cpu())
-        
-        if last_i >= 0 and (last_i + 1) % self.accumulation_steps != 0: # Update leftover gradients at end of epoch
+
+        if last_i >= 0 and (last_i + 1) % self.accumulation_steps != 0:  # Update leftover gradients at end of epoch
             self.optimizer.step()
             self.optimizer.zero_grad()
 

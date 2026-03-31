@@ -1,4 +1,3 @@
-
 from wildlife_tools.similarity import CosineSimilarity, MatchLOFTR
 
 
@@ -9,7 +8,7 @@ def test_cosine_similarity(features_deep):
 
 
 def test_match_loftr(dataset_loftr):
-    similarity = MatchLOFTR(device='cpu')
+    similarity = MatchLOFTR(device="cpu")
     output = similarity(dataset_loftr, dataset_loftr)
     assert output.shape == (4, 4)
 

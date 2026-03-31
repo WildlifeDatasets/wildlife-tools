@@ -34,8 +34,8 @@ def test_deep_features_cached_split(wd_dataset_deep, extractor_cached):
     n = len(wd_dataset_deep)
 
     features_all = extractor_cached(wd_dataset_deep)
-    dataset0 = wd_dataset_deep.get_subset(range(0,m))
-    dataset1 = wd_dataset_deep.get_subset(range(m,n))
+    dataset0 = wd_dataset_deep.get_subset(range(0, m))
+    dataset1 = wd_dataset_deep.get_subset(range(m, n))
     features0 = extractor_cached(dataset0)
     features1 = extractor_cached(dataset1)
     assert np.array_equal(features0.features, features_all.features[:m])
@@ -53,8 +53,8 @@ def test_sift_features_cached_split(wd_dataset, extractor_sift_cached):
     n = len(wd_dataset)
 
     features_all = extractor_sift_cached(wd_dataset)
-    dataset0 = wd_dataset.get_subset(range(0,m))
-    dataset1 = wd_dataset.get_subset(range(m,n))
+    dataset0 = wd_dataset.get_subset(range(0, m))
+    dataset1 = wd_dataset.get_subset(range(m, n))
     features0 = extractor_sift_cached(dataset0)
     features1 = extractor_sift_cached(dataset1)
     check_sift_features(features0.features, features_all.features[:m])
