@@ -61,12 +61,16 @@ packages = [
   "wildlife_tools.train",
 ]
 
-[tool.flake8]
-max-line-length = 120
-
-[tool.black]
+[tool.ruff]
 line-length = 120
 
-[tool.isort]
-profile = "black"
-line_length = 120
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+ignore = ["E501", "F403", "F405"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
