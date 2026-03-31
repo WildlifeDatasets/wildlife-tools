@@ -34,7 +34,6 @@ class SimilarityPipeline:
         extractor: Callable | None = None,
         calibration: Callable | None = None,
         transform: Callable | None = None,
-        save_features: bool = False,
     ):
         """
         Args:
@@ -44,8 +43,6 @@ class SimilarityPipeline:
             calibration (callable, optional): A calibration model to refine similarity scores.
             transform (callable, optional): Image transformation function applied before feature
                 extraction.
-            save_features (bool, optional): Could prevent multiple computation of the same features.
-                Increases memory usage, especially when using big datasets.
         """
 
         self.matcher = matcher
@@ -53,8 +50,6 @@ class SimilarityPipeline:
         self.calibration_done = False
         self.extractor = extractor
         self.transform = transform
-        self.save_features = save_features
-        self.features = {}
 
     def get_feature_dataset(self, dataset: ImageDataset) -> FeatureDataset:
         """Apply transformations and extract features from the image dataset."""
@@ -62,11 +57,6 @@ class SimilarityPipeline:
         if self.transform is not None:
             dataset.transform = self.transform
         if self.extractor is not None:
-            if self.save_features:
-                key = dataset.__repr__()
-                if key not in self.features:
-                    self.features[key] = self.extractor(dataset)
-                return self.features[key]
             return self.extractor(dataset)
         else:
             return dataset
