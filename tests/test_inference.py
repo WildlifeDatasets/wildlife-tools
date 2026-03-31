@@ -1,6 +1,7 @@
-import pytest
 import numpy as np
-from wildlife_tools.inference import TopkClassifier, KnnClassifier
+import pytest
+
+from wildlife_tools.inference import KnnClassifier, TopkClassifier
 
 
 @pytest.fixture

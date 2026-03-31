@@ -1,6 +1,6 @@
 import os
 import random
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import numpy as np
 import torch
@@ -95,7 +95,7 @@ class BasicTrainer:
         batch_size: int = 128,
         num_workers: int = 1,
         accumulation_steps: int = 1,
-        epoch_callback: Optional[Callable] = None,
+        epoch_callback: Callable | None = None,
     ):
         check_dataset_output(dataset, check_label=True)
         self.dataset = dataset

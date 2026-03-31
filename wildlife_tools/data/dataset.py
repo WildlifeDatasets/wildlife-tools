@@ -1,14 +1,12 @@
 import json
 import os
 import pickle
-from collections.abc import Sequence
-from typing import Callable, List
+from collections.abc import Callable, Sequence
 
 import cv2
 import numpy as np
 import pandas as pd
 import pycocotools.mask as mask_coco
-import torch
 from PIL import Image
 
 
@@ -132,7 +130,7 @@ class WildlifeDataset(ImageDataset):
         img = self.get_image(img_path)
 
         if self.img_load in ["full_mask", "full_hide", "bbox_mask", "bbox_hide", "mask_crop"]:
-            if not ("segmentation" in data):
+            if "segmentation" not in data:
                 raise ValueError(f"{self.img_load} selected but no segmentation found.")
             if type(data["segmentation"]) == str:
                 segmentation = eval(data["segmentation"])
@@ -151,7 +149,7 @@ class WildlifeDataset(ImageDataset):
                 segmentation = mask_coco.frPyObjects(segmentation, h, w)
 
         if self.img_load in ["bbox"]:
-            if not ("bbox" in data):
+            if "bbox" not in data:
                 raise ValueError(f"{self.img_load} selected but no bbox found.")
             if type(data["bbox"]) == str:
                 bbox = json.loads(data["bbox"])

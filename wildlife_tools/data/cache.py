@@ -2,7 +2,7 @@ import pickle
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Generic, Iterable, Optional, TypeVar, Union
+from typing import Generic, TypeVar
 
 import lmdb
 import torch
@@ -22,8 +22,8 @@ class CacheMixin(ABC, Generic[TModel]):
         self,
         batch_size: int = 128,
         num_workers: int = 1,
-        device: Optional[str] = "cpu",
-        cache_path: Optional[str] = None,
+        device: str | None = "cpu",
+        cache_path: str | None = None,
     ):
 
         if device is None:

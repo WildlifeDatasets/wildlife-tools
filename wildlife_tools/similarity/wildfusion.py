@@ -1,4 +1,4 @@
-from typing import Callable, List, Optional, Tuple
+from collections.abc import Callable
 
 import numpy as np
 import torch
@@ -166,7 +166,7 @@ class WildFusion:
         dataset0: ImageDataset,
         dataset1: ImageDataset,
         B: int,
-        ignore_pairs: Optional[List[Tuple[int, int]]] = None,
+        ignore_pairs: list[tuple[int, int]] | None = None,
     ) -> np.ndarray:
         """Implements shortlisting strategy for selection of most relevant pairs."""
 
@@ -189,7 +189,7 @@ class WildFusion:
         dataset1: ImageDataset,
         pairs: list | None = None,
         B: int = None,
-        ignore_pairs: List[Tuple[int, int]] = [],
+        ignore_pairs: list[tuple[int, int]] = [],
     ):
         """
         Compute fused similarity scores between two images datasets using multiple calibrated

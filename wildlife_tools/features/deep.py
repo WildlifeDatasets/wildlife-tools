@@ -1,8 +1,6 @@
-from typing import Optional
 
 import numpy as np
 import torch
-from tqdm import tqdm
 from transformers import CLIPModel, CLIPProcessor
 
 from ..data import FeatureCacheMixin
@@ -19,7 +17,7 @@ class DeepFeatures(FeatureCacheMixin):
         batch_size: int = 128,
         num_workers: int = 1,
         device: str = "cpu",
-        cache_path: Optional[str] = None,
+        cache_path: str | None = None,
     ):
         """
         Args:
@@ -58,12 +56,12 @@ class ClipFeatures(FeatureCacheMixin):
 
     def __init__(
         self,
-        model: Optional[CLIPModel] = None,
-        processor: Optional[CLIPProcessor] = None,
+        model: CLIPModel | None = None,
+        processor: CLIPProcessor | None = None,
         batch_size: int = 128,
         num_workers: int = 1,
         device: str = "cpu",
-        cache_path: Optional[str] = None,
+        cache_path: str | None = None,
     ):
         """
         Args:

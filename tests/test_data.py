@@ -1,8 +1,10 @@
 import os
+
 import pytest
-from wildlife_tools.data import WildlifeDataset, FeatureDataset
 from PIL.Image import Image
 from torch import Tensor
+
+from wildlife_tools.data import FeatureDataset, WildlifeDataset
 
 load_options_ok = ["full", "crop_black"]
 load_options_error = ["full_mask", "full_hide", "bbox", "bbox_mask", "bbox_hide"]

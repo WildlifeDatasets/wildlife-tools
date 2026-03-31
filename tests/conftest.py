@@ -2,15 +2,17 @@ import multiprocessing as mp
 
 mp.set_start_method("spawn", force=True)
 import os
-import pytest
-import torchvision.transforms as T
+
+import numpy as np
 import pandas as pd
+import pytest
+import timm
+import torchvision.transforms as T
 from wildlife_datasets import datasets
+
 from wildlife_tools.data import ImageDataset
 from wildlife_tools.features import DeepFeatures, SiftExtractor, SuperPointExtractor
 from wildlife_tools.similarity import CosineSimilarity, MatchLightGlue
-import numpy as np
-import timm
 
 
 @pytest.fixture(scope="session")

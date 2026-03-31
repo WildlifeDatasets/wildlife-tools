@@ -1,7 +1,9 @@
-import pytest
-from wildlife_tools.train import BasicTrainer, ArcFaceLoss
 from itertools import chain
+
+import pytest
 from torch.optim import SGD
+
+from wildlife_tools.train import ArcFaceLoss, BasicTrainer
 
 
 def test_basic_trainer(dataset_deep, backbone):

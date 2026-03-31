@@ -1,5 +1,6 @@
-import pytest
 import numpy as np
+import pytest
+
 from wildlife_tools.data import FeatureDataset
 from wildlife_tools.features import DataToMemory
 
