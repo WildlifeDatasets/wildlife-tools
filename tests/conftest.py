@@ -1,6 +1,4 @@
 import multiprocessing as mp
-
-mp.set_start_method("spawn", force=True)
 import os
 
 import numpy as np
@@ -13,6 +11,8 @@ from wildlife_datasets import datasets
 from wildlife_tools.data import ImageDataset
 from wildlife_tools.features import DeepFeatures, SiftExtractor, SuperPointExtractor
 from wildlife_tools.similarity import CosineSimilarity, MatchLightGlue
+
+mp.set_start_method("spawn", force=True)
 
 
 @pytest.fixture(scope="session")

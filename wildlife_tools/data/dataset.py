@@ -132,7 +132,7 @@ class WildlifeDataset(ImageDataset):
         if self.img_load in ["full_mask", "full_hide", "bbox_mask", "bbox_hide", "mask_crop"]:
             if "segmentation" not in data:
                 raise ValueError(f"{self.img_load} selected but no segmentation found.")
-            if type(data["segmentation"]) == str:
+            if isinstance(data["segmentation"], str):
                 segmentation = eval(data["segmentation"])
             else:
                 segmentation = data["segmentation"]
@@ -151,7 +151,7 @@ class WildlifeDataset(ImageDataset):
         if self.img_load in ["bbox"]:
             if "bbox" not in data:
                 raise ValueError(f"{self.img_load} selected but no bbox found.")
-            if type(data["bbox"]) == str:
+            if isinstance(data["bbox"], str):
                 bbox = json.loads(data["bbox"])
             else:
                 bbox = data["bbox"]

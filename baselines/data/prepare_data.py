@@ -53,7 +53,7 @@ def resize_dataset(dataset_factory, new_root, size, img_load="bbox", unique_path
 
 def save_dataframe(dataset_factory, new_root):
     df_simplified = dataset_factory.df[["image_id", "identity", "path"]]
-    assert type(df_simplified.index) == pd.RangeIndex
+    assert isinstance(df_simplified.index, pd.RangeIndex)
     df_simplified.to_csv(os.path.join(new_root, "annotations.csv"))
 
 
