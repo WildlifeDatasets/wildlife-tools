@@ -1,6 +1,6 @@
 import os
 import random
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import numpy as np
 import torch
@@ -95,7 +95,7 @@ class BasicTrainer:
         batch_size: int = 128,
         num_workers: int = 1,
         accumulation_steps: int = 1,
-        epoch_callback: Optional[Callable] = None,
+        epoch_callback: Callable | None = None,
     ):
         check_dataset_output(dataset, check_label=True)
         self.dataset = dataset
@@ -137,15 +137,15 @@ class BasicTrainer:
 
             out = model(x)
             loss = self.objective(out, y)
-            loss_scaled = loss / self.accumulation_steps    # Loss scaling
+            loss_scaled = loss / self.accumulation_steps  # Loss scaling
             loss_scaled.backward()
             if (i + 1) % self.accumulation_steps == 0:
                 self.optimizer.step()
                 self.optimizer.zero_grad()
 
             losses.append(loss.detach().cpu())
-        
-        if last_i >= 0 and (last_i + 1) % self.accumulation_steps != 0: # Update leftover gradients at end of epoch
+
+        if last_i >= 0 and (last_i + 1) % self.accumulation_steps != 0:  # Update leftover gradients at end of epoch
             self.optimizer.step()
             self.optimizer.zero_grad()
 

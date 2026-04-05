@@ -2,58 +2,23 @@ name: Code Quality
 
 on:
   push:
-    paths:
-      - '**.py'
-      - 'setup.cfg'
-      - 'pyproject.toml'
-
-env:
-  PYTHON_VERSION: 3.9
+    branches:
+      - main  
+  pull_request:
 
 jobs:
-  black:
+  ruff:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Set up Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install black[jupyter]==22.3.0
-      - name: Analysing the code with black
-        run: black --check --diff --line-length 120 wildlife_tools
-  isort:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Set up Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install isort==5.10.1
-      - name: Analysing the code with isort
-        run: isort --check --diff --line-length 120 wildlife_tools
-  
-  # flake8:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v3
-  #     - name: Set up Python ${{ env.PYTHON_VERSION }}
-  #       uses: actions/setup-python@v3
-  #       with:
-  #         python-version: ${{ env.PYTHON_VERSION }}
-  #     - name: Install dependencies
-  #       run: |
-  #         python -m pip install --upgrade pip
-  #         pip install flake8==4.0.1 flake8-docstrings==1.6.0
-  #     - name: Analysing the code with flake8
-  #       run: flake8 wildlife_tools
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Ruff
+        run: pip install ruff
+
+      - name: Ruff lint
+        run: ruff check .
+
+      - name: Ruff format check
+        run: ruff format . --check

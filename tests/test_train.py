@@ -1,8 +1,9 @@
-import pytest
-from wildlife_tools.train import BasicTrainer, ArcFaceLoss
 from itertools import chain
+
+import pytest
 from torch.optim import SGD
 
+from wildlife_tools.train import ArcFaceLoss, BasicTrainer
 
 
 def test_basic_trainer(dataset_deep, backbone):
@@ -16,7 +17,7 @@ def test_basic_trainer(dataset_deep, backbone):
         objective=objective,
         optimizer=optimizer,
         epochs=2,
-        device='cpu',
+        device="cpu",
     )
     trainer.train()
 
@@ -33,7 +34,7 @@ def test_wildlife_datasets_train1(wd_dataset_deep, backbone):
         objective=objective,
         optimizer=optimizer,
         epochs=2,
-        device='cpu',
+        device="cpu",
     )
     trainer.train()
 
@@ -50,5 +51,5 @@ def test_wildlife_datasets_train2(wd_dataset_deep_no_labels, backbone):
             objective=objective,
             optimizer=optimizer,
             epochs=2,
-            device='cpu',
+            device="cpu",
         )
