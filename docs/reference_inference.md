@@ -1,4 +1,4 @@
-# Reference similarity
+# Reference inference
 
 ::: inference.classifier
     options:
