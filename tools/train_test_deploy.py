@@ -29,6 +29,7 @@ def train(config):
         transform=config.train_transforms,
         max_length=2000,
         select_every=1,
+        detector_checkpoint=config.detector_checkpoint,
     )
     n_training_dataset = dataset.num_classes
     training_label_map = dataset.labels_map
@@ -42,6 +43,7 @@ def train(config):
         max_length=2000,
         select_every=10,
         return_isolation=True,
+        detector_checkpoint=config.detector_checkpoint,
     )
     validation_label_map = dataset.labels_map
 
@@ -64,7 +66,7 @@ def train(config):
         num_classes=dataset.num_classes, embedding_size=config.model_config.n_output_embd, margin=0.5, scale=64
     )
 
-    params = chain(model.parameters(), objective.arcface_loss.parameters())
+    params = chain(filter(lambda p: p.requires_grad, model.parameters()), objective.arcface_loss.parameters())
     optimizer = SGD(params=params, lr=0.001, momentum=0.9)
     min_lr = optimizer.defaults.get("lr") * 1e-3
 
@@ -99,6 +101,7 @@ def train(config):
 def test(config):
     ckpt_path = os.path.abspath(os.path.join(config.save_directory, "precision_track_re-identificator.pth"))
     model = PtReIDModel(config=config.model_config, checkpoint=ckpt_path)
+    # model = PtReIDModel(config=config.model_config, checkpoint=None, pretrained=True)
 
     test_metrics(config, model)
     test_classification(config, model)
@@ -109,6 +112,7 @@ def test(config):
 def deploy(config):
     ckpt_path = os.path.abspath(os.path.join(config.save_directory, "precision_track_re-identificator.pth"))
     model = PtReIDModel(config=config.model_config, checkpoint=ckpt_path)
+    # model = PtReIDModel(config=config.model_config, checkpoint=None, pretrained=True)
     model.eval()
 
     deploy_model(config, model)
@@ -126,16 +130,6 @@ def main():
     else:
         print_info("Your machine is NOT CUDA accelerated. Therefore, the processes will take place on CPU.")
         config.device = "cpu"
-
-    labels_path = os.path.abspath(os.path.join(config.dataset_directory, "labels.csv"))
-    if os.path.exists(labels_path) and os.path.isfile(labels_path):
-        print_info(
-            f"Labels file '{labels_path}' found. Will NOT be creating a new one. If you wish to update your labels file, simply delete the existing one."
-        )
-    else:
-        print_info(f"Labels file '{labels_path}' not found. Will be creating a new one.")
-        create_labels_file(config.dataset_directory, config.val_split, config.seed)
-    config.labels_path = labels_path
 
     os.makedirs(config.save_directory, exist_ok=True)
 
@@ -160,8 +154,9 @@ def main():
 
     config.model_config = Dict(
         dict(
-            n_embd=768,
-            n_output_embd=16,
+            backbone_name=config.backbone_name,
+            freeze_backbone=False,
+            n_output_embd=128,
             n_layers=1,
             n_classes=config.num_classes,
             dropout=0.0,

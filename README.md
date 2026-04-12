@@ -68,9 +68,17 @@ pip install -e ".[cuda]"
 
 ## How to use
 
-### 1. Create your metadata file
+### 1. Create a MOT dataset
 
-Path to your metadata `.json` file that maps identities between each of yours MOT bounding box files to your defined class identifiants. Here's an example:
+The first step is to have a MOT dataset, meaning [MOT-styled annonotations](https://motchallenge.net/).
+
+For reference, you can check the [MICE sequential dataset](https://drive.google.com/drive/folders/1WcDkX-92X6SCgZPAZXFyDc6EGUzU0Onq?usp=drive_link) which have MOT-styled annonotations under its `./bboxes/*` directories.
+
+**Note** The MOT-styled annonotations are used inside the dataset creation pipeline. It will indicate where to crop the images. As such, we recommend the bounding boxes to be as precise as possible.
+
+### 2. Create a dataset metadata file
+
+You will also need a dataset metadata file (identities between each of yours MOT bounding box files to your defined class identifiants). This file will be a `.json`. Here's an example of a valid file:
 
 ```json
 {
@@ -101,19 +109,21 @@ Path to your metadata `.json` file that maps identities between each of yours MO
 
 This mapping allows the network to associate each unique IDS (a combination of the label and the instance ID of each subjects) of your MOT bounding box files with your defined identities in the `classes` list.
 
-### 2. Format your dataset's file Tree
+**Note** You will need to register the path to your dataset metadata file inside your `./configs/user_configs.yaml` file. You can refer to our [Config guide](https://github.com/VincentCoulombe/precision_track-ReID/tree/main/configs) for more details.
 
-Format your `dataset_directory` so it has the following structure.
+### 3. Format your dataset's file Tree
+
+Format your `dataset_directory` so it has the following structure. You will then need to register your `dataset_directory` inside your `./configs/user_configs.yaml` file.
 
 ```bash
 <Your dataset root directory>/
   ├── bboxes/
-  │ ├── video1.csv # NOTE: Your bounding bboxes can have any name and extensions
+  │ ├── video1.csv # NOTE: This is your MOT annotations (your bounding bboxes). They can have any name
   │ ├── video2.csv
   │ ├── etc...
   ├── videos/
-  │ ├── video1.mp4 # NOTE: Your videos must match their correspondig bboxes files.
-  │ ├── video2.mp4
+  │ ├── video1.mp4 # NOTE: Your videos must match their correspondig MOT bboxes files.
+  │ ├── video2.avi
   │ ├── etc...
   ├── <your metadata file>/ # NOTE This is the metadata file from step 1.
 ```
@@ -131,7 +141,7 @@ python train_test_deploy.py
 
 ### 4. Move your deployed checkpoints to your PrecisionTrack deployment directory
 
-Once done, simply move the newly generated deployed checkpoints to your PrecisionTrack's [deploying_directory](https://github.com/VincentCoulombe/precision_track/tree/main/configs)
+Once done, move the newly generated deployed ONNX or TensorRT checkpoints to your PrecisionTrack's [deploying_directory](https://github.com/VincentCoulombe/precision_track/tree/main/configs). Then, follow PrecisionTrack's documentation to operationalize your checkpoint.
 
 ## Citation
 

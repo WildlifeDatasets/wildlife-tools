@@ -104,6 +104,10 @@ This mapping allows the network to associate each unique IDS (a combination of t
 - **Default**: `"../work_dir/training_runs/"`
 - **Description**: The training runs root directory, this is were your `deployed checkpoints` and your `confusion matrix` will be saved.
 
+## Crop confidence filter (optional)
+
+- **`detector_checkpoint`**: Path to your PrecisionTrack's checkpoint. This option is optionnal, meaning you can leave a `null` value to disable it. If enable, the dataset creation pipeline will be able to access a confidence level for each crop of your dataset. Knowing the confidence level of your crop will then enable the testing pipeline to calculate a F1 score specifically for confident crops (confidence > 0.75).
+
 ## Training Parameters
 
 ### `batch_size`

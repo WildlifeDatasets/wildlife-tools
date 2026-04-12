@@ -19,9 +19,15 @@ metadata: "re_id_mapping.json"
 save_directory: "../work_dir/training_runs/"
 
 # ================================
+# Crop confidence filter (optional)
+# ================================
+detector_checkpoint: "../../precision_track/checkpoints/camille/model_camille_DEPLOYED.onnx"
+
+# ================================
 # Training parameters
 # ================================
-batch_size: 80
+backbone_name: "megadescriptor"
+batch_size: 24
 epochs: 200
 val_split: 0.2
 seed: 42

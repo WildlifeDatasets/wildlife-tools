@@ -7,7 +7,7 @@ import json
 import random
 import numpy as np
 
-from .utils import print_info, print_counts, calculate_overlaps
+from .utils import print_info, print_counts, calculate_overlaps, DetectionFilter
 
 
 class BalancedImageDataset:
@@ -24,8 +24,10 @@ class BalancedImageDataset:
         select_every: int = 5,
         overlap_thr: float = 0.8,
         return_isolation: bool = False,
+        detector_checkpoint: str | None = None,
     ):
         self.return_isolation = bool(return_isolation)
+        self.confident_only = detector_checkpoint is not None
 
         assert phase in self.SUPPORTED_PHASES
         self.phase = phase
@@ -68,13 +70,41 @@ class BalancedImageDataset:
             print_info(f"Loading labels from '{labels_csv_path}'...")
             labels_df = pd.read_csv(labels_csv_path)
             has_isolation = "isolated" in labels_df.columns
+            has_confident = "confident" in labels_df.columns
+
+            total_crops = 0
+            confident_crops = 0
             for row in labels_df.itertuples(index=False):
                 isolated = row.isolated if has_isolation else True
+                confident = row.confident if has_confident else True
+                total_crops += 1
+                if confident:
+                    confident_crops += 1
+                # Filter by confidence if detector_checkpoint is set
+                if self.confident_only and not confident:
+                    continue
                 identity_crops[row.identity].append((row.path, isolated))
+
+            if has_confident:
+                if self.confident_only:
+                    print_info(f"Loaded {confident_crops}/{total_crops} confident crops (filtered).")
+                else:
+                    print_info(f"Loaded {total_crops} crops ({confident_crops} confident).")
+            else:
+                print_info(f"Loaded {total_crops} crops (no confidence info in labels.csv).")
+
             self.sequences = identity_crops
+
         elif os.path.isdir(videos_dir):
             os.makedirs(self.crops_dir, exist_ok=True)
             video_extensions = (".mp4", ".avi", ".mov", ".mkv", ".webm")
+
+            detection_filter = None
+            if detector_checkpoint is not None:
+                detection_filter = DetectionFilter(
+                    model={"input_shapes": [(640, 640)], "checkpoint": detector_checkpoint},
+                    sample_every=1,
+                )
 
             for video_file in os.listdir(videos_dir):
                 if video_file.lower().endswith(video_extensions):
@@ -92,7 +122,7 @@ class BalancedImageDataset:
 
                     last_seen_bbox = {}  # Track last bbox per identity in this video
                     cap = cv2.VideoCapture(video_path)
-                    frame_id = 1
+                    frame_id = 0
                     while True:
                         ret, frame = cap.read()
                         if not ret:
@@ -113,6 +143,17 @@ class BalancedImageDataset:
                                     frame_identity_counts.get(global_identity, 0) + 1
                                 )
 
+                        # Determine which identities are confident (if detection_filter is set)
+                        confident_ids = None
+                        if detection_filter is not None and len(frame_bboxes) > 0:
+                            frame_detections = []
+                            for row in frame_bboxes.itertuples(index=False):
+                                idx = self._find_instance_in_mapping(video_name, row.class_id, row.instance_id)
+                                if idx is not None:
+                                    gid = self.mapping["classes"][idx]
+                                    frame_detections.append((gid, int(row.x), int(row.y), int(row.w), int(row.h)))
+                            confident_ids = {d[0] for d in detection_filter(frame, frame_detections)}
+
                         for row in frame_bboxes.itertuples(index=False):
                             idx = self._find_instance_in_mapping(video_name, row.class_id, row.instance_id)
                             if idx is None:
@@ -122,6 +163,11 @@ class BalancedImageDataset:
 
                             if frame_identity_counts[global_identity] > 1:  # Filter out duplicate labels (errors)
                                 continue
+
+                            # Determine confidence status for this crop
+                            is_confident = True
+                            if confident_ids is not None:
+                                is_confident = global_identity in confident_ids
 
                             # Filter out redundant crops (immobile subjects)
                             x, y, w, h = int(row.x), int(row.y), int(row.w), int(row.h)
@@ -145,29 +191,31 @@ class BalancedImageDataset:
                             cv2.imwrite(output_path, crop)
 
                             isolation_status = True
-                            if self.return_isolation:
-                                # Enlarge current bbox by 10%
-                                enlarged_w = w * 1.1
-                                enlarged_h = h * 1.1
-                                enlarged_x = x - (enlarged_w - w) / 2
-                                enlarged_y = y - (enlarged_h - h) / 2
-                                enlarged_bbox = (enlarged_x, enlarged_y, enlarged_w, enlarged_h)
+                            # Enlarge current bbox by 10%
+                            enlarged_w = w * 1.1
+                            enlarged_h = h * 1.1
+                            enlarged_x = x - (enlarged_w - w) / 2
+                            enlarged_y = y - (enlarged_h - h) / 2
+                            enlarged_bbox = (enlarged_x, enlarged_y, enlarged_w, enlarged_h)
 
-                                # Check overlap with all other bboxes in the frame
-                                for other_row in frame_bboxes.itertuples(index=False):
-                                    if other_row.instance_id == row.instance_id and other_row.class_id == row.class_id:
-                                        continue
-                                    other_bbox = (
-                                        int(other_row.x),
-                                        int(other_row.y),
-                                        int(other_row.w),
-                                        int(other_row.h),
-                                    )
-                                    if calculate_overlaps(enlarged_bbox, other_bbox) > 0:
-                                        isolation_status = False
-                                        break
+                            # Check overlap with all other bboxes in the frame
+                            for other_row in frame_bboxes.itertuples(index=False):
+                                if other_row.instance_id == row.instance_id and other_row.class_id == row.class_id:
+                                    continue
+                                other_bbox = (
+                                    int(other_row.x),
+                                    int(other_row.y),
+                                    int(other_row.w),
+                                    int(other_row.h),
+                                )
+                                if calculate_overlaps(enlarged_bbox, other_bbox) > 0:
+                                    isolation_status = False
+                                    break
 
-                            identity_crops[global_identity].append((os.path.abspath(output_path), isolation_status))
+                            # Store (path, isolated, confident) - we'll unpack confident when saving
+                            identity_crops[global_identity].append(
+                                (os.path.abspath(output_path), isolation_status, is_confident)
+                            )
                             last_seen_bbox[global_identity] = current_bbox
 
                         frame_id += 1
@@ -178,11 +226,24 @@ class BalancedImageDataset:
             if identity_crops:
                 labels_data = []
                 for identity, items in identity_crops.items():
-                    for path, isolated in items:
-                        labels_data.append({"identity": identity, "path": path, "isolated": isolated})
+                    for item in items:
+                        path, isolated, confident = item
+                        labels_data.append(
+                            {
+                                "identity": identity,
+                                "path": path,
+                                "isolated": isolated,
+                                "confident": confident,
+                            }
+                        )
                 labels_df = pd.DataFrame(labels_data)
                 labels_df.to_csv(labels_csv_path, index=False)
                 print_info(f"Saved labels to '{labels_csv_path}'")
+
+                # Convert back to (path, isolated) tuples for consistency
+                for identity in identity_crops:
+                    identity_crops[identity] = [(p, iso) for p, iso, _ in identity_crops[identity]]
+                self.sequences = identity_crops
 
         self.root = root
         self.transform = transform
@@ -278,6 +339,7 @@ class NumpyDataset(BalancedImageDataset):
         max_length: int = 1000,
         select_every: int = 5,
         return_isolation: bool = False,
+        detector_checkpoint: str | None = None,
     ):
         super().__init__(
             metadata=metadata,
@@ -287,6 +349,7 @@ class NumpyDataset(BalancedImageDataset):
             max_length=max_length,
             select_every=select_every,
             return_isolation=return_isolation,
+            detector_checkpoint=detector_checkpoint,
         )
         self.img_size = img_size
 
