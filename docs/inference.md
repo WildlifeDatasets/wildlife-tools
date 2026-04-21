@@ -80,6 +80,70 @@ predictions = classifier(similarity)
 accuracy = np.mean(dataset_query.labels_string == predictions)
 ```
 
+## Metadata priors
+
+The `inference.priors` module provides reusable priors extracted from the method introduced in *Animal Identification with Independent Foreground and Background Modeling* by Picek, Neumann, and Matas. They are designed for settings where appearance-based class probabilities should be reweighted using metadata such as location or time.
+
+The priors operate on a tensor of appearance probabilities with shape `n_samples x n_classes` and a list of metadata dictionaries, one per sample. The exact metadata fields depend on the prior:
+
+- location priors expect `grid_code`
+- time priors expect `timestamp`
+
+For example, a moving location prior can be used to favor identities previously observed near the current location:
+
+```python
+import torch
+from wildlife_tools.inference import MovingLocationPrior
+
+appearance_prob = torch.tensor([
+    [0.70, 0.20, 0.10],
+    [0.40, 0.35, 0.25],
+])
+
+prior = MovingLocationPrior(
+    identity_to_base_location_map=[
+        [("10-10", 5)],
+        [("30-30", 3)],
+        [("50-50", 2)],
+    ],
+    alpha=2.5,
+)
+
+metadata = [
+    {"grid_code": "10-11"},
+    {"grid_code": "12-12"},
+]
+
+combined_prob = prior(appearance_prob, metadata)
+predictions = torch.argmax(combined_prob, dim=1)
+```
+
+Currently available priors are:
+
+- `BaseLocationPrior`
+- `MultipleHomeLocationsPrior`
+- `MovingLocationPrior`
+- `MultipleMovingLocationsPrior`
+- `TimeDecayPrior`
+
+These priors are intentionally lightweight. They do not define a full end-to-end background model; instead, they provide the reusable probability reweighting logic so you can combine appearance predictions with metadata inside your own pipeline.
+
+Reference:
+
+- arXiv: [2408.12930](https://arxiv.org/abs/2408.12930)
+- Springer DOI: [10.1007/978-3-031-85181-0_16](https://doi.org/10.1007/978-3-031-85181-0_16)
+
+```bibtex
+@inproceedings{Picek2025ForegroundBackground,
+  author = {Picek, Luk{\'a}{\v{s}} and Neumann, Luk{\'a}{\v{s}} and Matas, Ji{\v{r}}{\'i}},
+  title = {Animal Identification with Independent Foreground and Background Modeling},
+  booktitle = {Pattern Recognition - 46th DAGM German Conference, DAGM GCPR 2024, Proceedings},
+  year = {2025},
+  doi = {10.1007/978-3-031-85181-0_16},
+  url = {https://arxiv.org/abs/2408.12930}
+}
+```
+
 ## Feature extractors
 
 There are additional ways to extract features from images. Feature extractors, implemented as classes, can be created with specific arguments that define the extraction properties. After instantiation, the extractor functions as a callable, requiring only a single argument — the `WildlifeDataset` instance. The specific output type and shape vary based on the chosen feature extractor.

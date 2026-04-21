@@ -102,7 +102,7 @@ def features_deep(dataset_deep, extractor):
 @pytest.fixture(scope="session")
 def similarity_deep(features_deep):
     similarity = CosineSimilarity()
-    return similarity(features_deep, features_deep)["cosine"]
+    return similarity(features_deep, features_deep)
 
 
 @pytest.fixture(scope="session")
