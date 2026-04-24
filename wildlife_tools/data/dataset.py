@@ -292,6 +292,9 @@ class FeatureDataset:
     def from_file(cls, path: str, **config):
         with open(path, "rb") as file:
             data = pickle.load(file)
+        for name in ["col_label", "load_label"]:
+            if name in config and name in data:
+                data.pop(name)
         return cls(**data, **config)
 
     @classmethod
