@@ -1,3 +1,4 @@
+import ast
 import json
 import os
 import pickle
@@ -57,11 +58,12 @@ class ImageDataset:
     def __len__(self):
         return len(self.metadata)
 
-    def get_image(self, path: str):
+    def get_image(self, path: str) -> Image.Image:
         img = cv2.imread(path)
+        if img is None:
+            raise FileNotFoundError(f"Unable to read image at path: {path}")
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img = Image.fromarray(img)
-        return img
+        return Image.fromarray(img)
 
     def __getitem__(self, idx: int):
         data = self.metadata.iloc[idx]
@@ -121,6 +123,21 @@ class WildlifeDataset(ImageDataset):
         self.load_label = load_label
         self.labels, self.labels_map = pd.factorize(self.metadata[self.col_label].values)
 
+    @staticmethod
+    def _crop_to_nonzero(img: Image.Image, mode: str) -> Image.Image:
+        arr = np.asarray(img)
+        if arr.ndim == 2:
+            nonzero = np.argwhere(arr != 0)
+        else:
+            nonzero = np.argwhere(np.any(arr != 0, axis=-1))
+
+        if len(nonzero) == 0:
+            raise ValueError(f"{mode} produced an empty crop.")
+
+        y_min, x_min = nonzero.min(axis=0)[:2]
+        y_max, x_max = nonzero.max(axis=0)[:2]
+        return img.crop((x_min, y_min, x_max + 1, y_max + 1))
+
     def __getitem__(self, idx: int):
         data = self.metadata.iloc[idx]
         if self.root:
@@ -133,7 +150,7 @@ class WildlifeDataset(ImageDataset):
             if "segmentation" not in data:
                 raise ValueError(f"{self.img_load} selected but no segmentation found.")
             if isinstance(data["segmentation"], str):
-                segmentation = eval(data["segmentation"])
+                segmentation = ast.literal_eval(data["segmentation"])
             else:
                 segmentation = data["segmentation"]
             if isinstance(segmentation, list) or isinstance(segmentation, np.ndarray):
@@ -164,13 +181,13 @@ class WildlifeDataset(ImageDataset):
         elif self.img_load == "full_mask":
             if not np.any(pd.isnull(segmentation)):
                 mask = mask_coco.decode(segmentation).astype("bool")
-                img = Image.fromarray(img * mask[..., np.newaxis])
+                img = Image.fromarray(np.asarray(img) * mask[..., np.newaxis])
 
         # Hide object using segmentation mask
         elif self.img_load == "full_hide":
             if not np.any(pd.isnull(segmentation)):
                 mask = mask_coco.decode(segmentation).astype("bool")
-                img = Image.fromarray(img * ~mask[..., np.newaxis])
+                img = Image.fromarray(np.asarray(img) * ~mask[..., np.newaxis])
 
         # Crop to bounding box
         elif self.img_load == "bbox":
@@ -181,43 +198,19 @@ class WildlifeDataset(ImageDataset):
         elif self.img_load == "bbox_mask":
             if not np.any(pd.isnull(segmentation)):
                 mask = mask_coco.decode(segmentation).astype("bool")
-                img = Image.fromarray(img * mask[..., np.newaxis])
-                y_nonzero, x_nonzero, _ = np.nonzero(img)
-                img = img.crop(
-                    (
-                        np.min(x_nonzero),
-                        np.min(y_nonzero),
-                        np.max(x_nonzero),
-                        np.max(y_nonzero),
-                    )
-                )
+                img = Image.fromarray(np.asarray(img) * mask[..., np.newaxis])
+                img = self._crop_to_nonzero(img, self.img_load)
 
         # Hide object using segmentation mask and crop to bounding box.
         elif self.img_load == "bbox_hide":
             if not np.any(pd.isnull(segmentation)):
                 mask = mask_coco.decode(segmentation).astype("bool")
-                img = Image.fromarray(img * ~mask[..., np.newaxis])
-                y_nonzero, x_nonzero, _ = np.nonzero(img)
-                img = img.crop(
-                    (
-                        np.min(x_nonzero),
-                        np.min(y_nonzero),
-                        np.max(x_nonzero),
-                        np.max(y_nonzero),
-                    )
-                )
+                img = Image.fromarray(np.asarray(img) * ~mask[..., np.newaxis])
+                img = self._crop_to_nonzero(img, self.img_load)
 
         # Crop black background around images
         elif self.img_load == "crop_black":
-            y_nonzero, x_nonzero, _ = np.nonzero(img)
-            img = img.crop(
-                (
-                    np.min(x_nonzero),
-                    np.min(y_nonzero),
-                    np.max(x_nonzero),
-                    np.max(y_nonzero),
-                )
-            )
+            img = self._crop_to_nonzero(img, self.img_load)
 
         else:
             raise ValueError(f"Invalid img_load argument: {self.img_load}")
@@ -299,12 +292,16 @@ class FeatureDataset:
     def from_file(cls, path: str, **config):
         with open(path, "rb") as file:
             data = pickle.load(file)
+        for name in ["col_label", "load_label"]:
+            if name in config and name in data:
+                data.pop(name)
         return cls(**data, **config)
 
     @classmethod
     def from_config(cls, config):
+        config = dict(config)
         path = config.pop("path")
-        return cls.load(path, **config)
+        return cls.from_file(path, **config)
 
 
 class FeatureDatabase(FeatureDataset):
