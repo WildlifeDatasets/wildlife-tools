@@ -282,7 +282,9 @@ class BalancedImageDataset:
 
     def _find_instance_in_mapping(self, name: str, class_id: int, instance_id: int) -> int | None:
         sequence_mapping = self.mapping.get(name, [])
-        assert sequence_mapping, f"{sequence_mapping} does not have an identity mapping."
+        assert (
+            sequence_mapping
+        ), f"the sequence named: '{name}' does not have an identity map in the metadata file. Here is the list of all the keys in the metadata file: {list(self.mapping.keys())}."
         for idx, pair in enumerate(sequence_mapping):
             if pair[0] == class_id and pair[1] == instance_id:
                 return idx
