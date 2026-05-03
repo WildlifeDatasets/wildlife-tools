@@ -72,6 +72,16 @@ pip install -e ".[cuda]"
 
 The first step is to have a MOT dataset, meaning [MOT-styled annonotations](https://motchallenge.net/).
 
+A MOT-styled annotation file is a `.csv` where each row describes a single bounding box in a single frame. For example:
+
+| frame_id | class_id | instance_id | x   | y   | w   | h   | score |
+| -------- | -------- | ----------- | --- | --- | --- | --- | ----- |
+| 0        | 0        | 2           | 412 | 158 | 64  | 72  | 1     |
+| 0        | 0        | 5           | 730 | 220 | 58  | 70  | 1     |
+| 1        | 0        | 2           | 415 | 160 | 64  | 71  | 1     |
+
+**Note** In the context of the MOT-styled annonotations, the column `class_id` refers to the subjects species.
+
 For reference, you can check the [MICE sequential dataset](https://drive.google.com/drive/folders/1WcDkX-92X6SCgZPAZXFyDc6EGUzU0Onq?usp=drive_link) which have MOT-styled annonotations under its `./bboxes/*` directories.
 
 **Note** The MOT-styled annonotations are used inside the dataset creation pipeline. It will indicate where to crop the images. As such, we recommend the bounding boxes to be as precise as possible.
@@ -82,16 +92,17 @@ You will also need a dataset metadata file (identities between each of yours MOT
 
 ```json
 {
-	"classes": ["Horizontal", "Vertical", "Top", "Top_twice", "Full"],
-	"gt_mosaic": [
-		[0, 4],
+	"classes": ["Benjamin", "Jacob", "Noodle", "Puddy", "Leo"],
+	// NOTE the sequence mappings are expected to be the same length as the classes list
+	"sequence_2025-12-22T09_08_33": [
+		[0, 4], // NOTE this means that the identity linked to instance id 0 of the class id 0 is 'Benjamin'
 		[0, 1],
 		[0, 3],
-		[0, 5],
+		[0, 5], // NOTE this means that the identity linked to instance id 5 of the class id 0 is 'Puddy'
 		[0, 2]
 	],
-	"mosaic_2025-12-22T09_08_33": [
-		[0, 2],
+	"sequence_2026-01-25T10_25_01": [
+		[0, 2], // NOTE in this sequence, 'Benjamin' is linked to instance id 2
 		[0, -1], // NOTE set to -1 if absent from the .csv file
 		[0, 6],
 		[0, 5],
@@ -100,12 +111,16 @@ You will also need a dataset metadata file (identities between each of yours MOT
 }
 ```
 
+**Note** In the context of our re-identification training, the column `classes` refers to the subjects identities.
+
 **Structure:**
 
 - **`classes`**: A list of your dataset's identity names (e.g., individual animal names or IDs).
-- **Video entries** (e.g., `gt_mosaic`, `mosaic_2025-12-22T09_08_33`): Each key corresponds to a video name and contains mappings between the MOT bounding box file columns:
+- **Video entries** (e.g., `sequence_2025-12-22T09_08_33`, `sequence_2026-01-25T10_25_01`): Each key corresponds to a video name and contains mappings between the MOT bounding box file columns:
   - The first value in each pair corresponds to the **label column** (2nd column in the MOT `bboxes.csv` files)
   - The second value corresponds to the **instance ID column** (3rd column in the MOT `bboxes.csv` files)
+
+Each of the **Video entries** mappings are expected to be lists with the same length as the number of classes (identities). Simply mark missing instance ids as `-1`.
 
 This mapping allows the network to associate each unique IDS (a combination of the label and the instance ID of each subjects) of your MOT bounding box files with your defined identities in the `classes` list.
 

@@ -38,6 +38,17 @@ class BalancedImageDataset:
         with open(os.path.join(root, metadata), "r") as f:
             self.mapping = json.load(f)
 
+        self.labels_map = self.mapping.get("classes")
+        assert self.labels_map is not None, f"The '{metadata}' file must contain classes."
+        nb_classes = len(self.labels_map)
+        for k, v in self.mapping:
+            assert isinstance(
+                v, list
+            ), f"The '{metadata}' file must only contain list entries. the key: '{k}' have the following entry: '{v}' which is not a list."
+            assert (
+                len(v) == nb_classes
+            ), f"The '{metadata}' have {nb_classes} classes ({self.labels_map}). Therefore, all the sequences are expected to have mappings of length {nb_classes}. The key '{k}' have a mapping of length '{v}'"
+
         assert os.path.isdir(root), f"The provided dataset directory: '{root}' does not exists."
         bboxes_dir = os.path.join(root, "bboxes", self.phase)
         assert os.path.isdir(bboxes_dir), f"The '{bboxes_dir}' does not exists."
@@ -62,8 +73,6 @@ class BalancedImageDataset:
 
         labels_csv_path = os.path.abspath(os.path.join(self.crops_dir, "labels.csv"))
 
-        self.labels_map = self.mapping.get("classes")
-        assert self.labels_map is not None, f"The '{metadata}' file must contain classes."
         identity_crops = {cls_: [] for cls_ in self.labels_map}
 
         if os.path.isfile(labels_csv_path):
@@ -293,7 +302,9 @@ class BalancedImageDataset:
     def _compute_sample_weights(self):
         counts = torch.tensor([len(self.sequences.get(i, [])) for i in self.labels_map], dtype=torch.float32)
         print_counts(counts=counts.tolist(), labels=self.labels_map, phase=self.phase)
-        self.sample_weights_dict = {identity: 1.0 / count for identity, count in zip(self.labels_map, counts.tolist())}
+        self.sample_weights_dict = {
+            identity: 1.0 / count if count > 0 else count for identity, count in zip(self.labels_map, counts.tolist())
+        }
 
     def __getitem__(self, idx: int):
         rng = random.Random(idx)
