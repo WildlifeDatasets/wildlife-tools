@@ -1,0 +1,10 @@
+identities:
+- Horizontal
+- Vertical
+- Top
+- Top_twice
+- Full
+input_shape:
+- 224
+- 224
+nb_features: 128

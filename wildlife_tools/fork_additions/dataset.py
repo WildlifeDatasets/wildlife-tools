@@ -41,7 +41,7 @@ class BalancedImageDataset:
         self.labels_map = self.mapping.get("classes")
         assert self.labels_map is not None, f"The '{metadata}' file must contain classes."
         nb_classes = len(self.labels_map)
-        for k, v in self.mapping:
+        for k, v in self.mapping.items():
             assert isinstance(
                 v, list
             ), f"The '{metadata}' file must only contain list entries. the key: '{k}' have the following entry: '{v}' which is not a list."

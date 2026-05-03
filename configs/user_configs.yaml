@@ -21,7 +21,7 @@ save_directory: "../work_dir/training_runs/"
 # ================================
 # Crop confidence filter (optional)
 # ================================
-detector_checkpoint: "../../precision_track/checkpoints/stripedmice/re-id_DEPLOYED.onnx"
+detector_checkpoint: "../../precision_track/checkpoints/stripedmice/model_stripedmice_DEPLOYED.onnx"
 
 # ================================
 # Training parameters
