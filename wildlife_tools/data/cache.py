@@ -42,7 +42,10 @@ class CacheMixin(ABC, Generic[TModel]):
         txn.put(key, pickle.dumps(entry, protocol=pickle.HIGHEST_PROTOCOL))
 
     def get_key(self, dataset: ImageDataset, index: int) -> str:
-        return str(dataset.metadata["image_id"][index])
+        metadata = dataset.metadata.iloc[index]
+        if "image_id" in metadata:
+            return str(metadata["image_id"])
+        return str(metadata[dataset.col_path])
 
     def make_loader(self, dataset: ImageDataset) -> torch.utils.data.DataLoader:
 

@@ -101,6 +101,8 @@ class BasicTrainer:
         self.dataset = dataset
         self.model = model.to(device)
         self.objective = objective.to(device)
+        if hasattr(self.objective, "set_label_counts") and hasattr(dataset, "label_counts"):
+            self.objective.set_label_counts(dataset.label_counts)
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.epochs = epochs
