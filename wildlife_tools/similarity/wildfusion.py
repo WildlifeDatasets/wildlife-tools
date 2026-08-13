@@ -1,9 +1,9 @@
 from collections.abc import Callable
 
 import numpy as np
-import torch
 
 from ..data import FeatureDataset, ImageDataset
+from .pair_selector import PairSelector
 
 
 def get_hits(dataset0, dataset1):
@@ -135,16 +135,20 @@ class WildFusion:
         self,
         calibrated_pipelines: list[SimilarityPipeline],
         priority_pipeline: SimilarityPipeline | None = None,
+        pair_selector: PairSelector | None = None,
     ):
         """
         Args:
             calibrated_pipelines (list[SimilarityPipeline]): List of SimilarityPipeline objects.
             priority_pipeline (SimilarityPipeline, optional): Fast-to-compute similarity matcher
                 used for shortlisting.
+            pair_selector (PairSelector, optional): Strategy used to select shortlisted pairs from
+                the priority matrix. Defaults to top-B selection with `ignore_pairs` support.
         """
 
         self.calibrated_pipelines = calibrated_pipelines
         self.priority_pipeline = priority_pipeline
+        self.pair_selector = pair_selector if pair_selector is not None else PairSelector()
 
     def fit_calibration(self, dataset0: ImageDataset, dataset1: ImageDataset):
         """
@@ -174,14 +178,7 @@ class WildFusion:
             raise ValueError("Priority matcher is not assigned.")
 
         priority = self.priority_pipeline(dataset0, dataset1)
-        if ignore_pairs:
-            ignore_pairs = np.array(ignore_pairs)
-            priority[ignore_pairs[:, 0], ignore_pairs[:, 1]] = -np.inf
-        _, idx1 = torch.topk(torch.tensor(priority), min(B, priority.shape[1]))
-        idx0 = np.indices(idx1.numpy().shape)[0]
-        idx_keep = priority[idx0.flatten(), idx1.flatten()] > -np.inf
-        grid_indices = np.stack([idx0.flatten(), idx1.flatten()]).T[idx_keep]
-        return grid_indices
+        return self.pair_selector(priority, B=B, ignore_pairs=ignore_pairs)
 
     def __call__(
         self,
