@@ -107,7 +107,18 @@ class MetadataPairSelector(TopkPairSelector):
         B: int,
     ) -> np.ndarray:
         ignore_pairs = self.get_ignore_pairs(dataset0.metadata, dataset1.metadata)
-        if ignore_pairs:
-            ignore_idx = np.array(ignore_pairs)
-            similarity_priority[ignore_idx[:, 0], ignore_idx[:, 1]] = -np.inf
-        return super().__call__(similarity_priority, dataset0, dataset1, B)
+        # Return if there are no ignore_pairs
+        if not ignore_pairs:
+            return super().__call__(similarity_priority, dataset0, dataset1, B)
+
+        # Mask ignore pairs to prevent overwriting the original values
+        ignore_idx = np.array(ignore_pairs)
+        rows, cols = ignore_idx[:, 0], ignore_idx[:, 1]
+        original_values = similarity_priority[rows, cols].copy()
+        similarity_priority[rows, cols] = -np.inf
+
+        # Get the priority pairs and restore the original values
+        try:
+            return super().__call__(similarity_priority, dataset0, dataset1, B)
+        finally:
+            similarity_priority[rows, cols] = original_values
