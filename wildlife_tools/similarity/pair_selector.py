@@ -38,9 +38,9 @@ class TopkPairSelector(PairSelector):
         return grid_indices
 
 
-class MetadataPairSelector(TopkPairSelector):
+class MetadataIgnoreMask:
     """
-    Top-B pair selection that additionally ignores pairs based on matching metadata columns.
+    Computes a boolean ignore mask from matching metadata columns.
 
     Pairs are ignored if any `cols_equal` column has the same value in both datasets, or if any
     `cols_unequal` column has different values in both datasets.
@@ -102,6 +102,14 @@ class MetadataPairSelector(TopkPairSelector):
 
         return ignore_mask
 
+
+class MaskedPairSelector(PairSelector):
+    """Wraps a PairSelector, masking out ignored pairs before delegating to it."""
+
+    def __init__(self, pair_selector: PairSelector, mask_provider: MetadataIgnoreMask):
+        self.pair_selector = pair_selector
+        self.mask_provider = mask_provider
+
     def __call__(
         self,
         similarity_priority: np.ndarray,
@@ -109,15 +117,15 @@ class MetadataPairSelector(TopkPairSelector):
         dataset1: ImageDataset,
         B: int,
     ) -> np.ndarray:
-        ignore_mask = self.get_ignore_mask(dataset0.metadata, dataset1.metadata)
+        ignore_mask = self.mask_provider.get_ignore_mask(dataset0.metadata, dataset1.metadata)
         if not ignore_mask.any():
-            return super().__call__(similarity_priority, dataset0, dataset1, B)
+            return self.pair_selector(similarity_priority, dataset0, dataset1, B)
 
         # Mask ignored pairs, restoring the original values afterwards.
         original_values = similarity_priority[ignore_mask].copy()
         similarity_priority[ignore_mask] = -np.inf
 
         try:
-            return super().__call__(similarity_priority, dataset0, dataset1, B)
+            return self.pair_selector(similarity_priority, dataset0, dataset1, B)
         finally:
             similarity_priority[ignore_mask] = original_values
