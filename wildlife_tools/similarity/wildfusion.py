@@ -177,8 +177,8 @@ class WildFusion:
         if self.priority_pipeline is None:
             raise ValueError("Priority matcher is not assigned.")
 
-        priority = self.priority_pipeline(dataset0, dataset1)
-        return self.pair_selector(priority, B=B, ignore_pairs=ignore_pairs)
+        similarity_priority = self.priority_pipeline(dataset0, dataset1)
+        return self.pair_selector(similarity_priority, dataset0, dataset1, B=B, ignore_pairs=ignore_pairs)
 
     def __call__(
         self,
