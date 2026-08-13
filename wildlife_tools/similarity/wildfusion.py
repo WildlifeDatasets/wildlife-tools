@@ -3,7 +3,7 @@ from collections.abc import Callable
 import numpy as np
 
 from ..data import FeatureDataset, ImageDataset
-from .pair_selector import PairSelector
+from .pair_selector import PairSelector, TopkPairSelector
 
 
 def get_hits(dataset0, dataset1):
@@ -148,7 +148,7 @@ class WildFusion:
 
         self.calibrated_pipelines = calibrated_pipelines
         self.priority_pipeline = priority_pipeline
-        self.pair_selector = pair_selector if pair_selector is not None else PairSelector()
+        self.pair_selector = pair_selector if pair_selector is not None else TopkPairSelector()
 
     def fit_calibration(self, dataset0: ImageDataset, dataset1: ImageDataset):
         """

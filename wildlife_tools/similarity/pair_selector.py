@@ -1,10 +1,27 @@
+from abc import ABC, abstractmethod
+
 import numpy as np
 import torch
 
 from ..data import ImageDataset
 
 
-class PairSelector:
+class PairSelector(ABC):
+    """Base class for strategies that select shortlisted pairs from a priority matrix."""
+
+    @abstractmethod
+    def __call__(
+        self,
+        similarity_priority: np.ndarray,
+        dataset0: ImageDataset,
+        dataset1: ImageDataset,
+        B: int,
+        ignore_pairs: list[tuple[int, int]] | None = None,
+    ) -> np.ndarray:
+        raise NotImplementedError
+
+
+class TopkPairSelector(PairSelector):
     """Default pair selection strategy: top-B priority pairs per query, with optional ignore_pairs."""
 
     def __call__(
