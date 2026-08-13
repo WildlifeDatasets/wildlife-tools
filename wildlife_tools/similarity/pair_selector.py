@@ -56,8 +56,8 @@ class MetadataPairSelector(TopkPairSelector):
         self.cols_unequal = cols_unequal or []
         self.ignore_unknown = ignore_unknown
 
-    def get_ignore_pairs(self, df1: pd.DataFrame, df2: pd.DataFrame) -> list[tuple[int, int]]:
-        ignore_pairs = []
+    def get_ignore_mask(self, df1: pd.DataFrame, df2: pd.DataFrame) -> np.ndarray:
+        ignore_mask = np.zeros((len(df1), len(df2)), dtype=bool)
 
         # Ignores same values in cols_equal
         for col in self.cols_equal:
@@ -71,14 +71,14 @@ class MetadataPairSelector(TopkPairSelector):
 
             groups2 = s2.groupby(s2).groups
             for val, idx1 in s1.groupby(s1).groups.items():
-                if val not in groups2:
+                idx2 = groups2.get(val)
+                if idx2 is None:
                     continue
-                idx2 = groups2[val]
+                ignore_mask[np.ix_(idx1.to_numpy(), idx2.to_numpy())] = True
 
-                i, j = np.meshgrid(idx1.to_numpy(), idx2.to_numpy(), indexing="ij")
-                ignore_pairs.extend(zip(i.ravel(), j.ravel()))
-
-        # Ignores different values in cols_unequal
+        # Ignores different values in cols_unequal. Instead of enumerating the (typically huge)
+        # set of unequal pairs directly, ignore the whole column's index range and then restore
+        # (un-ignore) the equal-value blocks, whose combined size is usually much smaller.
         for col in self.cols_unequal:
             if col not in df1.columns or col not in df2.columns:
                 continue
@@ -88,16 +88,19 @@ class MetadataPairSelector(TopkPairSelector):
                 s1 = s1[s1 != "unknown"]
                 s2 = s2[s2 != "unknown"]
 
-            values1 = s1.to_numpy()
-            values2 = s2.to_numpy()
-            idx1 = s1.index.to_numpy()
-            idx2 = s2.index.to_numpy()
+            col_ignore = np.zeros_like(ignore_mask)
+            col_ignore[np.ix_(s1.index.to_numpy(), s2.index.to_numpy())] = True
 
-            mask = values1[:, None] != values2[None, :]
-            i, j = np.where(mask)
-            ignore_pairs.extend(zip(idx1[i], idx2[j]))
+            groups2 = s2.groupby(s2).groups
+            for val, idx1 in s1.groupby(s1).groups.items():
+                idx2 = groups2.get(val)
+                if idx2 is None:
+                    continue
+                col_ignore[np.ix_(idx1.to_numpy(), idx2.to_numpy())] = False
 
-        return ignore_pairs
+            ignore_mask |= col_ignore
+
+        return ignore_mask
 
     def __call__(
         self,
@@ -106,19 +109,15 @@ class MetadataPairSelector(TopkPairSelector):
         dataset1: ImageDataset,
         B: int,
     ) -> np.ndarray:
-        ignore_pairs = self.get_ignore_pairs(dataset0.metadata, dataset1.metadata)
-        # Return if there are no ignore_pairs
-        if not ignore_pairs:
+        ignore_mask = self.get_ignore_mask(dataset0.metadata, dataset1.metadata)
+        if not ignore_mask.any():
             return super().__call__(similarity_priority, dataset0, dataset1, B)
 
-        # Mask ignore pairs to prevent overwriting the original values
-        ignore_idx = np.array(ignore_pairs)
-        rows, cols = ignore_idx[:, 0], ignore_idx[:, 1]
-        original_values = similarity_priority[rows, cols].copy()
-        similarity_priority[rows, cols] = -np.inf
+        # Mask ignored pairs, restoring the original values afterwards.
+        original_values = similarity_priority[ignore_mask].copy()
+        similarity_priority[ignore_mask] = -np.inf
 
-        # Get the priority pairs and restore the original values
         try:
             return super().__call__(similarity_priority, dataset0, dataset1, B)
         finally:
-            similarity_priority[rows, cols] = original_values
+            similarity_priority[ignore_mask] = original_values
