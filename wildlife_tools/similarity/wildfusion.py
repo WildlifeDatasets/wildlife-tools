@@ -143,7 +143,7 @@ class WildFusion:
             priority_pipeline (SimilarityPipeline, optional): Fast-to-compute similarity matcher
                 used for shortlisting.
             pair_selector (PairSelector, optional): Strategy used to select shortlisted pairs from
-                the priority matrix. Defaults to top-B selection with `ignore_pairs` support.
+                the priority matrix. Defaults to top-B selection.
         """
 
         self.calibrated_pipelines = calibrated_pipelines
@@ -170,7 +170,6 @@ class WildFusion:
         dataset0: ImageDataset,
         dataset1: ImageDataset,
         B: int,
-        ignore_pairs: list[tuple[int, int]] | None = None,
     ) -> np.ndarray:
         """Implements shortlisting strategy for selection of most relevant pairs."""
 
@@ -178,7 +177,7 @@ class WildFusion:
             raise ValueError("Priority matcher is not assigned.")
 
         similarity_priority = self.priority_pipeline(dataset0, dataset1)
-        return self.pair_selector(similarity_priority, dataset0, dataset1, B=B, ignore_pairs=ignore_pairs)
+        return self.pair_selector(similarity_priority, dataset0, dataset1, B)
 
     def __call__(
         self,
@@ -186,7 +185,6 @@ class WildFusion:
         dataset1: ImageDataset,
         pairs: list | None = None,
         B: int = None,
-        ignore_pairs: list[tuple[int, int]] = [],
     ):
         """
         Compute fused similarity scores between two images datasets using multiple calibrated
@@ -210,7 +208,7 @@ class WildFusion:
         """
 
         if B is not None:
-            pairs = self.get_priority_pairs(dataset0, dataset1, B=B, ignore_pairs=ignore_pairs)
+            pairs = self.get_priority_pairs(dataset0, dataset1, B=B)
 
         scores = []
         for matcher in self.calibrated_pipelines:
