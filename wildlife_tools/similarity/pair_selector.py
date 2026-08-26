@@ -38,7 +38,15 @@ class TopkPairSelector(PairSelector):
         return grid_indices
 
 
-class MetadataIgnoreMask:
+class IgnoreMaskProvider(ABC):
+    """Base class for strategies that compute a boolean ignore mask from two metadata frames."""
+
+    @abstractmethod
+    def get_ignore_mask(self, df1: pd.DataFrame, df2: pd.DataFrame) -> np.ndarray:
+        raise NotImplementedError
+
+
+class MetadataIgnoreMask(IgnoreMaskProvider):
     """
     Computes a boolean ignore mask from matching metadata columns.
 
@@ -106,9 +114,12 @@ class MetadataIgnoreMask:
 class MaskedPairSelector(PairSelector):
     """Wraps a PairSelector, masking out ignored pairs before delegating to it."""
 
-    def __init__(self, pair_selector: PairSelector, mask_provider: MetadataIgnoreMask):
+    def __init__(self, pair_selector: PairSelector, mask_provider: IgnoreMaskProvider):
         self.pair_selector = pair_selector
         self.mask_provider = mask_provider
+
+    def get_ignore_mask(self, dataset0: ImageDataset, dataset1: ImageDataset) -> np.ndarray:
+        return self.mask_provider.get_ignore_mask(dataset0.metadata, dataset1.metadata)
 
     def __call__(
         self,
@@ -117,7 +128,7 @@ class MaskedPairSelector(PairSelector):
         dataset1: ImageDataset,
         B: int,
     ) -> np.ndarray:
-        ignore_mask = self.mask_provider.get_ignore_mask(dataset0.metadata, dataset1.metadata)
+        ignore_mask = self.get_ignore_mask(dataset0, dataset1)
         if not ignore_mask.any():
             return self.pair_selector(similarity_priority, dataset0, dataset1, B)
 
