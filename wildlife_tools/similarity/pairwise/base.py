@@ -87,8 +87,8 @@ class MatchPairs:
         Args:
             batch_size (int, optional): Number of pairs processed in one batch.
             num_workers (int, optional): Number of workers used for data loading.
-            tqdm_silent (int, bool): If True, progress bar is disabled.
-            collector (Collector): Collector object used for storing results.
+            tqdm_silent (bool, optional): If True, progress bar is disabled.
+            collector (Collector | None, optional): Collector object used for storing results.
         """
 
         if collector is None:
