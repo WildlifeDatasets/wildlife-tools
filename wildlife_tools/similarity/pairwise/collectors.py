@@ -1,7 +1,17 @@
-from typing import Any
+from typing import Any, Protocol
 
 import cv2
 import numpy as np
+
+
+class Collector(Protocol):
+    """Interface for collecting matcher results in MatchPairs."""
+
+    def init_store(self, grid_shape: tuple | None = None) -> None: ...
+
+    def add(self, results_list: list[dict]) -> None: ...
+
+    def process_results(self) -> Any: ...
 
 
 class CollectAll:
@@ -10,16 +20,16 @@ class CollectAll:
     Collected data is list of matcher results for each pair. Usefull for keypoint visualizations.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         self.data = None
 
-    def init_store(self, **kwargs):
+    def init_store(self, grid_shape: tuple | None = None) -> None:
         self.data = []
 
-    def add(self, results_list: list[dict]):
+    def add(self, results_list: list[dict]) -> None:
         self.data.extend(results_list)
 
-    def process_results(self):
+    def process_results(self) -> Any:
         return self.data
 
 
@@ -32,7 +42,7 @@ class CollectCounts:
     the corresponding grid as value.
     """
 
-    def __init__(self, grid_dtype: str = "float16", thresholds: tuple = (0.5,), **kwargs):
+    def __init__(self, grid_dtype: str = "float16", thresholds: tuple = (0.5,), **kwargs) -> None:
         """
         Args:
             grid_dtype (str, optional): Data type of the output grid.
@@ -44,14 +54,14 @@ class CollectCounts:
         self.grid_dtype = grid_dtype
         self.thresholds = thresholds
 
-    def init_store(self, grid_shape: tuple | None = None):
+    def init_store(self, grid_shape: tuple | None = None) -> None:
         if grid_shape is not None:
             self.grid_shape = grid_shape
             self.data = {t: np.full(grid_shape, np.nan, dtype=self.grid_dtype) for t in self.thresholds}
         else:
-            self.data = {"idx0": [], "idx1": []} + {t: [] for t in self.thresholds}
+            self.data = {"idx0": [], "idx1": []} | {t: [] for t in self.thresholds}
 
-    def add(self, results_list: dict):
+    def add(self, results_list: list[dict]) -> None:
         for item in results_list:
             i0, i1, scores = item["idx0"], item["idx1"], item["scores"]
 
@@ -65,7 +75,7 @@ class CollectCounts:
                 for t in self.thresholds:
                     self.data[t].append(np.sum(scores > t))
 
-    def process_results(self):
+    def process_results(self) -> Any:
         if len(self.data) == 1:  # if dictionary have one key, return only value.
             return list(self.data.values())[0]
         else:
@@ -86,7 +96,7 @@ class CollectCountsRansac(CollectCounts):
         confidence: float = 0.999,
         maxIters: float = 100,
         **kwargs,
-    ):
+    ) -> None:
         """
         Args:
             grid_dtype (str, optional): Data type of the output grid.
@@ -105,14 +115,14 @@ class CollectCountsRansac(CollectCounts):
             "maxIters": maxIters,
         }
 
-    def init_store(self, grid_shape: tuple | None = None):
+    def init_store(self, grid_shape: tuple | None = None) -> None:
         if grid_shape is not None:
             self.grid_shape = grid_shape
             self.data = {"score": np.full(grid_shape, np.nan, dtype=self.grid_dtype)}
         else:
             self.data = {"idx0": [], "idx1": [], "score": []}
 
-    def add(self, results_list: dict):
+    def add(self, results_list: list[dict]) -> None:
         for item in results_list:
             i0, i1, kpts0, kpts1 = item["idx0"], item["idx1"], item["kpts0"], item["kpts1"]
 

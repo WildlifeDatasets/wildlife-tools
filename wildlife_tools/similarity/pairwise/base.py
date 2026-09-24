@@ -5,7 +5,7 @@ import torch
 from tqdm import tqdm
 
 from ...data import FeatureDataset
-from .collectors import CollectCounts
+from .collectors import CollectCounts, Collector
 
 
 class PairDataset(torch.utils.data.IterableDataset):
@@ -81,14 +81,14 @@ class MatchPairs:
         batch_size: int = 128,
         num_workers: int = 0,
         tqdm_silent: bool = False,
-        collector: CollectCounts = None,
+        collector: Collector | None = None,
     ):
         """
         Args:
             batch_size (int, optional): Number of pairs processed in one batch.
             num_workers (int, optional): Number of workers used for data loading.
-            tqdm_silent (int, bool): If True, progress bar is disabled.
-            collector (int, CollectCounts): Collector object used for storing results.
+            tqdm_silent (bool, optional): If True, progress bar is disabled.
+            collector (Collector | None, optional): Collector object used for storing results.
         """
 
         if collector is None:
