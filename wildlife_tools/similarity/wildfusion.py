@@ -1,8 +1,11 @@
-from collections.abc import Callable
+from typing import Any, overload
 
 import numpy as np
 
-from ..data import FeatureDataset, ImageDataset
+from ..data import FeatureDataset, ImageDataset, Transform
+from ..features import FeatureExtractor
+from .base import Matcher
+from .calibration import Calibration
 from .pair_selector import PairSelector, TopkPairSelector
 
 
@@ -28,20 +31,39 @@ class SimilarityPipeline:
         4. Calibrate similarity scores.
     """
 
+    @overload
     def __init__(
         self,
-        matcher: Callable,
-        extractor: Callable | None = None,
-        calibration: Callable | None = None,
-        transform: Callable | None = None,
-    ):
+        matcher: Matcher[ImageDataset],
+        extractor: None = None,
+        calibration: Calibration | None = None,
+        transform: Transform | None = None,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        matcher: Matcher[FeatureDataset],
+        extractor: FeatureExtractor,
+        calibration: Calibration | None = None,
+        transform: Transform | None = None,
+    ) -> None: ...
+
+    def __init__(
+        self,
+        matcher: Matcher[Any],
+        extractor: FeatureExtractor | None = None,
+        calibration: Calibration | None = None,
+        transform: Transform | None = None,
+    ) -> None:
         """
         Args:
-            matcher (callable): A matcher that computes scores between two feature datasets.
-            extractor (callable, optional): A function to extract features from the image datasets.
+            matcher (Matcher): A matcher that computes scores between two feature datasets, or
+                between the image datasets if no extractor is given.
+            extractor (FeatureExtractor | None, optional): A function to extract features from the image datasets.
                 Not needed for some matchers.
-            calibration (callable, optional): A calibration model to refine similarity scores.
-            transform (callable, optional): Image transformation function applied before feature
+            calibration (Calibration | None, optional): A calibration model to refine similarity scores.
+            transform (Transform | None, optional): Image transformation function applied before feature
                 extraction.
         """
 
@@ -51,7 +73,7 @@ class SimilarityPipeline:
         self.extractor = extractor
         self.transform = transform
 
-    def get_feature_dataset(self, dataset: ImageDataset) -> FeatureDataset:
+    def get_feature_dataset(self, dataset: ImageDataset) -> FeatureDataset | ImageDataset:
         """Apply transformations and extract features from the image dataset."""
 
         if self.transform is not None:
@@ -77,22 +99,22 @@ class SimilarityPipeline:
         if self.calibration is None:
             raise ValueError("Calibration method is not assigned.")
 
-        dataset0 = self.get_feature_dataset(dataset0)
-        dataset1 = self.get_feature_dataset(dataset1)
-        score = self.matcher(dataset0, dataset1)
+        features0 = self.get_feature_dataset(dataset0)
+        features1 = self.get_feature_dataset(dataset1)
+        score = self.matcher(features0, features1)
 
-        hits = get_hits(dataset0, dataset1)
+        hits = get_hits(features0, features1)
         self.calibration.fit(score.flatten(), hits.flatten())
         self.calibration_done = True
 
-    def __call__(self, dataset0: ImageDataset, dataset1: ImageDataset, pairs: list | None = None) -> np.ndarray:
+    def __call__(self, dataset0: ImageDataset, dataset1: ImageDataset, pairs: np.ndarray | None = None) -> np.ndarray:
         """
         Compute similarity scores between two image datasets, with optional calibration.
 
         Args:
             dataset0 (ImageDataset): The first dataset (e.g., query set).
             dataset1 (ImageDataset): The second dataset (e.g., database set).
-            pairs (list of tuples, optional): Specific pairs of images to compute similarity scores.
+            pairs (np.ndarray | None, optional): Pairs of indexes to compute similarity scores for.
                 If None, compute similarity scores for all pairs.
 
         Returns:
@@ -103,9 +125,9 @@ class SimilarityPipeline:
         if not self.calibration_done and (self.calibration is not None):
             raise ValueError("Calibration is not fitted. Use fit_calibration method.")
 
-        dataset0 = self.get_feature_dataset(dataset0)
-        dataset1 = self.get_feature_dataset(dataset1)
-        score = self.matcher(dataset0, dataset1, pairs=pairs)
+        features0 = self.get_feature_dataset(dataset0)
+        features1 = self.get_feature_dataset(dataset1)
+        score = self.matcher(features0, features1, pairs=pairs)
 
         if self.calibration is not None:
             if pairs is not None:
@@ -183,7 +205,7 @@ class WildFusion:
         self,
         dataset0: ImageDataset,
         dataset1: ImageDataset,
-        pairs: list | None = None,
+        pairs: np.ndarray | None = None,
         B: int = None,
     ):
         """
@@ -196,7 +218,7 @@ class WildFusion:
         Args:
             dataset0 (ImageDataset): The first dataset (e.g., query set).
             dataset1 (ImageDataset): The second dataset (e.g., database set).
-            pairs (list of tuples, optional): Specific pairs of images to compute similarity scores.
+            pairs (np.ndarray | None, optional): Pairs of indexes to compute similarity scores for.
                                               If None, compute similarity scores for all pairs.
                                               Is ignored if `B` is provided.
             B (int, optional): Number of pairs to compute similarity scores for. Required `priority_pipeline` to be assigned.

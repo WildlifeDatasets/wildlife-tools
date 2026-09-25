@@ -2,9 +2,10 @@ from tqdm import tqdm
 
 from ..data import FeatureDataset, ImageDataset
 from ..tools import check_dataset_output
+from .base import FeatureExtractor
 
 
-class DataToMemory:
+class DataToMemory(FeatureExtractor):
     """
     Loads the dataset into memory for quicker access
 
@@ -14,7 +15,7 @@ class DataToMemory:
 
     """
 
-    def __call__(self, dataset: ImageDataset):
+    def __call__(self, dataset: ImageDataset) -> FeatureDataset:
         """Loads data from input dataset into array and returns them as a new FeatureDataset."""
 
         features = []

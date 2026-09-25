@@ -1,3 +1,5 @@
+from typing import Protocol
+
 import matplotlib.axes
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,13 +9,21 @@ from sklearn.isotonic import IsotonicRegression
 from sklearn.linear_model import LogisticRegression
 
 
+class Calibration(Protocol):
+    """Interface for calibrating raw similarity scores."""
+
+    def fit(self, scores: np.ndarray, hits: np.ndarray) -> None: ...
+
+    def predict(self, scores: np.ndarray) -> np.ndarray: ...
+
+
 class LogisticCalibration:
     """Performs logistic regression calibration."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.model = LogisticRegression()
 
-    def fit(self, scores: np.ndarray, hits: np.ndarray):
+    def fit(self, scores: np.ndarray, hits: np.ndarray) -> None:
         """
         Fit the logistic regression model to calibrate raw scores.
 
@@ -24,7 +34,7 @@ class LogisticCalibration:
 
         self.model.fit(np.atleast_2d(scores).T, hits)
 
-    def predict(self, scores: np.ndarray):
+    def predict(self, scores: np.ndarray) -> np.ndarray:
         """
         Predict calibrated scores using a fitted calibration model.
 
@@ -46,7 +56,7 @@ class IsotonicCalibration:
     to ensure that the calibration curve is strictly increasing, which is necessary for ranking.
     """
 
-    def __init__(self, interpolate: bool = True, strict: bool = True):
+    def __init__(self, interpolate: bool = True, strict: bool = True) -> None:
         """
         Args:
             interpolate (bool): If True, use spline interpolation for calibration.
@@ -62,7 +72,7 @@ class IsotonicCalibration:
         self.y_min = None
         self.y_max = None
 
-    def fit(self, scores: np.ndarray, hits: np.ndarray):
+    def fit(self, scores: np.ndarray, hits: np.ndarray) -> None:
         """Fit the isotonic regression model to calibrate the scores.
 
         Args:
@@ -72,8 +82,8 @@ class IsotonicCalibration:
 
         x = scores
         y = hits
-        self.x_min, self.x_max = np.max(x), np.min(x)
-        self.y_min, self.y_max = np.max(y), np.min(y)
+        self.x_min, self.x_max = np.min(x), np.max(x)
+        self.y_min, self.y_max = np.min(y), np.max(y)
         self.calibration.fit(x, y)
 
         if self.interpolate:
@@ -84,7 +94,7 @@ class IsotonicCalibration:
             y_new = self.calibration.predict(x_new)
             self.spline = PchipInterpolator(x_new, y_new)
 
-    def predict(self, scores: np.ndarray):
+    def predict(self, scores: np.ndarray) -> np.ndarray:
         """
         Predict calibrated scores using a fitted calibration model.
 
@@ -98,8 +108,8 @@ class IsotonicCalibration:
 
         if self.interpolate:
             y = self.spline(x)
-            y = np.where(x < self.x_max, self.y_max, y)
-            y = np.where(x > self.x_min, self.y_min, y)
+            y = np.where(x < self.x_min, self.y_min, y)
+            y = np.where(x > self.x_max, self.y_max, y)
         else:
             y = self.calibration.predict(x)
 

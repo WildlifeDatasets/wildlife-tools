@@ -3,6 +3,7 @@ import torch
 from transformers import CLIPModel, CLIPProcessor
 
 from ..data import FeatureCacheMixin
+from .base import FeatureExtractor
 
 
 def collate_fn(batch):
@@ -10,7 +11,7 @@ def collate_fn(batch):
     return list(images), labels
 
 
-class DeepFeatures(FeatureCacheMixin):
+class DeepFeatures(FeatureCacheMixin, FeatureExtractor):
     """
     Extracts features using forward pass of pytorch model.
     """

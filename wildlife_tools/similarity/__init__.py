@@ -1,3 +1,4 @@
+from .base import Matcher
 from .cosine import CosineSimilarity
 from .pair_selector import IgnoreMaskProvider, MaskedPairSelector, MetadataIgnoreMask, PairSelector, TopkPairSelector
 from .pairwise.collectors import CollectAll, CollectCounts, CollectCountsRansac
