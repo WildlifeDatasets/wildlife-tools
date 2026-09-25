@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from typing import Any, overload
 
 import numpy as np
 
@@ -31,16 +32,35 @@ class SimilarityPipeline:
         4. Calibrate similarity scores.
     """
 
+    @overload
     def __init__(
         self,
-        matcher: Matcher,
+        matcher: Matcher[ImageDataset],
+        extractor: None = None,
+        calibration: Calibration | None = None,
+        transform: Callable | None = None,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        matcher: Matcher[FeatureDataset],
+        extractor: FeatureExtractor,
+        calibration: Calibration | None = None,
+        transform: Callable | None = None,
+    ) -> None: ...
+
+    def __init__(
+        self,
+        matcher: Matcher[Any],
         extractor: FeatureExtractor | None = None,
         calibration: Calibration | None = None,
         transform: Callable | None = None,
-    ):
+    ) -> None:
         """
         Args:
-            matcher (Matcher): A matcher that computes scores between two feature datasets.
+            matcher (Matcher): A matcher that computes scores between two feature datasets, or
+                between the image datasets if no extractor is given.
             extractor (FeatureExtractor | None, optional): A function to extract features from the image datasets.
                 Not needed for some matchers.
             calibration (Calibration | None, optional): A calibration model to refine similarity scores.
@@ -54,7 +74,7 @@ class SimilarityPipeline:
         self.extractor = extractor
         self.transform = transform
 
-    def get_feature_dataset(self, dataset: ImageDataset) -> FeatureDataset:
+    def get_feature_dataset(self, dataset: ImageDataset) -> FeatureDataset | ImageDataset:
         """Apply transformations and extract features from the image dataset."""
 
         if self.transform is not None:
@@ -80,11 +100,11 @@ class SimilarityPipeline:
         if self.calibration is None:
             raise ValueError("Calibration method is not assigned.")
 
-        dataset0 = self.get_feature_dataset(dataset0)
-        dataset1 = self.get_feature_dataset(dataset1)
-        score = self.matcher(dataset0, dataset1)
+        features0 = self.get_feature_dataset(dataset0)
+        features1 = self.get_feature_dataset(dataset1)
+        score = self.matcher(features0, features1)
 
-        hits = get_hits(dataset0, dataset1)
+        hits = get_hits(features0, features1)
         self.calibration.fit(score.flatten(), hits.flatten())
         self.calibration_done = True
 
@@ -108,9 +128,9 @@ class SimilarityPipeline:
         if not self.calibration_done and (self.calibration is not None):
             raise ValueError("Calibration is not fitted. Use fit_calibration method.")
 
-        dataset0 = self.get_feature_dataset(dataset0)
-        dataset1 = self.get_feature_dataset(dataset1)
-        score = self.matcher(dataset0, dataset1, pairs=pairs)
+        features0 = self.get_feature_dataset(dataset0)
+        features1 = self.get_feature_dataset(dataset1)
+        score = self.matcher(features0, features1, pairs=pairs)
 
         if self.calibration is not None:
             if pairs is not None:

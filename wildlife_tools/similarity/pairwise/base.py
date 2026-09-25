@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-from ...data import FeatureDataset
+from ...data import FeatureDataset, ImageDataset
 from ..base import Matcher
 from .collectors import CollectCounts, Collector
 
@@ -71,7 +71,7 @@ class PairDataset(torch.utils.data.IterableDataset):
                 yield idx0, self.dataset0[idx0][0], idx1, self.dataset1[idx1][0]
 
 
-class MatchPairs(Matcher):
+class MatchPairs(Matcher[FeatureDataset | ImageDataset]):
     """
     Base class for matching pairs from two datasets.
     Any child class needs to implement `get_matches` method that implements processing of pair batches.
@@ -102,8 +102,8 @@ class MatchPairs(Matcher):
 
     def __call__(
         self,
-        query: FeatureDataset,
-        database: FeatureDataset,
+        query: FeatureDataset | ImageDataset,
+        database: FeatureDataset | ImageDataset,
         pairs: np.ndarray | None = None,
     ):
         """

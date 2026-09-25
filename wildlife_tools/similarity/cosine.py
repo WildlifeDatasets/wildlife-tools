@@ -17,7 +17,7 @@ def cosine_similarity(a, b):
     return similarity.numpy()
 
 
-class CosineSimilarity(Matcher):
+class CosineSimilarity(Matcher[FeatureDataset]):
     """Wraps cosine similarity to be usable in SimilarityPipeline."""
 
     def __call__(
