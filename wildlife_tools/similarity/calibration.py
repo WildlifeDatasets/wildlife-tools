@@ -82,8 +82,8 @@ class IsotonicCalibration:
 
         x = scores
         y = hits
-        self.x_min, self.x_max = np.max(x), np.min(x)
-        self.y_min, self.y_max = np.max(y), np.min(y)
+        self.x_min, self.x_max = np.min(x), np.max(x)
+        self.y_min, self.y_max = np.min(y), np.max(y)
         self.calibration.fit(x, y)
 
         if self.interpolate:
@@ -108,8 +108,8 @@ class IsotonicCalibration:
 
         if self.interpolate:
             y = self.spline(x)
-            y = np.where(x < self.x_max, self.y_max, y)
-            y = np.where(x > self.x_min, self.y_min, y)
+            y = np.where(x < self.x_min, self.y_min, y)
+            y = np.where(x > self.x_max, self.y_max, y)
         else:
             y = self.calibration.predict(x)
 
