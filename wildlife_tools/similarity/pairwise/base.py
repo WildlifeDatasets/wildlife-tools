@@ -1,11 +1,15 @@
 import itertools
+import pickle
 from collections.abc import Iterator
+from pathlib import Path
+from typing import Any
 
 import numpy as np
 import torch
 from tqdm import tqdm
 
 from ...data import FeatureDataset, ImageDataset
+from ...data.cache import open_lmdb
 from ..base import Matcher
 from .collectors import CollectCounts, Collector
 
@@ -84,6 +88,7 @@ class MatchPairs(Matcher[FeatureDataset | ImageDataset]):
         num_workers: int = 0,
         tqdm_silent: bool = False,
         collector: Collector | None = None,
+        cache_path: str | None = None,
     ):
         """
         Args:
@@ -91,15 +96,19 @@ class MatchPairs(Matcher[FeatureDataset | ImageDataset]):
             num_workers (int, optional): Number of workers used for data loading.
             tqdm_silent (bool, optional): If True, progress bar is disabled.
             collector (Collector | None, optional): Collector object used for storing results.
+            cache_path (str, optional): Path for cached pair matches. No caching for None.
+                Cache stores raw matches, so it is independent of the collector, but it must be
+                unique for each matcher configuration and each feature extractor.
         """
 
         if collector is None:
-            collector = CollectCounts(thresholds=[0.5])
+            collector = CollectCounts()
 
         self.collector = collector
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.tqdm_kwargs = {"mininterval": 1, "ncols": 100, "disable": tqdm_silent}
+        self.cache_path = Path(cache_path) if cache_path is not None else None
 
     def __call__(
         self,
@@ -120,6 +129,9 @@ class MatchPairs(Matcher[FeatureDataset | ImageDataset]):
             results (dict): Exact output is determined by the used collector.
         """
 
+        if self.cache_path is not None:
+            return self._call_with_cache(query, database, pairs)
+
         dataset_pairs = PairDataset(query, database, pairs=pairs)
 
         self.collector.init_store(grid_shape=dataset_pairs.grid_shape)
@@ -128,6 +140,44 @@ class MatchPairs(Matcher[FeatureDataset | ImageDataset]):
 
         results = self.collector.process_results()
         return results
+
+    def _call_with_cache(
+        self,
+        query: FeatureDataset | ImageDataset,
+        database: FeatureDataset | ImageDataset,
+        pairs: np.ndarray | None = None,
+    ) -> Any:
+        assert self.cache_path is not None
+        if pairs is None:
+            pair_list = list(itertools.product(range(len(query)), range(len(database))))
+        else:
+            pair_list = [(int(i0), int(i1)) for i0, i1 in pairs]
+        keys0 = [self.get_key(query, i) for i in range(len(query))]
+        keys1 = [self.get_key(database, i) for i in range(len(database))]
+
+        env = open_lmdb(self.cache_path)
+        with env.begin() as txn:
+            missing = [(i0, i1) for i0, i1 in pair_list if txn.get(f"{keys0[i0]}|{keys1[i1]}".encode()) is None]
+
+        for matches in self._iter_matches(PairDataset(query, database, pairs=missing)):
+            with env.begin(write=True) as txn:
+                for m in matches:
+                    i0, i1 = m.pop("idx0"), m.pop("idx1")
+                    txn.put(f"{keys0[i0]}|{keys1[i1]}".encode(), pickle.dumps(m, protocol=pickle.HIGHEST_PROTOCOL))
+
+        self.collector.init_store(grid_shape=(len(query), len(database)))
+        with env.begin() as txn:
+            for i0, i1 in pair_list:
+                val = txn.get(f"{keys0[i0]}|{keys1[i1]}".encode())
+                assert val is not None
+                m = pickle.loads(val)
+                self.collector.add([m | {"idx0": i0, "idx1": i1}])
+        env.close()
+
+        return self.collector.process_results()
+
+    def get_key(self, dataset: FeatureDataset | ImageDataset, index: int) -> str:
+        return str(dataset.metadata["image_id"][index])
 
     def _iter_matches(self, dataset_pairs: PairDataset) -> Iterator[list[dict]]:
         loader_length = int(np.ceil(len(dataset_pairs) / self.batch_size))
