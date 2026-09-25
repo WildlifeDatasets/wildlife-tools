@@ -6,10 +6,11 @@ from gluefactory.models import get_model
 from omegaconf import OmegaConf
 
 from ..data import FeatureCacheMixin
+from .base import FeatureExtractor
 from .gluefactory_fix import extract_single_image_fix  # https://github.com/cvg/glue-factory/pull/50
 
 
-class GlueFactoryExtractor(FeatureCacheMixin):
+class GlueFactoryExtractor(FeatureCacheMixin, FeatureExtractor):
     """
     Base class for Gluefactory extractors.
 
