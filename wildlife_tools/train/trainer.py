@@ -1,6 +1,7 @@
 import os
 import random
 from collections.abc import Callable
+from typing import Protocol
 
 import numpy as np
 import torch
@@ -53,6 +54,12 @@ def get_random_states():
     return states
 
 
+class EpochCallback(Protocol):
+    """Interface for callbacks called by the trainer after each epoch."""
+
+    def __call__(self, trainer: "BasicTrainer", epoch_data: dict[str, float]) -> None: ...
+
+
 class BasicTrainer:
     """
     Implements basic training loop for Pytorch models.
@@ -79,7 +86,7 @@ class BasicTrainer:
             Number of data loading workers in torch DataLoader.
         accumulation_steps (int, optional):
             Number of gradient accumulation steps.
-        epoch_callback (Callable, optional):
+        epoch_callback (EpochCallback | None, optional):
             Callback function to be called after each epoch.
     """
 
@@ -95,7 +102,7 @@ class BasicTrainer:
         batch_size: int = 128,
         num_workers: int = 1,
         accumulation_steps: int = 1,
-        epoch_callback: Callable | None = None,
+        epoch_callback: EpochCallback | None = None,
     ):
         check_dataset_output(dataset, check_label=True)
         self.dataset = dataset
@@ -126,7 +133,7 @@ class BasicTrainer:
             if self.epoch_callback:
                 self.epoch_callback(trainer=self, epoch_data=epoch_data)
 
-    def train_epoch(self, loader):
+    def train_epoch(self, loader: torch.utils.data.DataLoader) -> dict[str, float]:
         model = self.model.train()
         losses = []
         last_i = -1
@@ -152,7 +159,7 @@ class BasicTrainer:
         if self.scheduler:
             self.scheduler.step()
 
-        return {"train_loss_epoch_avg": np.mean(losses)}
+        return {"train_loss_epoch_avg": float(np.mean(losses))}
 
     def save(self, folder, file_name="checkpoint.pth", save_rng=True, **kwargs):
         if not os.path.exists(folder):
