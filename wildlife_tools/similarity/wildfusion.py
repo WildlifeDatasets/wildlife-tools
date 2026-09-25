@@ -3,6 +3,7 @@ from collections.abc import Callable
 import numpy as np
 
 from ..data import FeatureDataset, ImageDataset
+from .calibration import Calibration
 from .pair_selector import PairSelector, TopkPairSelector
 
 
@@ -32,7 +33,7 @@ class SimilarityPipeline:
         self,
         matcher: Callable,
         extractor: Callable | None = None,
-        calibration: Callable | None = None,
+        calibration: Calibration | None = None,
         transform: Callable | None = None,
     ):
         """
@@ -40,7 +41,7 @@ class SimilarityPipeline:
             matcher (callable): A matcher that computes scores between two feature datasets.
             extractor (callable, optional): A function to extract features from the image datasets.
                 Not needed for some matchers.
-            calibration (callable, optional): A calibration model to refine similarity scores.
+            calibration (Calibration | None, optional): A calibration model to refine similarity scores.
             transform (callable, optional): Image transformation function applied before feature
                 extraction.
         """
