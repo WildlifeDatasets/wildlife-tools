@@ -3,6 +3,7 @@ from collections.abc import Callable
 import numpy as np
 
 from ..data import FeatureDataset, ImageDataset
+from .base import Matcher
 from .calibration import Calibration
 from .pair_selector import PairSelector, TopkPairSelector
 
@@ -31,14 +32,14 @@ class SimilarityPipeline:
 
     def __init__(
         self,
-        matcher: Callable,
+        matcher: Matcher,
         extractor: Callable | None = None,
         calibration: Calibration | None = None,
         transform: Callable | None = None,
     ):
         """
         Args:
-            matcher (callable): A matcher that computes scores between two feature datasets.
+            matcher (Matcher): A matcher that computes scores between two feature datasets.
             extractor (callable, optional): A function to extract features from the image datasets.
                 Not needed for some matchers.
             calibration (Calibration | None, optional): A calibration model to refine similarity scores.
@@ -86,14 +87,16 @@ class SimilarityPipeline:
         self.calibration.fit(score.flatten(), hits.flatten())
         self.calibration_done = True
 
-    def __call__(self, dataset0: ImageDataset, dataset1: ImageDataset, pairs: list | None = None) -> np.ndarray:
+    def __call__(
+        self, dataset0: ImageDataset, dataset1: ImageDataset, pairs: np.ndarray | None = None
+    ) -> np.ndarray:
         """
         Compute similarity scores between two image datasets, with optional calibration.
 
         Args:
             dataset0 (ImageDataset): The first dataset (e.g., query set).
             dataset1 (ImageDataset): The second dataset (e.g., database set).
-            pairs (list of tuples, optional): Specific pairs of images to compute similarity scores.
+            pairs (np.ndarray | None, optional): Pairs of indexes to compute similarity scores for.
                 If None, compute similarity scores for all pairs.
 
         Returns:
@@ -184,7 +187,7 @@ class WildFusion:
         self,
         dataset0: ImageDataset,
         dataset1: ImageDataset,
-        pairs: list | None = None,
+        pairs: np.ndarray | None = None,
         B: int = None,
     ):
         """
@@ -197,7 +200,7 @@ class WildFusion:
         Args:
             dataset0 (ImageDataset): The first dataset (e.g., query set).
             dataset1 (ImageDataset): The second dataset (e.g., database set).
-            pairs (list of tuples, optional): Specific pairs of images to compute similarity scores.
+            pairs (np.ndarray | None, optional): Pairs of indexes to compute similarity scores for.
                                               If None, compute similarity scores for all pairs.
                                               Is ignored if `B` is provided.
             B (int, optional): Number of pairs to compute similarity scores for. Required `priority_pipeline` to be assigned.
