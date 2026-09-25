@@ -17,6 +17,18 @@ TFeature = TypeVar("TFeature", bound=Sequence)  # np.ndarray | list[dict]
 TModel = TypeVar("TModel", bound=Sequence)  # torch.Tensor | list[dict]
 
 
+def open_lmdb(path: Path) -> lmdb.Environment:
+    Path(path).mkdir(parents=True, exist_ok=True)
+    return lmdb.open(
+        str(path),
+        map_size=1 << 40,
+        subdir=True,
+        lock=True,
+        readahead=False,
+        meminit=False,
+    )
+
+
 class CacheMixin(ABC, Generic[TModel]):
     def __init__(
         self,
@@ -91,15 +103,7 @@ class FeatureCacheMixin(CacheMixin, Generic[TDict, TFeature, TModel]):
 
     def _open_env(self) -> lmdb.Environment:
         assert self.cache_path is not None
-        Path(self.cache_path).mkdir(parents=True, exist_ok=True)
-        return lmdb.open(
-            str(self.cache_path),
-            map_size=1 << 40,
-            subdir=True,
-            lock=True,
-            readahead=False,
-            meminit=False,
-        )
+        return open_lmdb(self.cache_path)
 
     def extract_with_cache(self, dataset: ImageDataset) -> TFeature:
 

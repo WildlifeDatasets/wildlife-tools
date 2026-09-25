@@ -1,4 +1,5 @@
 import itertools
+from collections.abc import Iterator
 
 import numpy as np
 import torch
@@ -121,6 +122,14 @@ class MatchPairs(Matcher[FeatureDataset | ImageDataset]):
 
         dataset_pairs = PairDataset(query, database, pairs=pairs)
 
+        self.collector.init_store(grid_shape=dataset_pairs.grid_shape)
+        for matches in self._iter_matches(dataset_pairs):
+            self.collector.add(matches)
+
+        results = self.collector.process_results()
+        return results
+
+    def _iter_matches(self, dataset_pairs: PairDataset) -> Iterator[list[dict]]:
         loader_length = int(np.ceil(len(dataset_pairs) / self.batch_size))
         loader = torch.utils.data.DataLoader(
             dataset_pairs,
@@ -128,14 +137,8 @@ class MatchPairs(Matcher[FeatureDataset | ImageDataset]):
             batch_size=self.batch_size,
             shuffle=False,
         )
-
-        self.collector.init_store(grid_shape=dataset_pairs.grid_shape)
         for batch in tqdm(loader, total=loader_length, **self.tqdm_kwargs):
-            matches = self.get_matches(batch)
-            self.collector.add(matches)
-
-        results = self.collector.process_results()
-        return results
+            yield self.get_matches(batch)
 
     def get_matches(self, batch: tuple):
         """
