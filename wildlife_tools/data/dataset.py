@@ -2,12 +2,15 @@ import json
 import os
 import pickle
 from collections.abc import Callable, Sequence
+from typing import Any
 
 import cv2
 import numpy as np
 import pandas as pd
 import pycocotools.mask as mask_coco
 from PIL import Image
+
+Transform = Callable[[Image.Image], Any]
 
 
 class ImageDataset:
@@ -17,7 +20,7 @@ class ImageDataset:
     Args:
         metadata (pd.DataFrame): A pandas dataframe containing image metadata.
         root (str | None, optional): Root directory if paths in metadata are relative. If None, absolute paths in metadata are used.
-        transform (Callable | None, optional): A function that takes in an image and returns its transformed version.
+        transform (Transform | None, optional): A function that takes in a PIL image and returns its transformed version.
         col_path (str, optional): Column name in the metadata containing image file paths.
         col_label (str, optional): Column name in the metadata containing class labels.
         load_label (bool, optional): If False, `__getitem__` returns only image instead of (image, label) tuple.
@@ -33,7 +36,7 @@ class ImageDataset:
         self,
         metadata: pd.DataFrame,
         root: str | None = None,
-        transform: Callable | None = None,
+        transform: Transform | None = None,
         col_path: str = "path",
         col_label: str = "identity",
         load_label: bool = True,
@@ -87,7 +90,7 @@ class WildlifeDataset(ImageDataset):
     Args:
         metadata (pd.DataFrame): A pandas dataframe containing image metadata.
         root (str | None, optional): Root directory if paths in metadata are relative. If None, absolute paths in metadata are used.
-        transform (Callable | None, optional): A function that takes in an image and returns its transformed version.
+        transform (Transform | None, optional): A function that takes in a PIL image and returns its transformed version.
         img_load (str, optional): Method to load images.
             Options: 'full', 'full_mask', 'full_hide', 'bbox', 'bbox_mask', 'bbox_hide',
                       and 'crop_black'.
@@ -106,7 +109,7 @@ class WildlifeDataset(ImageDataset):
         self,
         metadata: pd.DataFrame,
         root: str | None = None,
-        transform: Callable | None = None,
+        transform: Transform | None = None,
         img_load: str = "full",
         col_path: str = "path",
         col_label: str = "identity",

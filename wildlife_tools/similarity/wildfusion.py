@@ -1,9 +1,8 @@
-from collections.abc import Callable
 from typing import Any, overload
 
 import numpy as np
 
-from ..data import FeatureDataset, ImageDataset
+from ..data import FeatureDataset, ImageDataset, Transform
 from ..features import FeatureExtractor
 from .base import Matcher
 from .calibration import Calibration
@@ -38,7 +37,7 @@ class SimilarityPipeline:
         matcher: Matcher[ImageDataset],
         extractor: None = None,
         calibration: Calibration | None = None,
-        transform: Callable | None = None,
+        transform: Transform | None = None,
     ) -> None: ...
 
     @overload
@@ -47,7 +46,7 @@ class SimilarityPipeline:
         matcher: Matcher[FeatureDataset],
         extractor: FeatureExtractor,
         calibration: Calibration | None = None,
-        transform: Callable | None = None,
+        transform: Transform | None = None,
     ) -> None: ...
 
     def __init__(
@@ -55,7 +54,7 @@ class SimilarityPipeline:
         matcher: Matcher[Any],
         extractor: FeatureExtractor | None = None,
         calibration: Calibration | None = None,
-        transform: Callable | None = None,
+        transform: Transform | None = None,
     ) -> None:
         """
         Args:
@@ -64,7 +63,7 @@ class SimilarityPipeline:
             extractor (FeatureExtractor | None, optional): A function to extract features from the image datasets.
                 Not needed for some matchers.
             calibration (Calibration | None, optional): A calibration model to refine similarity scores.
-            transform (callable, optional): Image transformation function applied before feature
+            transform (Transform | None, optional): Image transformation function applied before feature
                 extraction.
         """
 
