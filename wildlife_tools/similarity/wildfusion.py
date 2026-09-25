@@ -107,9 +107,7 @@ class SimilarityPipeline:
         self.calibration.fit(score.flatten(), hits.flatten())
         self.calibration_done = True
 
-    def __call__(
-        self, dataset0: ImageDataset, dataset1: ImageDataset, pairs: np.ndarray | None = None
-    ) -> np.ndarray:
+    def __call__(self, dataset0: ImageDataset, dataset1: ImageDataset, pairs: np.ndarray | None = None) -> np.ndarray:
         """
         Compute similarity scores between two image datasets, with optional calibration.
 

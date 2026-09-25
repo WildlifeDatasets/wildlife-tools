@@ -1,6 +1,5 @@
 import os
 import random
-from collections.abc import Callable
 from typing import Protocol
 
 import numpy as np
