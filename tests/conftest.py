@@ -10,8 +10,8 @@ from transformers import AutoImageProcessor, AutoModel, CLIPModel, CLIPProcessor
 from wildlife_datasets import datasets
 
 from wildlife_tools.data import ImageDataset
-from wildlife_tools.features import ClipFeatures, DeepFeatures, DinoFeatures, SiftExtractor, SuperPointExtractor
-from wildlife_tools.similarity import CosineSimilarity, MatchLightGlue
+from wildlife_tools.features import ClipFeatures, DeepFeatures, DinoFeatures, SiftExtractor
+from wildlife_tools.similarity import CosineSimilarity
 
 mp.set_start_method("spawn", force=True)
 
@@ -104,12 +104,6 @@ def features_sift(dataset_lightglue):
 
 
 @pytest.fixture(scope="session")
-def features_superpoint(dataset_lightglue):
-    extractor = SuperPointExtractor()
-    return extractor(dataset_lightglue)
-
-
-@pytest.fixture(scope="session")
 def features_deep(dataset_deep, extractor):
     return extractor(dataset_deep)
 
@@ -118,18 +112,6 @@ def features_deep(dataset_deep, extractor):
 def similarity_deep(features_deep):
     similarity = CosineSimilarity()
     return similarity(features_deep, features_deep)["cosine"]
-
-
-@pytest.fixture(scope="session")
-def similarity_sift(features_sift):
-    similarity = MatchLightGlue(features="sift", descriptor_dim=128, thresholds=[0.5])
-    return similarity(features_sift, features_sift)
-
-
-@pytest.fixture(scope="session")
-def similarity_superpoint(features_superpoint):
-    similarity = MatchLightGlue(features="sift", descriptor_dim=128, thresholds=[0.5])
-    return similarity(features_superpoint, features_superpoint)
 
 
 @pytest.fixture(scope="session")
