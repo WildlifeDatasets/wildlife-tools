@@ -53,7 +53,24 @@ def check_cache_config(env: lmdb.Environment, key: bytes, config: dict) -> None:
         )
 
 
-class CacheMixin(ABC, Generic[TModel]):
+class CacheMixin:
+    def __init__(self, cache_path: str | None = None):
+        self.cache_path = Path(cache_path) if cache_path is not None else None
+
+    def cache_config(self) -> dict:
+        return {"class": type(self).__name__}
+
+    def get_key(self, dataset: ImageDataset | FeatureDataset, index: int) -> str:
+        return str(dataset.metadata["image_id"][index])
+
+    def _open_env(self) -> lmdb.Environment:
+        assert self.cache_path is not None
+        env = open_lmdb(self.cache_path)
+        check_cache_config(env, CONFIG_KEY, self.cache_config())
+        return env
+
+
+class FeatureCacheMixin(CacheMixin, ABC, Generic[TDict, TFeature, TModel]):
     def __init__(
         self,
         batch_size: int = 128,
@@ -61,6 +78,7 @@ class CacheMixin(ABC, Generic[TModel]):
         device: str | None = "cpu",
         cache_path: str | None = None,
     ):
+        super().__init__(cache_path=cache_path)
 
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -68,20 +86,9 @@ class CacheMixin(ABC, Generic[TModel]):
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.device = device
-        self.cache_path = Path(cache_path) if cache_path is not None else None
-
-    def cache_config(self) -> dict:
-        return {"class": type(self).__name__}
-
-    @abstractmethod
-    def process_batch(self, batch: TBatch) -> TModel:
-        pass
 
     def _save_entry(self, txn: lmdb.Transaction, key: bytes, entry) -> None:
         txn.put(key, pickle.dumps(entry, protocol=pickle.HIGHEST_PROTOCOL))
-
-    def get_key(self, dataset: ImageDataset, index: int) -> str:
-        return str(dataset.metadata["image_id"][index])
 
     def make_loader(self, dataset: ImageDataset) -> torch.utils.data.DataLoader:
 
@@ -92,8 +99,6 @@ class CacheMixin(ABC, Generic[TModel]):
             shuffle=False,
         )
 
-
-class FeatureCacheMixin(CacheMixin, Generic[TDict, TFeature, TModel]):
     @abstractmethod
     def cat_features_dictionary(self, feats: list[TDict]) -> TFeature:
         pass
@@ -128,10 +133,6 @@ class FeatureCacheMixin(CacheMixin, Generic[TDict, TFeature, TModel]):
             col_label=dataset.col_label,
         )
 
-    def _open_env(self) -> lmdb.Environment:
-        assert self.cache_path is not None
-        return open_lmdb(self.cache_path)
-
     def extract_with_cache(self, dataset: ImageDataset) -> TFeature:
 
         # Handle the case when cache is not required
@@ -144,7 +145,6 @@ class FeatureCacheMixin(CacheMixin, Generic[TDict, TFeature, TModel]):
 
         # Load the cache
         env = self._open_env()
-        check_cache_config(env, CONFIG_KEY, self.cache_config())
         keys = [self.get_key(dataset, i) for i in range(len(dataset))]
 
         # Determine missing entries
