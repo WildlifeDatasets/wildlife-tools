@@ -11,6 +11,19 @@ def collate_fn(batch):
     return list(images), labels
 
 
+def model_variant(model: torch.nn.Module) -> str | None:
+    config = getattr(model, "config", None)
+    name = getattr(config, "name_or_path", None)
+    if isinstance(name, str) and name:
+        return name
+
+    pretrained_cfg = getattr(model, "pretrained_cfg", None)
+    if isinstance(pretrained_cfg, dict):
+        return pretrained_cfg.get("hf_hub_id") or pretrained_cfg.get("architecture")
+
+    return None
+
+
 class DeepFeatures(FeatureCacheMixin, FeatureExtractor):
     """
     Extracts features using forward pass of pytorch model.
@@ -40,6 +53,12 @@ class DeepFeatures(FeatureCacheMixin, FeatureExtractor):
             cache_path=cache_path,
         )
         self.model = model
+
+    def cache_config(self) -> dict:
+        return super().cache_config() | {
+            "model": type(self.model).__name__,
+            "variant": model_variant(self.model),
+        }
 
     def cat_features_dictionary(self, feats: list[np.ndarray]) -> np.ndarray:
         return np.stack(feats, axis=0)

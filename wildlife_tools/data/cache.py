@@ -16,6 +16,8 @@ TDict = TypeVar("TDict")  # np.ndarray | dict
 TFeature = TypeVar("TFeature", bound=Sequence)  # np.ndarray | list[dict]
 TModel = TypeVar("TModel", bound=Sequence)  # torch.Tensor | list[dict]
 
+CONFIG_KEY = b"\x00__config__"
+
 
 def open_lmdb(path: Path) -> lmdb.Environment:
     Path(path).mkdir(parents=True, exist_ok=True)
@@ -27,6 +29,28 @@ def open_lmdb(path: Path) -> lmdb.Environment:
         readahead=False,
         meminit=False,
     )
+
+
+def read_cache_config(env: lmdb.Environment, key: bytes) -> dict | None:
+    with env.begin() as txn:
+        val = txn.get(key)
+    return pickle.loads(val) if val is not None else None
+
+
+def write_cache_config(env: lmdb.Environment, key: bytes, config: dict) -> None:
+    with env.begin(write=True) as txn:
+        txn.put(key, pickle.dumps(config, protocol=pickle.HIGHEST_PROTOCOL))
+
+
+def check_cache_config(env: lmdb.Environment, key: bytes, config: dict) -> None:
+    stored = read_cache_config(env, key)
+    if stored is None:
+        write_cache_config(env, key, config)
+    elif stored != config:
+        raise ValueError(
+            f"Cache at {env.path()} was created with config {stored}, "
+            f"but the current config is {config}. Use a different cache_path."
+        )
 
 
 class CacheMixin(ABC, Generic[TModel]):
@@ -45,6 +69,9 @@ class CacheMixin(ABC, Generic[TModel]):
         self.num_workers = num_workers
         self.device = device
         self.cache_path = Path(cache_path) if cache_path is not None else None
+
+    def cache_config(self) -> dict:
+        return {"class": type(self).__name__}
 
     @abstractmethod
     def process_batch(self, batch: TBatch) -> TModel:
@@ -117,6 +144,7 @@ class FeatureCacheMixin(CacheMixin, Generic[TDict, TFeature, TModel]):
 
         # Load the cache
         env = self._open_env()
+        check_cache_config(env, CONFIG_KEY, self.cache_config())
         keys = [self.get_key(dataset, i) for i in range(len(dataset))]
 
         # Determine missing entries

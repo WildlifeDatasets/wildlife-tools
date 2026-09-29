@@ -9,7 +9,7 @@ import torch
 from tqdm import tqdm
 
 from ...data import FeatureDataset, ImageDataset
-from ...data.cache import open_lmdb
+from ...data.cache import CONFIG_KEY, check_cache_config, open_lmdb
 from ..base import Matcher
 from .collectors import CollectCounts, Collector
 
@@ -110,6 +110,9 @@ class MatchPairs(Matcher[FeatureDataset | ImageDataset]):
         self.tqdm_kwargs = {"mininterval": 1, "ncols": 100, "disable": tqdm_silent}
         self.cache_path = Path(cache_path) if cache_path is not None else None
 
+    def cache_config(self) -> dict:
+        return {"class": type(self).__name__}
+
     def __call__(
         self,
         query: FeatureDataset | ImageDataset,
@@ -156,6 +159,7 @@ class MatchPairs(Matcher[FeatureDataset | ImageDataset]):
         keys1 = [self.get_key(database, i) for i in range(len(database))]
 
         env = open_lmdb(self.cache_path)
+        check_cache_config(env, CONFIG_KEY, self.cache_config())
         with env.begin() as txn:
             missing = [(i0, i1) for i0, i1 in pair_list if txn.get(f"{keys0[i0]}|{keys1[i1]}".encode()) is None]
 

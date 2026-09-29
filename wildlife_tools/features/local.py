@@ -47,6 +47,9 @@ class GlueFactoryExtractor(FeatureCacheMixin, FeatureExtractor):
         config = OmegaConf.create(config)
         self.model = get_model(config.name)(config)
 
+    def cache_config(self) -> dict:
+        return super().cache_config() | {"model": OmegaConf.to_container(self.model.conf, resolve=True)}
+
     def _save_entry(self, txn: lmdb.Transaction, key: bytes, entry) -> None:
         entry = self._extract_entry(entry)
         super()._save_entry(txn, key, entry)
