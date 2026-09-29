@@ -10,7 +10,7 @@ from tqdm import tqdm
 from ...data import FeatureDataset, ImageDataset
 from ...data.cache import CacheMixin
 from ..base import Matcher
-from .collectors import CollectCounts, Collector
+from .collectors import CollectCounts, CollectCountsRansac, Collector
 
 
 class PairDataset(torch.utils.data.IterableDataset):
@@ -89,6 +89,7 @@ class MatchPairs(CacheMixin, Matcher[FeatureDataset | ImageDataset]):
         collector: Collector | None = None,
         cache_path: str | None = None,
         config_tag: str | None = None,
+        cache_scores_only: bool = False,
     ):
         """
         Args:
@@ -103,9 +104,13 @@ class MatchPairs(CacheMixin, Matcher[FeatureDataset | ImageDataset]):
                 different tag raises an error. Changes of the image transform (for LoFTR) or of the
                 feature extractor (for LightGlue) are not detected automatically, so encode them in
                 the tag (e.g. "resize224_gray" or "sift256_resize224").
+            cache_scores_only (bool, optional): If True, only scores are cached (keypoints are dropped),
+                which greatly reduces cache size. Collectors needing keypoints (e.g. CollectCountsRansac)
+                cannot be used then.
         """
 
         super().__init__(cache_path=cache_path, config_tag=config_tag)
+        self.cache_scores_only = cache_scores_only
 
         if collector is None:
             collector = CollectCounts()
@@ -114,6 +119,9 @@ class MatchPairs(CacheMixin, Matcher[FeatureDataset | ImageDataset]):
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.tqdm_kwargs = {"mininterval": 1, "ncols": 100, "disable": tqdm_silent}
+
+    def cache_config(self) -> dict:
+        return super().cache_config() | {"scores_only": self.cache_scores_only}
 
     def __call__(
         self,
@@ -153,6 +161,8 @@ class MatchPairs(CacheMixin, Matcher[FeatureDataset | ImageDataset]):
         pairs: np.ndarray | None = None,
     ) -> Any:
         assert self.cache_path is not None
+        if self.cache_scores_only and isinstance(self.collector, CollectCountsRansac):
+            raise ValueError("CollectCountsRansac needs keypoints, but cache_scores_only is True.")
         if pairs is None:
             pair_list = list(itertools.product(range(len(query)), range(len(database))))
         else:
@@ -168,6 +178,8 @@ class MatchPairs(CacheMixin, Matcher[FeatureDataset | ImageDataset]):
                 with env.begin(write=True) as txn:
                     for m in matches:
                         i0, i1 = m.pop("idx0"), m.pop("idx1")
+                        if self.cache_scores_only:
+                            m = {"scores": m["scores"]}
                         txn.put(
                             self.get_pair_key(keys0[i0], keys1[i1]), pickle.dumps(m, protocol=pickle.HIGHEST_PROTOCOL)
                         )
