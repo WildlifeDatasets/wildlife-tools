@@ -157,24 +157,27 @@ class MatchPairs(CacheMixin, Matcher[FeatureDataset | ImageDataset]):
 
         env = self._open_env()
         with env.begin() as txn:
-            missing = [(i0, i1) for i0, i1 in pair_list if txn.get(f"{keys0[i0]}|{keys1[i1]}".encode()) is None]
+            missing = [(i0, i1) for i0, i1 in pair_list if txn.get(self.get_pair_key(keys0[i0], keys1[i1])) is None]
 
         for matches in self._iter_matches(PairDataset(query, database, pairs=missing)):
             with env.begin(write=True) as txn:
                 for m in matches:
                     i0, i1 = m.pop("idx0"), m.pop("idx1")
-                    txn.put(f"{keys0[i0]}|{keys1[i1]}".encode(), pickle.dumps(m, protocol=pickle.HIGHEST_PROTOCOL))
+                    txn.put(self.get_pair_key(keys0[i0], keys1[i1]), pickle.dumps(m, protocol=pickle.HIGHEST_PROTOCOL))
 
         self.collector.init_store(grid_shape=(len(query), len(database)))
         with env.begin() as txn:
             for i0, i1 in pair_list:
-                val = txn.get(f"{keys0[i0]}|{keys1[i1]}".encode())
+                val = txn.get(self.get_pair_key(keys0[i0], keys1[i1]))
                 assert val is not None
                 m = pickle.loads(val)
                 self.collector.add([m | {"idx0": i0, "idx1": i1}])
         env.close()
 
         return self.collector.process_results()
+
+    def get_pair_key(self, key0: str, key1: str) -> bytes:
+        return f"{key0}\x00{key1}".encode()
 
     def _iter_matches(self, dataset_pairs: PairDataset) -> Iterator[list[dict]]:
         loader_length = int(np.ceil(len(dataset_pairs) / self.batch_size))
