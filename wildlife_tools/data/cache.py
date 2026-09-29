@@ -67,7 +67,11 @@ class CacheMixin:
     def _open_env(self) -> lmdb.Environment:
         assert self.cache_path is not None
         env = open_lmdb(self.cache_path)
-        check_cache_config(env, CONFIG_KEY, self.cache_config())
+        try:
+            check_cache_config(env, CONFIG_KEY, self.cache_config())
+        except Exception:
+            env.close()
+            raise
         return env
 
 
@@ -145,43 +149,40 @@ class FeatureCacheMixin(CacheMixin, ABC, Generic[TDict, TFeature, TModel]):
                 feats.append(self.process_batch(batch))
             return self.cat_features_model(feats)
 
-        # Load the cache
-        env = self._open_env()
         keys = [self.get_key(dataset, i) for i in range(len(dataset))]
 
-        # Determine missing entries
-        missing = []
-        with env.begin() as txn:
-            for i, k in enumerate(keys):
-                if txn.get(k.encode()) is None:
-                    missing.append(i)
+        # Load the cache (closed automatically, also on errors)
+        with self._open_env() as env:
+            # Determine missing entries
+            missing = []
+            with env.begin() as txn:
+                for i, k in enumerate(keys):
+                    if txn.get(k.encode()) is None:
+                        missing.append(i)
 
-        if missing:
-            # Define loader on the missing entries
-            subset = torch.utils.data.Subset(dataset, missing)
-            loader = self.make_loader(subset)
+            if missing:
+                # Define loader on the missing entries
+                subset = torch.utils.data.Subset(dataset, missing)
+                loader = self.make_loader(subset)
 
-            # Load the missing entries
-            ptr = 0
-            for batch in tqdm(loader, mininterval=1, ncols=100):
-                feats = self.forward_batch(batch)
+                # Load the missing entries
+                ptr = 0
+                for batch in tqdm(loader, mininterval=1, ncols=100):
+                    feats = self.forward_batch(batch)
 
-                # Write the batch
-                with env.begin(write=True) as txn:
-                    for j in range(len(feats)):
-                        key = keys[missing[ptr]].encode()
-                        self._save_entry(txn, key, feats[j])
-                        ptr += 1
+                    # Write the batch
+                    with env.begin(write=True) as txn:
+                        for j in range(len(feats)):
+                            key = keys[missing[ptr]].encode()
+                            self._save_entry(txn, key, feats[j])
+                            ptr += 1
 
-        # Read all features back in order
-        outputs = []
-        with env.begin() as txn:
-            for k in keys:
-                val = txn.get(k.encode())
-                outputs.append(pickle.loads(val))
-
-        # Close the cache
-        env.close()
+            # Read all features back in order
+            outputs = []
+            with env.begin() as txn:
+                for k in keys:
+                    val = txn.get(k.encode())
+                    outputs.append(pickle.loads(val))
 
         # Merge the extracted features
         return self.cat_features_dictionary(outputs)

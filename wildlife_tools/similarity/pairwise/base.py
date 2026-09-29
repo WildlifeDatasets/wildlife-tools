@@ -160,24 +160,27 @@ class MatchPairs(CacheMixin, Matcher[FeatureDataset | ImageDataset]):
         keys0 = [self.get_key(query, i) for i in range(len(query))]
         keys1 = [self.get_key(database, i) for i in range(len(database))]
 
-        env = self._open_env()
-        with env.begin() as txn:
-            missing = [(i0, i1) for i0, i1 in pair_list if txn.get(self.get_pair_key(keys0[i0], keys1[i1])) is None]
+        with self._open_env() as env:
+            with env.begin() as txn:
+                missing = [
+                    (i0, i1) for i0, i1 in pair_list if txn.get(self.get_pair_key(keys0[i0], keys1[i1])) is None
+                ]
 
-        for matches in self._iter_matches(PairDataset(query, database, pairs=missing)):
-            with env.begin(write=True) as txn:
-                for m in matches:
-                    i0, i1 = m.pop("idx0"), m.pop("idx1")
-                    txn.put(self.get_pair_key(keys0[i0], keys1[i1]), pickle.dumps(m, protocol=pickle.HIGHEST_PROTOCOL))
+            for matches in self._iter_matches(PairDataset(query, database, pairs=missing)):
+                with env.begin(write=True) as txn:
+                    for m in matches:
+                        i0, i1 = m.pop("idx0"), m.pop("idx1")
+                        txn.put(
+                            self.get_pair_key(keys0[i0], keys1[i1]), pickle.dumps(m, protocol=pickle.HIGHEST_PROTOCOL)
+                        )
 
-        self.collector.init_store(grid_shape=(len(query), len(database)))
-        with env.begin() as txn:
-            for i0, i1 in pair_list:
-                val = txn.get(self.get_pair_key(keys0[i0], keys1[i1]))
-                assert val is not None
-                m = pickle.loads(val)
-                self.collector.add([m | {"idx0": i0, "idx1": i1}])
-        env.close()
+            self.collector.init_store(grid_shape=(len(query), len(database)))
+            with env.begin() as txn:
+                for i0, i1 in pair_list:
+                    val = txn.get(self.get_pair_key(keys0[i0], keys1[i1]))
+                    assert val is not None
+                    m = pickle.loads(val)
+                    self.collector.add([m | {"idx0": i0, "idx1": i1}])
 
         return self.collector.process_results()
 
