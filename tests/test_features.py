@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from wildlife_tools.data import FeatureDataset
-from wildlife_tools.features import DataToMemory
+from wildlife_tools.features import DataToMemory, SiftExtractor
 
 
 def test_clip_features(dataset, extractor_clip):
@@ -72,6 +72,15 @@ def test_sift_features_cached_split(wd_dataset, extractor_sift_cached):
     features1 = extractor_sift_cached(dataset1)
     check_sift_features(features0.features, features_all.features[:m])
     check_sift_features(features1.features, features_all.features[m:])
+
+
+def test_features_cache_config_mismatch(dataset_deep, cache_dir):
+    cache_path = cache_dir / "features_mismatch"
+    SiftExtractor(cache_path=cache_path)(dataset_deep)
+    SiftExtractor(cache_path=cache_path)(dataset_deep)
+
+    with pytest.raises(ValueError):
+        SiftExtractor(max_num_keypoints=100, cache_path=cache_path)(dataset_deep)
 
 
 # Compatibility with wildlife-datasets

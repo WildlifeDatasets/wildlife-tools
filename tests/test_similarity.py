@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from wildlife_tools.data import ImageDataset
 from wildlife_tools.similarity import CollectCountsRansac, CosineSimilarity, MatchLOFTR
@@ -41,6 +42,21 @@ def test_match_loftr_cached(dataset_loftr, cache_dir):
     similarity.collector = CollectCountsRansac()
     output_ransac = similarity(dataset_loftr, dataset_loftr)
     assert output_ransac.shape == (4, 4)
+
+
+def test_match_loftr_cache_config_mismatch(dataset_loftr, cache_dir):
+    cache_path = str(cache_dir / "matches_loftr_mismatch")
+    pairs = np.array([[0, 1]])
+    MatchLOFTR(batch_size=1, device="cpu", init_threshold=0.2, cache_path=cache_path)(
+        dataset_loftr, dataset_loftr, pairs=pairs
+    )
+    MatchLOFTR(batch_size=1, device="cpu", init_threshold=0.2, cache_path=cache_path)(
+        dataset_loftr, dataset_loftr, pairs=pairs
+    )
+
+    similarity = MatchLOFTR(batch_size=1, device="cpu", init_threshold=0.3, cache_path=cache_path)
+    with pytest.raises(ValueError):
+        similarity(dataset_loftr, dataset_loftr, pairs=pairs)
 
 
 # Compatibility with wildlife-datasets
