@@ -162,9 +162,7 @@ class MatchPairs(CacheMixin, Matcher[FeatureDataset | ImageDataset]):
 
         with self._open_env() as env:
             with env.begin() as txn:
-                missing = [
-                    (i0, i1) for i0, i1 in pair_list if txn.get(self.get_pair_key(keys0[i0], keys1[i1])) is None
-                ]
+                missing = [(i0, i1) for i0, i1 in pair_list if txn.get(self.get_pair_key(keys0[i0], keys1[i1])) is None]
 
             for matches in self._iter_matches(PairDataset(query, database, pairs=missing)):
                 with env.begin(write=True) as txn:
