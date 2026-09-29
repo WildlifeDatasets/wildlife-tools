@@ -81,6 +81,8 @@ def test_features_cache_config_mismatch(dataset_deep, cache_dir):
 
     with pytest.raises(ValueError):
         SiftExtractor(max_num_keypoints=100, cache_path=cache_path)(dataset_deep)
+    with pytest.raises(ValueError):
+        SiftExtractor(config_tag="resize224", cache_path=cache_path)(dataset_deep)
 
 
 # Compatibility with wildlife-datasets

@@ -54,11 +54,12 @@ def check_cache_config(env: lmdb.Environment, key: bytes, config: dict) -> None:
 
 
 class CacheMixin:
-    def __init__(self, cache_path: str | None = None):
+    def __init__(self, cache_path: str | None = None, config_tag: str | None = None):
         self.cache_path = Path(cache_path) if cache_path is not None else None
+        self.config_tag = config_tag
 
     def cache_config(self) -> dict:
-        return {"class": type(self).__name__}
+        return {"class": type(self).__name__, "tag": self.config_tag}
 
     def get_key(self, dataset: ImageDataset | FeatureDataset, index: int) -> str:
         return str(dataset.metadata["image_id"][index])
@@ -77,8 +78,9 @@ class FeatureCacheMixin(CacheMixin, ABC, Generic[TDict, TFeature, TModel]):
         num_workers: int = 1,
         device: str | None = "cpu",
         cache_path: str | None = None,
+        config_tag: str | None = None,
     ):
-        super().__init__(cache_path=cache_path)
+        super().__init__(cache_path=cache_path, config_tag=config_tag)
 
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"

@@ -36,6 +36,7 @@ class DeepFeatures(FeatureCacheMixin, FeatureExtractor):
         num_workers: int = 1,
         device: str = "cpu",
         cache_path: str | None = None,
+        config_tag: str | None = None,
     ):
         """
         Args:
@@ -44,6 +45,8 @@ class DeepFeatures(FeatureCacheMixin, FeatureExtractor):
             num_workers (int, optional): Number of workers used for data loading.
             device (str, optional): Select between cuda and cpu devices.
             cache_path (str, optional): Path for cached results. No caching for None.
+            config_tag (str, optional): Free-form tag stored in the cache config (e.g. model and transform
+                description). Reusing cache_path with a different tag raises an error.
         """
 
         super().__init__(
@@ -51,6 +54,7 @@ class DeepFeatures(FeatureCacheMixin, FeatureExtractor):
             num_workers=num_workers,
             device=device,
             cache_path=cache_path,
+            config_tag=config_tag,
         )
         self.model = model
 
@@ -86,6 +90,7 @@ class ClipFeatures(DeepFeatures):
         num_workers: int = 1,
         device: str = "cpu",
         cache_path: str | None = None,
+        config_tag: str | None = None,
     ):
         """
         Args:
@@ -95,6 +100,8 @@ class ClipFeatures(DeepFeatures):
             num_workers (int, optional): Number of workers used for data loading.
             device (str, optional): Select between cuda and cpu devices.
             cache_path (str, optional): Path for cached results. No caching for None.
+            config_tag (str, optional): Free-form tag stored in the cache config (e.g. model and transform
+                description). Reusing cache_path with a different tag raises an error.
         """
         if model is None:
             model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14").vision_model
@@ -108,6 +115,7 @@ class ClipFeatures(DeepFeatures):
             num_workers=num_workers,
             device=device,
             cache_path=cache_path,
+            config_tag=config_tag,
         )
         self.processor = processor
         self.transform = lambda x: processor(images=x, return_tensors="pt")["pixel_values"]
@@ -136,6 +144,7 @@ class DinoFeatures(DeepFeatures):
         num_workers: int = 1,
         device: str = "cpu",
         cache_path: str | None = None,
+        config_tag: str | None = None,
     ):
 
         super().__init__(
@@ -144,6 +153,7 @@ class DinoFeatures(DeepFeatures):
             num_workers=num_workers,
             device=device,
             cache_path=cache_path,
+            config_tag=config_tag,
         )
 
         self.processor = processor

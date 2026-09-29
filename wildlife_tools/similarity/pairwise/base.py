@@ -88,6 +88,7 @@ class MatchPairs(CacheMixin, Matcher[FeatureDataset | ImageDataset]):
         tqdm_silent: bool = False,
         collector: Collector | None = None,
         cache_path: str | None = None,
+        config_tag: str | None = None,
     ):
         """
         Args:
@@ -96,11 +97,13 @@ class MatchPairs(CacheMixin, Matcher[FeatureDataset | ImageDataset]):
             tqdm_silent (bool, optional): If True, progress bar is disabled.
             collector (Collector | None, optional): Collector object used for storing results.
             cache_path (str, optional): Path for cached pair matches. No caching for None.
+            config_tag (str, optional): Free-form tag stored in the cache config (e.g. model and transform
+                description). Reusing cache_path with a different tag raises an error.
                 Cache stores raw matches, so it is independent of the collector, but it must be
                 unique for each matcher configuration and each feature extractor.
         """
 
-        super().__init__(cache_path=cache_path)
+        super().__init__(cache_path=cache_path, config_tag=config_tag)
 
         if collector is None:
             collector = CollectCounts()
