@@ -10,7 +10,7 @@ from tqdm import tqdm
 from ...data import FeatureDataset, ImageDataset
 from ...data.cache import CacheMixin
 from ..base import Matcher
-from .collectors import CollectCounts, CollectCountsRansac, Collector
+from .collectors import CollectCounts, Collector
 
 
 class PairDataset(torch.utils.data.IterableDataset):
@@ -161,8 +161,6 @@ class MatchPairs(CacheMixin, Matcher[FeatureDataset | ImageDataset]):
         pairs: np.ndarray | None = None,
     ) -> Any:
         assert self.cache_path is not None
-        if self.cache_scores_only and isinstance(self.collector, CollectCountsRansac):
-            raise ValueError("CollectCountsRansac needs keypoints, but cache_scores_only is True.")
         if pairs is None:
             pair_list = list(itertools.product(range(len(query)), range(len(database))))
         else:
