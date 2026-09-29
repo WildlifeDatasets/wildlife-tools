@@ -97,10 +97,12 @@ class MatchPairs(CacheMixin, Matcher[FeatureDataset | ImageDataset]):
             tqdm_silent (bool, optional): If True, progress bar is disabled.
             collector (Collector | None, optional): Collector object used for storing results.
             cache_path (str, optional): Path for cached pair matches. No caching for None.
-            config_tag (str, optional): Free-form tag stored in the cache config (e.g. model and transform
-                description). Reusing cache_path with a different tag raises an error.
                 Cache stores raw matches, so it is independent of the collector, but it must be
                 unique for each matcher configuration and each feature extractor.
+            config_tag (str, optional): Free-form tag stored in the cache config. Reusing cache_path with a
+                different tag raises an error. Changes of the image transform (for LoFTR) or of the
+                feature extractor (for LightGlue) are not detected automatically, so encode them in
+                the tag (e.g. "resize224_gray" or "sift256_resize224").
         """
 
         super().__init__(cache_path=cache_path, config_tag=config_tag)

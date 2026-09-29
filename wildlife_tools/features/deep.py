@@ -45,8 +45,9 @@ class DeepFeatures(FeatureCacheMixin, FeatureExtractor):
             num_workers (int, optional): Number of workers used for data loading.
             device (str, optional): Select between cuda and cpu devices.
             cache_path (str, optional): Path for cached results. No caching for None.
-            config_tag (str, optional): Free-form tag stored in the cache config (e.g. model and transform
-                description). Reusing cache_path with a different tag raises an error.
+            config_tag (str, optional): Free-form tag stored in the cache config. Reusing cache_path with a
+                different tag raises an error. Changes of the image transform are not
+                detected automatically, so encode them in the tag (e.g. "resize224").
         """
 
         super().__init__(
@@ -100,8 +101,9 @@ class ClipFeatures(DeepFeatures):
             num_workers (int, optional): Number of workers used for data loading.
             device (str, optional): Select between cuda and cpu devices.
             cache_path (str, optional): Path for cached results. No caching for None.
-            config_tag (str, optional): Free-form tag stored in the cache config (e.g. model and transform
-                description). Reusing cache_path with a different tag raises an error.
+            config_tag (str, optional): Free-form tag stored in the cache config. Reusing cache_path with a
+                different tag raises an error. Changes of the image transform are not
+                detected automatically, so encode them in the tag (e.g. "resize224").
         """
         if model is None:
             model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14").vision_model

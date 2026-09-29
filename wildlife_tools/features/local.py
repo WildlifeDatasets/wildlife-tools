@@ -36,8 +36,9 @@ class GlueFactoryExtractor(FeatureCacheMixin, FeatureExtractor):
             device (str | None, optional): Select between cuda and cpu devices.
             num_workers (int, optional): Number of workers used for data loading.
             cache_path (str, optional): Path for cached results. No caching for None.
-            config_tag (str, optional): Free-form tag stored in the cache config (e.g. model and transform
-                description). Reusing cache_path with a different tag raises an error.
+            config_tag (str, optional): Free-form tag stored in the cache config. Reusing cache_path with a
+                different tag raises an error. Changes of the image transform are not
+                detected automatically, so encode them in the tag (e.g. "resize224").
         """
 
         super().__init__(
