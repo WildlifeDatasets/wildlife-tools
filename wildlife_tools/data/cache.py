@@ -43,6 +43,18 @@ def write_cache_config(env: lmdb.Environment, key: bytes, config: dict) -> None:
 
 
 def check_cache_config(env: lmdb.Environment, key: bytes, config: dict) -> None:
+    """
+    Validate that the cache was created with the same config.
+    On the first use, the config is stored in the cache. On later uses, it is compared with the stored one.
+
+    Args:
+        env (lmdb.Environment): Opened LMDB cache.
+        key (bytes): Key under which the config is stored.
+        config (dict): Current config, typically from `CacheMixin.cache_config`.
+
+    Raises:
+        ValueError: If the stored config differs from the current one.
+    """
     stored = read_cache_config(env, key)
     if stored is None:
         write_cache_config(env, key, config)
@@ -54,14 +66,39 @@ def check_cache_config(env: lmdb.Environment, key: bytes, config: dict) -> None:
 
 
 class CacheMixin:
+    """
+    Base class for objects caching their results in an LMDB database at `cache_path`.
+
+    Entries are indexed by keys derived from `image_id` in the dataset metadata (see `get_key`).
+    The config returned by `cache_config` is stored in the cache on the first use and validated
+    on every later use, so that a cache is not reused with a different model.
+    """
+
     def __init__(self, cache_path: str | None = None, config_tag: str | None = None):
         self.cache_path = Path(cache_path) if cache_path is not None else None
         self.config_tag = config_tag
 
     def cache_config(self) -> dict:
+        """
+        Config identifying what is stored in the cache. Child classes extend it with model properties.
+        Properties not covered by it (e.g. image transforms) should be encoded in `config_tag`.
+
+        Returns:
+            config (dict): Config stored in and validated against the cache.
+        """
         return {"class": type(self).__name__, "tag": self.config_tag}
 
     def get_key(self, dataset: ImageDataset | FeatureDataset, index: int) -> str:
+        """
+        Cache key of a single image. Datasets with overlapping `image_id` must not share a cache.
+
+        Args:
+            dataset (ImageDataset | FeatureDataset): Dataset with `image_id` column in metadata.
+            index (int): Positional index of the image in the dataset.
+
+        Returns:
+            key (str): Cache key of the image.
+        """
         return str(dataset.metadata["image_id"][index])
 
     def _open_env(self) -> lmdb.Environment:

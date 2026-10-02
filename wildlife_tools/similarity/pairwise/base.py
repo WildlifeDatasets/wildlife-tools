@@ -132,6 +132,7 @@ class MatchPairs(CacheMixin, Matcher[FeatureDataset | ImageDataset]):
         """
         Match pairs of features from two feature datasets.
         Output for each pair is stored and processed using the collector.
+        If `cache_path` is set, raw matches are loaded from the cache and only missing pairs are computed.
 
         Args:
             query: Query dataset.
@@ -193,6 +194,16 @@ class MatchPairs(CacheMixin, Matcher[FeatureDataset | ImageDataset]):
         return self.collector.process_results()
 
     def get_pair_key(self, key0: str, key1: str) -> bytes:
+        """
+        Cache key of a pair of images. The key is ordered, so (key0, key1) and (key1, key0) differ.
+
+        Args:
+            key0 (str): Key of the query image from `get_key`.
+            key1 (str): Key of the database image from `get_key`.
+
+        Returns:
+            key (bytes): Cache key of the pair.
+        """
         return f"{key0}\x00{key1}".encode()
 
     def _iter_matches(self, dataset_pairs: PairDataset) -> Iterator[list[dict]]:
