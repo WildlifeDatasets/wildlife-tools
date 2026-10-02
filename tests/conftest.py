@@ -16,6 +16,28 @@ from wildlife_tools.similarity import CosineSimilarity
 mp.set_start_method("spawn", force=True)
 
 
+def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addoption(
+        "--run-extra-models",
+        action="store_true",
+        default=False,
+        help="Run tests that download additional models (SuperPoint, DISK, ALIKED, LightGlue).",
+    )
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    config.addinivalue_line("markers", "extra_models: test downloads additional models, run with --run-extra-models")
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    if config.getoption("--run-extra-models"):
+        return
+    skip = pytest.mark.skip(reason="needs --run-extra-models")
+    for item in items:
+        if "extra_models" in item.keywords:
+            item.add_marker(skip)
+
+
 @pytest.fixture(scope="session")
 def metadata():
     path = os.path.dirname(__file__)
