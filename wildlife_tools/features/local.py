@@ -28,6 +28,7 @@ class GlueFactoryExtractor(FeatureCacheMixin, FeatureExtractor):
         device: str | None = None,
         num_workers: int = 1,
         cache_path: str | None = None,
+        config_tag: str | None = None,
     ):
         """
         Args:
@@ -35,6 +36,9 @@ class GlueFactoryExtractor(FeatureCacheMixin, FeatureExtractor):
             device (str | None, optional): Select between cuda and cpu devices.
             num_workers (int, optional): Number of workers used for data loading.
             cache_path (str, optional): Path for cached results. No caching for None.
+            config_tag (str, optional): Free-form tag stored in the cache config. Reusing cache_path with a
+                different tag raises an error. Changes of the image transform are not
+                detected automatically, so encode them in the tag (e.g. "resize224").
         """
 
         super().__init__(
@@ -42,10 +46,14 @@ class GlueFactoryExtractor(FeatureCacheMixin, FeatureExtractor):
             num_workers=num_workers,
             device=device,
             cache_path=cache_path,
+            config_tag=config_tag,
         )
 
         config = OmegaConf.create(config)
         self.model = get_model(config.name)(config)
+
+    def cache_config(self) -> dict:
+        return super().cache_config() | {"model": OmegaConf.to_container(self.model.conf, resolve=True)}
 
     def _save_entry(self, txn: lmdb.Transaction, key: bytes, entry) -> None:
         entry = self._extract_entry(entry)
@@ -91,6 +99,7 @@ class SuperPointExtractor(GlueFactoryExtractor):
         max_num_keypoints: int = 256,
         device: str | None = None,
         cache_path: str | None = None,
+        config_tag: str | None = None,
         **model_config,
     ):
         config = {
@@ -100,7 +109,7 @@ class SuperPointExtractor(GlueFactoryExtractor):
             "force_num_keypoints": force_num_keypoints,
             "max_num_keypoints": max_num_keypoints,
         } | model_config
-        super().__init__(config, device=device, cache_path=cache_path)
+        super().__init__(config, device=device, cache_path=cache_path, config_tag=config_tag)
 
 
 class DiskExtractor(GlueFactoryExtractor):
@@ -118,6 +127,7 @@ class DiskExtractor(GlueFactoryExtractor):
         max_num_keypoints: int = 256,
         device: str | None = None,
         cache_path: str | None = None,
+        config_tag: str | None = None,
         **model_config,
     ):
         config = {
@@ -126,7 +136,7 @@ class DiskExtractor(GlueFactoryExtractor):
             "force_num_keypoints": force_num_keypoints,
             "max_num_keypoints": max_num_keypoints,
         } | model_config
-        super().__init__(config, device=device, cache_path=cache_path)
+        super().__init__(config, device=device, cache_path=cache_path, config_tag=config_tag)
 
 
 class AlikedExtractor(GlueFactoryExtractor):
@@ -144,6 +154,7 @@ class AlikedExtractor(GlueFactoryExtractor):
         max_num_keypoints: int = 256,
         device: str | None = None,
         cache_path: str | None = None,
+        config_tag: str | None = None,
         **model_config,
     ):
 
@@ -153,7 +164,7 @@ class AlikedExtractor(GlueFactoryExtractor):
             "force_num_keypoints": force_num_keypoints,
             "max_num_keypoints": max_num_keypoints,
         } | model_config
-        super().__init__(config, device=device, cache_path=cache_path)
+        super().__init__(config, device=device, cache_path=cache_path, config_tag=config_tag)
 
 
 class SiftExtractor(GlueFactoryExtractor):
@@ -167,6 +178,7 @@ class SiftExtractor(GlueFactoryExtractor):
         max_num_keypoints: int = 256,
         device: str | None = None,
         cache_path: str | None = None,
+        config_tag: str | None = None,
         **model_config,
     ):
 
@@ -177,7 +189,7 @@ class SiftExtractor(GlueFactoryExtractor):
             "force_num_keypoints": force_num_keypoints,
             "max_num_keypoints": max_num_keypoints,
         } | model_config
-        super().__init__(config, cache_path=cache_path)
+        super().__init__(config, cache_path=cache_path, config_tag=config_tag)
 
         # Fix extract_single_image method.
         self.model.extract_single_image = types.MethodType(extract_single_image_fix, self.model)

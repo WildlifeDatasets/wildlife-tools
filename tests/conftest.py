@@ -10,10 +10,32 @@ from transformers import AutoImageProcessor, AutoModel, CLIPModel, CLIPProcessor
 from wildlife_datasets import datasets
 
 from wildlife_tools.data import ImageDataset
-from wildlife_tools.features import ClipFeatures, DeepFeatures, DinoFeatures, SiftExtractor, SuperPointExtractor
-from wildlife_tools.similarity import CosineSimilarity, MatchLightGlue
+from wildlife_tools.features import ClipFeatures, DeepFeatures, DinoFeatures, SiftExtractor
+from wildlife_tools.similarity import CosineSimilarity
 
 mp.set_start_method("spawn", force=True)
+
+
+def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addoption(
+        "--run-extra-models",
+        action="store_true",
+        default=False,
+        help="Run tests that download additional models (SuperPoint, DISK, ALIKED, LightGlue).",
+    )
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    config.addinivalue_line("markers", "extra_models: test downloads additional models, run with --run-extra-models")
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    if config.getoption("--run-extra-models"):
+        return
+    skip = pytest.mark.skip(reason="needs --run-extra-models")
+    for item in items:
+        if "extra_models" in item.keywords:
+            item.add_marker(skip)
 
 
 @pytest.fixture(scope="session")
@@ -104,12 +126,6 @@ def features_sift(dataset_lightglue):
 
 
 @pytest.fixture(scope="session")
-def features_superpoint(dataset_lightglue):
-    extractor = SuperPointExtractor()
-    return extractor(dataset_lightglue)
-
-
-@pytest.fixture(scope="session")
 def features_deep(dataset_deep, extractor):
     return extractor(dataset_deep)
 
@@ -118,18 +134,6 @@ def features_deep(dataset_deep, extractor):
 def similarity_deep(features_deep):
     similarity = CosineSimilarity()
     return similarity(features_deep, features_deep)["cosine"]
-
-
-@pytest.fixture(scope="session")
-def similarity_sift(features_sift):
-    similarity = MatchLightGlue(features="sift", descriptor_dim=128, thresholds=[0.5])
-    return similarity(features_sift, features_sift)
-
-
-@pytest.fixture(scope="session")
-def similarity_superpoint(features_superpoint):
-    similarity = MatchLightGlue(features="sift", descriptor_dim=128, thresholds=[0.5])
-    return similarity(features_superpoint, features_superpoint)
 
 
 @pytest.fixture(scope="session")

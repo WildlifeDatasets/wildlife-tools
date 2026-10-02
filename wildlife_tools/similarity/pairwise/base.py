@@ -1,10 +1,14 @@
 import itertools
+import pickle
+from collections.abc import Iterator
+from typing import Any
 
 import numpy as np
 import torch
 from tqdm import tqdm
 
 from ...data import FeatureDataset, ImageDataset
+from ...data.cache import CacheMixin
 from ..base import Matcher
 from .collectors import CollectCounts, Collector
 
@@ -71,7 +75,7 @@ class PairDataset(torch.utils.data.IterableDataset):
                 yield idx0, self.dataset0[idx0][0], idx1, self.dataset1[idx1][0]
 
 
-class MatchPairs(Matcher[FeatureDataset | ImageDataset]):
+class MatchPairs(CacheMixin, Matcher[FeatureDataset | ImageDataset]):
     """
     Base class for matching pairs from two datasets.
     Any child class needs to implement `get_matches` method that implements processing of pair batches.
@@ -83,6 +87,9 @@ class MatchPairs(Matcher[FeatureDataset | ImageDataset]):
         num_workers: int = 0,
         tqdm_silent: bool = False,
         collector: Collector | None = None,
+        cache_path: str | None = None,
+        config_tag: str | None = None,
+        cache_scores_only: bool = False,
     ):
         """
         Args:
@@ -90,15 +97,31 @@ class MatchPairs(Matcher[FeatureDataset | ImageDataset]):
             num_workers (int, optional): Number of workers used for data loading.
             tqdm_silent (bool, optional): If True, progress bar is disabled.
             collector (Collector | None, optional): Collector object used for storing results.
+            cache_path (str, optional): Path for cached pair matches. No caching for None.
+                Cache stores raw matches, so it is independent of the collector, but it must be
+                unique for each matcher configuration and each feature extractor.
+            config_tag (str, optional): Free-form tag stored in the cache config. Reusing cache_path with a
+                different tag raises an error. Changes of the image transform (for LoFTR) or of the
+                feature extractor (for LightGlue) are not detected automatically, so encode them in
+                the tag (e.g. "resize224_gray" or "sift256_resize224").
+            cache_scores_only (bool, optional): If True, only scores are cached (keypoints are dropped),
+                which greatly reduces cache size. Collectors needing keypoints (e.g. CollectCountsRansac)
+                cannot be used then.
         """
 
+        super().__init__(cache_path=cache_path, config_tag=config_tag)
+        self.cache_scores_only = cache_scores_only
+
         if collector is None:
-            collector = CollectCounts(thresholds=[0.5])
+            collector = CollectCounts()
 
         self.collector = collector
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.tqdm_kwargs = {"mininterval": 1, "ncols": 100, "disable": tqdm_silent}
+
+    def cache_config(self) -> dict:
+        return super().cache_config() | {"scores_only": self.cache_scores_only}
 
     def __call__(
         self,
@@ -109,6 +132,7 @@ class MatchPairs(Matcher[FeatureDataset | ImageDataset]):
         """
         Match pairs of features from two feature datasets.
         Output for each pair is stored and processed using the collector.
+        If `cache_path` is set, raw matches are loaded from the cache and only missing pairs are computed.
 
         Args:
             query: Query dataset.
@@ -119,8 +143,70 @@ class MatchPairs(Matcher[FeatureDataset | ImageDataset]):
             results (dict): Exact output is determined by the used collector.
         """
 
+        if self.cache_path is not None:
+            return self._call_with_cache(query, database, pairs)
+
         dataset_pairs = PairDataset(query, database, pairs=pairs)
 
+        self.collector.init_store(grid_shape=dataset_pairs.grid_shape)
+        for matches in self._iter_matches(dataset_pairs):
+            self.collector.add(matches)
+
+        results = self.collector.process_results()
+        return results
+
+    def _call_with_cache(
+        self,
+        query: FeatureDataset | ImageDataset,
+        database: FeatureDataset | ImageDataset,
+        pairs: np.ndarray | None = None,
+    ) -> Any:
+        assert self.cache_path is not None
+        if pairs is None:
+            pair_list = list(itertools.product(range(len(query)), range(len(database))))
+        else:
+            pair_list = [(int(i0), int(i1)) for i0, i1 in pairs]
+        keys0 = [self.get_key(query, i) for i in range(len(query))]
+        keys1 = [self.get_key(database, i) for i in range(len(database))]
+
+        with self._open_env() as env:
+            with env.begin() as txn:
+                missing = [(i0, i1) for i0, i1 in pair_list if txn.get(self.get_pair_key(keys0[i0], keys1[i1])) is None]
+
+            for matches in self._iter_matches(PairDataset(query, database, pairs=missing)):
+                with env.begin(write=True) as txn:
+                    for m in matches:
+                        i0, i1 = m.pop("idx0"), m.pop("idx1")
+                        if self.cache_scores_only:
+                            m = {"scores": m["scores"]}
+                        txn.put(
+                            self.get_pair_key(keys0[i0], keys1[i1]), pickle.dumps(m, protocol=pickle.HIGHEST_PROTOCOL)
+                        )
+
+            self.collector.init_store(grid_shape=(len(query), len(database)))
+            with env.begin() as txn:
+                for i0, i1 in pair_list:
+                    val = txn.get(self.get_pair_key(keys0[i0], keys1[i1]))
+                    assert val is not None
+                    m = pickle.loads(val)
+                    self.collector.add([m | {"idx0": i0, "idx1": i1}])
+
+        return self.collector.process_results()
+
+    def get_pair_key(self, key0: str, key1: str) -> bytes:
+        """
+        Cache key of a pair of images. The key is ordered, so (key0, key1) and (key1, key0) differ.
+
+        Args:
+            key0 (str): Key of the query image from `get_key`.
+            key1 (str): Key of the database image from `get_key`.
+
+        Returns:
+            key (bytes): Cache key of the pair.
+        """
+        return f"{key0}\x00{key1}".encode()
+
+    def _iter_matches(self, dataset_pairs: PairDataset) -> Iterator[list[dict]]:
         loader_length = int(np.ceil(len(dataset_pairs) / self.batch_size))
         loader = torch.utils.data.DataLoader(
             dataset_pairs,
@@ -128,14 +214,8 @@ class MatchPairs(Matcher[FeatureDataset | ImageDataset]):
             batch_size=self.batch_size,
             shuffle=False,
         )
-
-        self.collector.init_store(grid_shape=dataset_pairs.grid_shape)
         for batch in tqdm(loader, total=loader_length, **self.tqdm_kwargs):
-            matches = self.get_matches(batch)
-            self.collector.add(matches)
-
-        results = self.collector.process_results()
-        return results
+            yield self.get_matches(batch)
 
     def get_matches(self, batch: tuple):
         """
