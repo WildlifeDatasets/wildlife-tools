@@ -45,6 +45,9 @@ class MatchLightGlue(MatchPairs):
         self.model = get_model(config.name)(config).to(device)
         self.device = device
 
+    def cache_config(self) -> dict:
+        return super().cache_config() | {"model": OmegaConf.to_container(self.model.conf, resolve=True)}
+
     def get_matches(self, batch):
         idx0, data0, idx1, data1 = batch
         data = {

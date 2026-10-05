@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from wildlife_tools.data import FeatureDataset
-from wildlife_tools.features import DataToMemory
+from wildlife_tools.features import DataToMemory, SiftExtractor
 
 
 def test_clip_features(dataset, extractor_clip):
@@ -20,7 +20,7 @@ def test_dino_features(dataset, extractor_dino):
 def check_sift_features(features0, features1):
     assert len(features0) == len(features1)
     for f1, f2 in zip(features0, features1):
-        np.array_equal(f1["descriptors"], f2["descriptors"])
+        assert np.array_equal(f1["descriptors"], f2["descriptors"])
 
 
 def test_features_deep(dataset_deep, extractor):
@@ -72,6 +72,17 @@ def test_sift_features_cached_split(wd_dataset, extractor_sift_cached):
     features1 = extractor_sift_cached(dataset1)
     check_sift_features(features0.features, features_all.features[:m])
     check_sift_features(features1.features, features_all.features[m:])
+
+
+def test_features_cache_config_mismatch(dataset_deep, cache_dir):
+    cache_path = cache_dir / "features_mismatch"
+    SiftExtractor(cache_path=cache_path)(dataset_deep)
+    SiftExtractor(cache_path=cache_path)(dataset_deep)
+
+    with pytest.raises(ValueError):
+        SiftExtractor(max_num_keypoints=100, cache_path=cache_path)(dataset_deep)
+    with pytest.raises(ValueError):
+        SiftExtractor(config_tag="resize224", cache_path=cache_path)(dataset_deep)
 
 
 # Compatibility with wildlife-datasets

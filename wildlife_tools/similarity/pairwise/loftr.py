@@ -204,6 +204,13 @@ class MatchLOFTR(MatchPairs):
         self.model = LoFTR(pretrained=pretrained, apply_fine=apply_fine, thr=init_threshold).to(device)
         self.device = device
 
+    def cache_config(self) -> dict:
+        return super().cache_config() | {
+            "model": self.model.config,
+            "pretrained": self.model.pretrained,
+            "apply_fine": self.model.apply_fine,
+        }
+
     def get_matches(self, batch):
         idx0, data0, idx1, data1 = batch
         data = {

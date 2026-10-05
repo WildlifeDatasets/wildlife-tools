@@ -11,6 +11,19 @@ def collate_fn(batch):
     return list(images), labels
 
 
+def model_variant(model: torch.nn.Module) -> str | None:
+    config = getattr(model, "config", None)
+    name = getattr(config, "name_or_path", None)
+    if isinstance(name, str) and name:
+        return name
+
+    pretrained_cfg = getattr(model, "pretrained_cfg", None)
+    if isinstance(pretrained_cfg, dict):
+        return pretrained_cfg.get("hf_hub_id") or pretrained_cfg.get("architecture")
+
+    return None
+
+
 class DeepFeatures(FeatureCacheMixin, FeatureExtractor):
     """
     Extracts features using forward pass of pytorch model.
@@ -23,6 +36,7 @@ class DeepFeatures(FeatureCacheMixin, FeatureExtractor):
         num_workers: int = 1,
         device: str = "cpu",
         cache_path: str | None = None,
+        config_tag: str | None = None,
     ):
         """
         Args:
@@ -31,6 +45,9 @@ class DeepFeatures(FeatureCacheMixin, FeatureExtractor):
             num_workers (int, optional): Number of workers used for data loading.
             device (str, optional): Select between cuda and cpu devices.
             cache_path (str, optional): Path for cached results. No caching for None.
+            config_tag (str, optional): Free-form tag stored in the cache config. Reusing cache_path with a
+                different tag raises an error. Changes of the image transform are not
+                detected automatically, so encode them in the tag (e.g. "resize224").
         """
 
         super().__init__(
@@ -38,8 +55,15 @@ class DeepFeatures(FeatureCacheMixin, FeatureExtractor):
             num_workers=num_workers,
             device=device,
             cache_path=cache_path,
+            config_tag=config_tag,
         )
         self.model = model
+
+    def cache_config(self) -> dict:
+        return super().cache_config() | {
+            "model": type(self.model).__name__,
+            "variant": model_variant(self.model),
+        }
 
     def cat_features_dictionary(self, feats: list[np.ndarray]) -> np.ndarray:
         return np.stack(feats, axis=0)
@@ -67,6 +91,7 @@ class ClipFeatures(DeepFeatures):
         num_workers: int = 1,
         device: str = "cpu",
         cache_path: str | None = None,
+        config_tag: str | None = None,
     ):
         """
         Args:
@@ -76,6 +101,9 @@ class ClipFeatures(DeepFeatures):
             num_workers (int, optional): Number of workers used for data loading.
             device (str, optional): Select between cuda and cpu devices.
             cache_path (str, optional): Path for cached results. No caching for None.
+            config_tag (str, optional): Free-form tag stored in the cache config. Reusing cache_path with a
+                different tag raises an error. Changes of the image transform are not
+                detected automatically, so encode them in the tag (e.g. "resize224").
         """
         if model is None:
             model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14").vision_model
@@ -89,6 +117,7 @@ class ClipFeatures(DeepFeatures):
             num_workers=num_workers,
             device=device,
             cache_path=cache_path,
+            config_tag=config_tag,
         )
         self.processor = processor
         self.transform = lambda x: processor(images=x, return_tensors="pt")["pixel_values"]
@@ -117,6 +146,7 @@ class DinoFeatures(DeepFeatures):
         num_workers: int = 1,
         device: str = "cpu",
         cache_path: str | None = None,
+        config_tag: str | None = None,
     ):
 
         super().__init__(
@@ -125,6 +155,7 @@ class DinoFeatures(DeepFeatures):
             num_workers=num_workers,
             device=device,
             cache_path=cache_path,
+            config_tag=config_tag,
         )
 
         self.processor = processor
