@@ -162,21 +162,23 @@ If you like our package, please cite us.
 
 ```
 @InProceedings{Cermak_2024_WACV,
-    author    = {\v{C}erm\'ak, Vojt\v{e}ch and Picek, Luk\'a\v{s} and Adam, Luk\'a\v{s} and Papafitsoros, Kostas},
-    title     = {{WildlifeDatasets: An Open-Source Toolkit for Animal Re-Identification}},
-    booktitle = {Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)},
-    month     = {January},
+    author    = {{\v{C}}erm{\'a}k, Vojt{\v{e}}ch and Picek, Lukas and Adam, Luk{\'a}{\v{s}} and Papafitsoros, Kostas},
+    title     = {{WildlifeDatasets: An open-source toolkit for animal re-identification}},
+    booktitle = {2024 IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)},
+    pages     = {5941--5951},
     year      = {2024},
-    pages     = {5953-5963}
+    organization={IEEE}
 }
 ```
 
 ```
-@article{cermak2024wildfusion,
-  title={WildFusion: Individual animal identification with calibrated similarity fusion},
+@inproceedings{cermak2024wildfusion,
+  title={Wildfusion: Individual animal identification with calibrated similarity fusion},
   author={Cermak, Vojt{\v{e}}ch and Picek, Lukas and Adam, Luk{\'a}{\v{s}} and Neumann, Luk{\'a}{\v{s}} and Matas, Ji{\v{r}}{\'\i}},
-  journal={arXiv preprint arXiv:2408.12934},
-  year={2024}
+  booktitle={European Conference on Computer Vision},
+  pages={18--36},
+  year={2024},
+  organization={Springer}
 }
 ```
 
