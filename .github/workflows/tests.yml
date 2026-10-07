@@ -29,6 +29,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
+      - name: Install CPU-only PyTorch
+        run: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
       - name: Install package with dev dependencies
         run: pip install -e .[dev]
 
