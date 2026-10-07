@@ -104,19 +104,22 @@ There are multiple local feature extractors including Aliked, DISK, SuperPoint a
 from wildlife_tools.features import AlikedExtractor, DiskExtractor, SiftExtractor, SuperPointExtractor
 
 device = 'cuda'
+num_workers = 4
 
-extractor = AlikedExtractor(device=device)
+extractor = AlikedExtractor(device=device, num_workers=num_workers)
 features = extractor(dataset)
 
-extractor = DiskExtractor(device=device)
+extractor = DiskExtractor(device=device, num_workers=num_workers)
 features = extractor(dataset)
 
-extractor = SuperPointExtractor(device=device)
+extractor = SuperPointExtractor(device=device, num_workers=num_workers)
 features = extractor(dataset)
 
-extractor = SiftExtractor(device=device)
+extractor = SiftExtractor(device=device, num_workers=num_workers)
 features = extractor(dataset)
 ```
+
+Image loading is often the bottleneck of local feature extraction. Using multiple workers (`num_workers`) for data loading speeds up the extraction significantly.
 
 For possible keywords, look at their [definitions](https://github.com/WildlifeDatasets/wildlife-tools/blob/main/wildlife_tools/features/local.py).
 
