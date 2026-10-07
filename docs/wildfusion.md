@@ -13,7 +13,7 @@ This functionality is implemented using `WildFusion` class, which uses multiple 
 ### Example - SimilarityPipeline
 
 We use LightGlue matching with SuperPoint descriptors and keypoints extracted from images resized to
- 512x512. The scores are calibrated using isotonic regression.
+ 512x512. The scores are calibrated using isotonic regression. Multiple workers (`num_workers`) are used for loading images, which speeds up the feature extraction significantly.
 
 ```Python
 import timm
@@ -27,7 +27,7 @@ from wildlife_tools.similarity.calibration import IsotonicCalibration
 
 pipeline = SimilarityPipeline(
   matcher = MatchLightGlue(features='superpoint'),
-  extractor = SuperPointExtractor(),
+  extractor = SuperPointExtractor(num_workers=4),
   transform = T.Compose([
       T.Resize([512, 512]),
       T.ToTensor()
@@ -57,7 +57,7 @@ matchers = [
 
     SimilarityPipeline(
         matcher = MatchLightGlue(features='superpoint'),
-        extractor = SuperPointExtractor(),
+        extractor = SuperPointExtractor(num_workers=4),
         transform = T.Compose([
             T.Resize([512, 512]),
             T.ToTensor()
@@ -67,7 +67,7 @@ matchers = [
 
     SimilarityPipeline(
         matcher = MatchLightGlue(features='aliked'),
-        extractor = AlikedExtractor(),
+        extractor = AlikedExtractor(num_workers=4),
         transform = T.Compose([
             T.Resize([512, 512]),
             T.ToTensor()
@@ -77,7 +77,7 @@ matchers = [
 
     SimilarityPipeline(
         matcher = MatchLightGlue(features='disk'),
-        extractor = DiskExtractor(),
+        extractor = DiskExtractor(num_workers=4),
         transform = T.Compose([
             T.Resize([512, 512]),
             T.ToTensor()
@@ -87,7 +87,7 @@ matchers = [
 
     SimilarityPipeline(
         matcher = MatchLightGlue(features='sift'),
-        extractor = SiftExtractor(),
+        extractor = SiftExtractor(num_workers=4),
         transform = T.Compose([
             T.Resize([512, 512]),
             T.ToTensor()
