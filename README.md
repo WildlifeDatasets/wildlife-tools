@@ -40,6 +40,7 @@ The `wildlife-tools` library offers a simple interface for various tasks in the 
 
 - It covers use cases such as training, feature extraction, similarity calculation, image retrieval, and classification.
 - It provides traning codes and usage examples for our models [MegaDescriptor](./megadescriptor.md) and [WildFusion](./wildfusion.md).
+- It supports [caching](https://wildlifedatasets.github.io/wildlife-tools/caching/) of extracted features and matching scores, so that repeated runs compute only what is missing.
 - It complements the [WildlifeDatasets](https://github.com/WildlifeDatasets/wildlife-datasets) library, which acts as dataset repository.
 
 More information can be found in the [documentation](https://wildlifedatasets.github.io/wildlife-tools/).
@@ -118,14 +119,17 @@ dataset_query = ImageDataset(metadata.df.iloc[:100,:], metadata.root, transform=
 ```
 
 ### 2. Extract features
-Extract features using MegaDescriptor Tiny, downloaded from HuggingFace hub.
+Extract features using MegaDescriptor Tiny, downloaded from HuggingFace hub. The features are [cached](https://wildlifedatasets.github.io/wildlife-tools/caching/) in `cache/MacaqueFaces/megadescriptor`, so later runs load them instead of computing them again.
 
 ```Python
 import timm
 from wildlife_tools.features import DeepFeatures
 
 name = 'hf-hub:BVRA/MegaDescriptor-T-224'
-extractor = DeepFeatures(timm.create_model(name, num_classes=0, pretrained=True))
+extractor = DeepFeatures(
+    timm.create_model(name, num_classes=0, pretrained=True),
+    cache_path='cache/MacaqueFaces/megadescriptor'
+)
 query, database = extractor(dataset_query), extractor(dataset_database)
 ```
 

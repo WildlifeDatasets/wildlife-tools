@@ -4,6 +4,7 @@ The `wildlife-tools` library offers a simple interface for various tasks in the 
 
 - It covers use cases such as training, feature extraction, similarity calculation, image retrieval, and classification.
 - It provides traning codes and usage examples for our models [MegaDescriptor](./megadescriptor.md) and [WildFusion](./wildfusion.md).
+- It supports [caching](./caching.md) of extracted features and matching scores, so that repeated runs compute only what is missing.
 - It complements the [WildlifeDatasets](https://github.com/WildlifeDatasets/wildlife-datasets) library, which acts as dataset repository.
 
 
