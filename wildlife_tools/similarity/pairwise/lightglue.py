@@ -42,7 +42,7 @@ class MatchLightGlue(MatchPairs):
             }
         )
 
-        self.model = get_model(config.name)(config).to(device)
+        self.model = get_model(config.name)(config)
         self.device = device
 
     def cache_config(self) -> dict:

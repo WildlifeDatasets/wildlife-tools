@@ -49,11 +49,15 @@ class GlueFactoryExtractor(FeatureCacheMixin, FeatureExtractor):
             config_tag=config_tag,
         )
 
-        config = OmegaConf.create(config)
-        self.model = get_model(config.name)(config)
+        self.config = OmegaConf.create(config)
+        self._model_factory = self.build_model
+
+    def build_model(self) -> torch.nn.Module:
+        return get_model(self.config.name)(self.config)
 
     def cache_config(self) -> dict:
-        return super().cache_config() | {"model": OmegaConf.to_container(self.model.conf, resolve=True)}
+        # Simplified: stores our config without gluefactory defaults; goes away with the move to Kornia.
+        return super().cache_config() | {"model": OmegaConf.to_container(self.config, resolve=True)}
 
     def _save_entry(self, txn: lmdb.Transaction, key: bytes, entry) -> None:
         entry = self._extract_entry(entry)
@@ -195,8 +199,11 @@ class SiftExtractor(GlueFactoryExtractor):
         } | model_config
         super().__init__(config, device=device, num_workers=num_workers, cache_path=cache_path, config_tag=config_tag)
 
+    def build_model(self) -> torch.nn.Module:
+        model = super().build_model()
         # Fix extract_single_image method.
-        self.model.extract_single_image = types.MethodType(extract_single_image_fix, self.model)
+        model.extract_single_image = types.MethodType(extract_single_image_fix, model)
+        return model
 
     def _extract_entry(self, entry):
         entry_new = super()._extract_entry(entry)

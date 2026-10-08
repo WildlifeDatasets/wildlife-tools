@@ -201,7 +201,7 @@ class MatchLOFTR(MatchPairs):
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        self.model = LoFTR(pretrained=pretrained, apply_fine=apply_fine, thr=init_threshold).to(device)
+        self.model = LoFTR(pretrained=pretrained, apply_fine=apply_fine, thr=init_threshold)
         self.device = device
 
     def cache_config(self) -> dict:
