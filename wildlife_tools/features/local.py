@@ -1,8 +1,5 @@
-import math
-
 import kornia.feature as KF
 import torch
-from kornia.color import rgb_to_grayscale
 
 from ..data import FeatureCacheMixin
 from .base import FeatureExtractor
@@ -224,4 +221,3 @@ class AlikedExtractor(LocalFeatureExtractor):
             }
             for f in self.model(images)
         ]
-
