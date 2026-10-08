@@ -24,7 +24,9 @@ def to_grayscale(images: torch.Tensor) -> torch.Tensor:
     return rgb_to_grayscale(images) if images.shape[1] == 3 else images
 
 
-def laf_features(lafs: torch.Tensor, responses: torch.Tensor, descriptors: torch.Tensor) -> list[dict[str, torch.Tensor]]:
+def laf_features(
+    lafs: torch.Tensor, responses: torch.Tensor, descriptors: torch.Tensor
+) -> list[dict[str, torch.Tensor]]:
     keypoints = KF.get_laf_center(lafs)
     scales = KF.get_laf_scale(lafs).flatten(1)
     oris = torch.deg2rad(KF.get_laf_orientation(lafs).flatten(1)) % (2 * math.pi)

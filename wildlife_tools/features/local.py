@@ -346,7 +346,9 @@ class DoGHardNetExtractor(LocalFeatureExtractor):
         self.affnet = affnet
 
     def build_model(self) -> torch.nn.Module:
-        detector = KF.SIFTFeature(num_features=self.max_num_keypoints, score_threshold=self.detection_threshold).detector
+        detector = KF.SIFTFeature(
+            num_features=self.max_num_keypoints, score_threshold=self.detection_threshold
+        ).detector
         if self.affnet:
             detector.aff = KF.LAFAffNetShapeEstimator(pretrained=True)
         descriptor = KF.LAFDescriptor(KF.HardNet(pretrained=True), patch_size=32, grayscale_descriptor=True)
