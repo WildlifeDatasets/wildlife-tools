@@ -1,4 +1,5 @@
 from copy import deepcopy
+from typing import Any
 
 import kornia.feature as KF
 import numpy as np
@@ -6,6 +7,14 @@ import torch
 from kornia.feature.loftr.loftr import default_cfg
 
 from .base import MatchPairs
+
+
+def loftr_config(pretrained: str, thr: float) -> dict[str, Any]:
+    config = deepcopy(default_cfg)
+    config["match_coarse"]["thr"] = thr
+    if pretrained == "indoor_new":
+        config["coarse"]["temp_bug_fix"] = True
+    return config
 
 
 class SkipFinePreprocess(torch.nn.Module):
@@ -48,19 +57,23 @@ class MatchLOFTR(MatchPairs):
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        config = deepcopy(default_cfg)
-        config["match_coarse"]["thr"] = init_threshold
-        self.model = KF.LoFTR(pretrained=pretrained, config=config)
-        if not apply_fine:
-            self.model.fine_preprocess = SkipFinePreprocess()
-            self.model.fine_matching = SkipFineMatching()
+        self.pretrained = pretrained
+        self.init_threshold = init_threshold
         self.apply_fine = apply_fine
         self.device = device
+        self._model_factory = self.build_model
+
+    def build_model(self) -> torch.nn.Module:
+        model = KF.LoFTR(pretrained=self.pretrained, config=loftr_config(self.pretrained, self.init_threshold))
+        if not self.apply_fine:
+            model.fine_preprocess = SkipFinePreprocess()
+            model.fine_matching = SkipFineMatching()
+        return model
 
     def cache_config(self) -> dict:
         return super().cache_config() | {
-            "model": self.model.config,
-            "pretrained": self.model.pretrained,
+            "model": loftr_config(self.pretrained, self.init_threshold),
+            "pretrained": self.pretrained,
             "apply_fine": self.apply_fine,
         }
 

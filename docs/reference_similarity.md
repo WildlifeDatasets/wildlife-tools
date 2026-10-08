@@ -44,6 +44,7 @@
       heading_level: 2
       filters:
         - "!^_[^_]"
+        - "!loftr_config"
         - "!SkipFinePreprocess"
         - "!SkipFineMatching"
 
