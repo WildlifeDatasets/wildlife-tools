@@ -3,21 +3,7 @@ import torch
 
 from ..data import FeatureCacheMixin
 from .base import FeatureExtractor
-
-
-def pad_features(features: dict[str, torch.Tensor], num: int, image_size: torch.Tensor) -> dict[str, torch.Tensor]:
-    missing = num - len(features["keypoints"])
-    if missing <= 0:
-        return features
-
-    padded = {}
-    for key, value in features.items():
-        if key == "keypoints":
-            pad = torch.rand(missing, 2, dtype=value.dtype) * (image_size.to(value) - 1)
-        else:
-            pad = value.new_zeros((missing, *value.shape[1:]))
-        padded[key] = torch.cat([value, pad])
-    return padded
+from .local_utils import laf_features, pad_features, to_grayscale
 
 
 class LocalFeatureExtractor(FeatureCacheMixin, FeatureExtractor):
@@ -221,3 +207,193 @@ class AlikedExtractor(LocalFeatureExtractor):
             }
             for f in self.model(images)
         ]
+
+
+class XFeatExtractor(LocalFeatureExtractor):
+    """
+    XFeat keypoints and descriptors. Match with `MatchLightGlue(features="xfeat")`.
+
+    - Paper: XFeat: Accelerated Features for Lightweight Image Matching
+    - Link: https://arxiv.org/abs/2404.19174
+    """
+
+    def __init__(
+        self,
+        detection_threshold: float = 0.0,
+        force_num_keypoints: bool = True,
+        max_num_keypoints: int = 256,
+        device: str | None = None,
+        num_workers: int = 1,
+        cache_path: str | None = None,
+        config_tag: str | None = None,
+        batch_size: int = 1,
+    ):
+        super().__init__(
+            max_num_keypoints=max_num_keypoints,
+            detection_threshold=detection_threshold,
+            force_num_keypoints=force_num_keypoints,
+            device=device,
+            num_workers=num_workers,
+            cache_path=cache_path,
+            config_tag=config_tag,
+            batch_size=batch_size,
+        )
+
+    def build_model(self) -> torch.nn.Module:
+        return KF.XFeat.from_pretrained(top_k=self.max_num_keypoints, detection_threshold=self.detection_threshold)
+
+    def extract(self, images: torch.Tensor) -> list[dict[str, torch.Tensor]]:
+        return [
+            {
+                "keypoints": f["keypoints"],
+                "keypoint_scores": f["scores"],
+                "descriptors": f["descriptors"],
+            }
+            for f in self.model.detectAndCompute(images)
+        ]
+
+
+class DeDoDeExtractor(LocalFeatureExtractor):
+    """
+    DeDoDe keypoints and descriptors. Match with `MatchLightGlue(features="dedodeb")` for
+    descriptor="B" and `MatchLightGlue(features="dedodeg")` for descriptor="G".
+    The detection_threshold is not used.
+
+    - Paper: DeDoDe: Detect, Don't Describe -- Describe, Don't Detect for Local Feature Matching
+    - Link: https://arxiv.org/abs/2308.08479
+    """
+
+    def __init__(
+        self,
+        detection_threshold: float = 0.0,
+        force_num_keypoints: bool = True,
+        max_num_keypoints: int = 256,
+        device: str | None = None,
+        num_workers: int = 1,
+        cache_path: str | None = None,
+        config_tag: str | None = None,
+        batch_size: int = 1,
+        descriptor: str = "B",
+        detector_weights: str = "L-C4-v2",
+    ):
+        super().__init__(
+            max_num_keypoints=max_num_keypoints,
+            detection_threshold=detection_threshold,
+            force_num_keypoints=force_num_keypoints,
+            device=device,
+            num_workers=num_workers,
+            cache_path=cache_path,
+            config_tag=config_tag,
+            batch_size=batch_size,
+        )
+        self.descriptor = descriptor
+        self.detector_weights = detector_weights
+
+    def build_model(self) -> torch.nn.Module:
+        amp_dtype = torch.float16 if str(self.device).startswith("cuda") else torch.float32
+        return KF.DeDoDe.from_pretrained(
+            detector_weights=self.detector_weights,
+            descriptor_weights=f"{self.descriptor}-upright",
+            amp_dtype=amp_dtype,
+        )
+
+    def model_config(self) -> dict:
+        return super().model_config() | {"descriptor": self.descriptor, "detector_weights": self.detector_weights}
+
+    def extract(self, images: torch.Tensor) -> list[dict[str, torch.Tensor]]:
+        keypoints, scores, descriptors = self.model(images, n=self.max_num_keypoints)
+        return [
+            {
+                "keypoints": keypoints[i],
+                "keypoint_scores": scores[i],
+                "descriptors": descriptors[i],
+            }
+            for i in range(len(keypoints))
+        ]
+
+
+class DoGHardNetExtractor(LocalFeatureExtractor):
+    """
+    Difference of Gaussians keypoints with HardNet descriptors. Match with
+    `MatchLightGlue(features="doghardnet")`, or `MatchLightGlue(features="dog_affnet_hardnet")` for affnet=True.
+
+    - Paper (HardNet): Working hard to know your neighbor's margins: Local descriptor learning loss
+    - Link: https://arxiv.org/abs/1705.10872
+    """
+
+    def __init__(
+        self,
+        detection_threshold: float = 0.0,
+        force_num_keypoints: bool = True,
+        max_num_keypoints: int = 256,
+        device: str | None = None,
+        num_workers: int = 1,
+        cache_path: str | None = None,
+        config_tag: str | None = None,
+        batch_size: int = 1,
+        affnet: bool = False,
+    ):
+        super().__init__(
+            max_num_keypoints=max_num_keypoints,
+            detection_threshold=detection_threshold,
+            force_num_keypoints=force_num_keypoints,
+            device=device,
+            num_workers=num_workers,
+            cache_path=cache_path,
+            config_tag=config_tag,
+            batch_size=batch_size,
+        )
+        self.affnet = affnet
+
+    def build_model(self) -> torch.nn.Module:
+        detector = KF.SIFTFeature(
+            num_features=self.max_num_keypoints, score_threshold=self.detection_threshold
+        ).detector
+        if self.affnet:
+            detector.aff = KF.LAFAffNetShapeEstimator(pretrained=True)
+        descriptor = KF.LAFDescriptor(KF.HardNet(pretrained=True), patch_size=32, grayscale_descriptor=True)
+        return KF.LocalFeature(detector, descriptor)
+
+    def model_config(self) -> dict:
+        return super().model_config() | {"affnet": self.affnet}
+
+    def extract(self, images: torch.Tensor) -> list[dict[str, torch.Tensor]]:
+        return [laf_features(*self.model(to_grayscale(image[None])))[0] for image in images]
+
+
+class KeyNetAffNetHardNetExtractor(LocalFeatureExtractor):
+    """
+    KeyNet keypoints with AffNet shapes and HardNet descriptors. Match with
+    `MatchLightGlue(features="keynet_affnet_hardnet")`.
+
+    - Paper (KeyNet): Key.Net: Keypoint Detection by Handcrafted and Learned CNN Filters
+    - Link: https://arxiv.org/abs/1904.00889
+    """
+
+    def __init__(
+        self,
+        detection_threshold: float = 0.0,
+        force_num_keypoints: bool = True,
+        max_num_keypoints: int = 256,
+        device: str | None = None,
+        num_workers: int = 1,
+        cache_path: str | None = None,
+        config_tag: str | None = None,
+        batch_size: int = 1,
+    ):
+        super().__init__(
+            max_num_keypoints=max_num_keypoints,
+            detection_threshold=detection_threshold,
+            force_num_keypoints=force_num_keypoints,
+            device=device,
+            num_workers=num_workers,
+            cache_path=cache_path,
+            config_tag=config_tag,
+            batch_size=batch_size,
+        )
+
+    def build_model(self) -> torch.nn.Module:
+        return KF.KeyNetAffNetHardNet(num_features=self.max_num_keypoints, score_threshold=self.detection_threshold)
+
+    def extract(self, images: torch.Tensor) -> list[dict[str, torch.Tensor]]:
+        return [laf_features(*self.model(to_grayscale(image[None])))[0] for image in images]

@@ -19,7 +19,8 @@ class MatchLightGlue(MatchPairs):
     ):
         """
         Args:
-            features (str): Features used for matching. Options: 'sift', 'aliked', 'disk'.
+            features (str): Features used for matching. Options: 'aliked', 'disk', 'xfeat', 'dedodeb',
+                'dedodeg', 'doghardnet', 'dog_affnet_hardnet', 'keynet_affnet_hardnet'.
                 Must match extracted features from the dataset.
             init_threshold (float, optional): Keep matches only over this threshold. Matches with
                 lower values are not passed to the collector.
@@ -36,19 +37,18 @@ class MatchLightGlue(MatchPairs):
         self._model_factory = self.build_model
 
     def build_model(self) -> torch.nn.Module:
-        return KF.LightGlue(
-            self.features,
-            depth_confidence=-1,
-            width_confidence=-1,
-            filter_threshold=self.init_threshold,
-        )
+        model = KF.LightGlue(self.features)
+        model.conf.depth_confidence = -1
+        model.conf.width_confidence = -1
+        model.conf.filter_threshold = self.init_threshold
+        return model
 
     def cache_config(self) -> dict:
         return super().cache_config() | {"model": {"features": self.features, "filter_threshold": self.init_threshold}}
 
     def get_matches(self, batch):
         idx0, data0, idx1, data1 = batch
-        keys = ["keypoints", "descriptors", "image_size", "scales", "oris"]
+        keys = ["keypoints", "descriptors", "image_size", "scales", "oris", "lafs"]
         data = {
             "image0": {k: data0[k].to(self.device) for k in keys if k in data0},
             "image1": {k: data1[k].to(self.device) for k in keys if k in data1},
