@@ -13,7 +13,7 @@ maintainers = [
 ]
 description = "Tools for using wildlife re-identification datasets."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = {file = "LICENSE"}
 keywords = [
     "wildlife",
