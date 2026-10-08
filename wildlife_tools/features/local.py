@@ -16,7 +16,7 @@ def pad_features(features: dict[str, torch.Tensor], num: int, image_size: torch.
     padded = {}
     for key, value in features.items():
         if key == "keypoints":
-            pad = torch.rand(missing, 2, dtype=value.dtype) * (image_size.flip(0).to(value) - 1)
+            pad = torch.rand(missing, 2, dtype=value.dtype) * (image_size.to(value) - 1)
         else:
             pad = value.new_zeros((missing, *value.shape[1:]))
         padded[key] = torch.cat([value, pad])
@@ -98,7 +98,7 @@ class LocalFeatureExtractor(FeatureCacheMixin, FeatureExtractor):
         # Batch has always size 1
         image, _ = batch
         image = image.to(self.device)
-        image_size = torch.tensor(image.shape[2:])
+        image_size = torch.tensor([image.shape[3], image.shape[2]])
         with torch.inference_mode():
             features = {k: v.cpu() for k, v in self.extract(image).items()}
         if self.force_num_keypoints:
