@@ -133,7 +133,7 @@ def extractor_aliked():
 
 @pytest.fixture(scope="session")
 def extractor_aliked_cached(cache_dir):
-    return RandomAlikedExtractor(device="cpu", cache_path=cache_dir / "features_aliked")
+    return RandomAlikedExtractor(device="cpu", cache_path=cache_dir / "features_aliked_random")
 
 
 @pytest.fixture(scope="session")
