@@ -57,13 +57,13 @@ class MatchLightGlue(MatchPairs):
         with torch.inference_mode():
             output = self.model(data)
 
-        data = []
+        results = []
         for i, (i0, i1, scores, matches) in enumerate(zip(idx0, idx1, output["scores"], output["matches"])):
             matches = matches.cpu()
             kpts0 = data0["keypoints"][i][matches[:, 0]].cpu().numpy()
             kpts1 = data1["keypoints"][i][matches[:, 1]].cpu().numpy()
             scores = scores.cpu().numpy()
-            data.append(
+            results.append(
                 {
                     "idx0": i0.item(),
                     "idx1": i1.item(),
@@ -72,4 +72,4 @@ class MatchLightGlue(MatchPairs):
                     "scores": scores,
                 }
             )
-        return data
+        return results
