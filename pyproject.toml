@@ -40,9 +40,8 @@ dependencies=[
           'pytorch_metric_learning',
           'transformers>=4.30.2',
           'wildlife-datasets>=1.0.7',
-          'kornia>=0.6.12',
+          'kornia>=0.8.3',
           'lmdb',
-          'gluefactory @ git+https://github.com/cvg/glue-factory.git@1f56839db2242929960d70f85bfac6c19ef2821c',
 ]
 
 [project.optional-dependencies]
