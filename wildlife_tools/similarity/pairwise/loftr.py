@@ -1,175 +1,31 @@
 from copy import deepcopy
 from typing import Any
 
+import kornia.feature as KF
 import numpy as np
 import torch
-from kornia.feature.loftr.backbone import build_backbone
-from kornia.feature.loftr.loftr import default_cfg, urls
-from kornia.feature.loftr.loftr_module.fine_preprocess import FinePreprocess
-from kornia.feature.loftr.loftr_module.transformer import LocalFeatureTransformer
-from kornia.feature.loftr.utils.coarse_matching import CoarseMatching
-from kornia.feature.loftr.utils.fine_matching import FineMatching
-from kornia.feature.loftr.utils.position_encoding import PositionEncodingSine
-from kornia.geometry import resize
+from kornia.feature.loftr.loftr import default_cfg
 
 from .base import MatchPairs
 
 
-# Modified Kornia LoFTR module that enables skiping finegrained refinement
-class LoFTR(torch.nn.Module):
-    r"""Module, which finds correspondences between two images.
+def loftr_config(pretrained: str, thr: float) -> dict[str, Any]:
+    config = deepcopy(default_cfg)
+    config["match_coarse"]["thr"] = thr
+    if pretrained == "indoor_new":
+        config["coarse"]["temp_bug_fix"] = True
+    return config
 
-    This is based on the original code from paper "LoFTR: Detector-Free Local
-    Feature Matching with Transformers". See :cite:`LoFTR2021` for more details.
 
-    If the distance matrix dm is not provided, :py:func:`torch.cdist` is used.
+class SkipFinePreprocess(torch.nn.Module):
+    def forward(self, feat_f0: torch.Tensor, feat_f1: torch.Tensor, *args) -> tuple[torch.Tensor, torch.Tensor]:
+        return feat_f0.new_empty(0), feat_f1.new_empty(0)
 
-    Args:
-        config: Dict with initialization parameters. Do not pass it,
-            unless you know what you are doing`.
-        pretrained: Download and set pretrained weights to the model. Options: 'outdoor', 'indoor'.
-            'outdoor' is trained on the MegaDepth dataset and 'indoor' on the ScanNet.
 
-    Returns:
-        Dictionary with image correspondences and confidence scores.
-
-    Example:
-        >>> img1 = torch.rand(1, 1, 320, 200)
-        >>> img2 = torch.rand(1, 1, 128, 128)
-        >>> input = {"image0": img1, "image1": img2}
-        >>> loftr = LoFTR('outdoor')
-        >>> out = loftr(input)
-    """
-
-    def __init__(
-        self,
-        pretrained: str = "outdoor",
-        config: dict[str, Any] = default_cfg,
-        apply_fine=True,
-        thr: float = 0.2,
-    ) -> None:
-
-        super().__init__()
-        config = deepcopy(config)
-        config["match_coarse"]["thr"] = thr
-
-        self.apply_fine = apply_fine
-        # Misc
-        self.config = config
-        if pretrained == "indoor_new":
-            self.config["coarse"]["temp_bug_fix"] = True
-        # Modules
-        self.backbone = build_backbone(config)
-        self.pos_encoding = PositionEncodingSine(
-            config["coarse"]["d_model"], temp_bug_fix=config["coarse"]["temp_bug_fix"]
-        )
-        self.loftr_coarse = LocalFeatureTransformer(config["coarse"])
-        self.coarse_matching = CoarseMatching(config["match_coarse"])
-        self.fine_preprocess = FinePreprocess(config)
-        self.loftr_fine = LocalFeatureTransformer(config["fine"])
-        self.fine_matching = FineMatching()
-        self.pretrained = pretrained
-        if pretrained is not None:
-            if pretrained not in urls.keys():
-                raise ValueError(f"pretrained should be None or one of {urls.keys()}")
-
-            pretrained_dict = torch.hub.load_state_dict_from_url(urls[pretrained], map_location=torch.device("cpu"))
-            self.load_state_dict(pretrained_dict["state_dict"])
-        self.eval()
-
-    def forward(self, data: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
-        """
-        Args:
-            data: dictionary containing the input data in the following format:
-
-        Keyword Args:
-            image0: left image with shape :math:`(N, 1, H1, W1)`.
-            image1: right image with shape :math:`(N, 1, H2, W2)`.
-            mask0 (optional): left image mask. '0' indicates a padded position :math:`(N, H1, W1)`.
-            mask1 (optional): right image mask. '0' indicates a padded position :math:`(N, H2, W2)`.
-
-        Returns:
-            - ``keypoints0``, matching keypoints from image0 :math:`(NC, 2)`.
-            - ``keypoints1``, matching keypoints from image1 :math:`(NC, 2)`.
-            - ``confidence``, confidence score [0, 1] :math:`(NC)`.
-            - ``batch_indexes``, batch indexes for the keypoints and lafs :math:`(NC)`.
-        """
-        # 1. Local Feature CNN
-        _data: dict[str, torch.Tensor | int | torch.Size] = {
-            "bs": data["image0"].size(0),
-            "hw0_i": data["image0"].shape[2:],
-            "hw1_i": data["image1"].shape[2:],
-        }
-
-        if _data["hw0_i"] == _data["hw1_i"]:  # faster & better BN convergence
-            feats_c, feats_f = self.backbone(torch.cat([data["image0"], data["image1"]], dim=0))
-            (feat_c0, feat_c1), (feat_f0, feat_f1) = feats_c.split(_data["bs"]), feats_f.split(_data["bs"])
-        else:  # handle different input shapes
-            (feat_c0, feat_f0), (feat_c1, feat_f1) = self.backbone(data["image0"]), self.backbone(data["image1"])
-
-        _data.update(
-            {
-                "hw0_c": feat_c0.shape[2:],
-                "hw1_c": feat_c1.shape[2:],
-                "hw0_f": feat_f0.shape[2:],
-                "hw1_f": feat_f1.shape[2:],
-            }
-        )
-
-        # 2. coarse-level loftr module
-        # add featmap with positional encoding, then flatten it to sequence [N, HW, C]
-
-        # feat_c0 = rearrange(self.pos_encoding(feat_c0), 'n c h w -> n (h w) c')
-        # feat_c1 = rearrange(self.pos_encoding(feat_c1), 'n c h w -> n (h w) c')
-        feat_c0 = self.pos_encoding(feat_c0).permute(0, 2, 3, 1)
-        n, h, w, c = feat_c0.shape
-        feat_c0 = feat_c0.reshape(n, -1, c)
-
-        feat_c1 = self.pos_encoding(feat_c1).permute(0, 2, 3, 1)
-        n1, h1, w1, c1 = feat_c1.shape
-        feat_c1 = feat_c1.reshape(n1, -1, c1)
-
-        mask_c0 = mask_c1 = None  # mask is useful in training
-        if "mask0" in _data:
-            mask_c0 = resize(data["mask0"], _data["hw0_c"], interpolation="nearest").flatten(-2)
-        if "mask1" in _data:
-            mask_c1 = resize(data["mask1"], _data["hw1_c"], interpolation="nearest").flatten(-2)
-        feat_c0, feat_c1 = self.loftr_coarse(feat_c0, feat_c1, mask_c0, mask_c1)
-
-        # 3. match coarse-level
-        self.coarse_matching(feat_c0, feat_c1, _data, mask_c0=mask_c0, mask_c1=mask_c1)
-
-        # Make fine-level optional
-        if self.apply_fine:
-            # 4. fine-level refinement
-            feat_f0_unfold, feat_f1_unfold = self.fine_preprocess(feat_f0, feat_f1, feat_c0, feat_c1, _data)
-            if feat_f0_unfold.size(0) != 0:  # at least one coarse level predicted
-                feat_f0_unfold, feat_f1_unfold = self.loftr_fine(feat_f0_unfold, feat_f1_unfold)
-
-            # 5. match fine-level
-            self.fine_matching(feat_f0_unfold, feat_f1_unfold, _data)
-        if self.apply_fine:
-            rename_keys: dict[str, str] = {
-                "mkpts0_f": "keypoints0",
-                "mkpts1_f": "keypoints1",
-                "mconf": "confidence",
-                "b_ids": "batch_indexes",
-            }
-        else:
-            rename_keys: dict[str, str] = {
-                "mkpts0_c": "keypoints0",
-                "mkpts1_c": "keypoints1",
-                "mconf": "confidence",
-                "b_ids": "batch_indexes",
-            }
-        out: dict[str, torch.Tensor] = {}
-        for k, v in rename_keys.items():
-            _d = _data[k]
-            if isinstance(_d, torch.Tensor):
-                out[v] = _d
-            else:
-                raise TypeError(f"Expected Tensor for item `{k}`. Gotcha {type(_d)}")
-        return out
+class SkipFineMatching(torch.nn.Module):
+    def forward(self, feat_f0: torch.Tensor, feat_f1: torch.Tensor, data: dict) -> None:
+        data["mkpts0_f"] = data["mkpts0_c"]
+        data["mkpts1_f"] = data["mkpts1_c"]
 
 
 class MatchLOFTR(MatchPairs):
@@ -189,7 +45,7 @@ class MatchLOFTR(MatchPairs):
     ):
         """
         Args:
-            pretrained: LOFTR model used. `outdoor` or `indoor`.
+            pretrained: LOFTR model used. `outdoor`, `indoor` or `indoor_new`.
             device: Specifies device used for the inference.
             init_threshold: Keep matches only over this threshold.
             apply_fine: Use LoFTR fine refinement of keypoints locations. Has no effect on
@@ -201,14 +57,24 @@ class MatchLOFTR(MatchPairs):
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        self.model = LoFTR(pretrained=pretrained, apply_fine=apply_fine, thr=init_threshold)
+        self.pretrained = pretrained
+        self.init_threshold = init_threshold
+        self.apply_fine = apply_fine
         self.device = device
+        self._model_factory = self.build_model
+
+    def build_model(self) -> torch.nn.Module:
+        model = KF.LoFTR(pretrained=self.pretrained, config=loftr_config(self.pretrained, self.init_threshold))
+        if not self.apply_fine:
+            model.fine_preprocess = SkipFinePreprocess()
+            model.fine_matching = SkipFineMatching()
+        return model
 
     def cache_config(self) -> dict:
         return super().cache_config() | {
-            "model": self.model.config,
-            "pretrained": self.model.pretrained,
-            "apply_fine": self.model.apply_fine,
+            "model": loftr_config(self.pretrained, self.init_threshold),
+            "pretrained": self.pretrained,
+            "apply_fine": self.apply_fine,
         }
 
     def get_matches(self, batch):
