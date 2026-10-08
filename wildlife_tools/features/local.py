@@ -43,6 +43,7 @@ class LocalFeatureExtractor(FeatureCacheMixin, FeatureExtractor):
         detection_threshold: float = 0.0,
         force_num_keypoints: bool = True,
         device: str | None = None,
+        batch_size: int = 1,
         num_workers: int = 1,
         cache_path: str | None = None,
         config_tag: str | None = None,
@@ -53,6 +54,7 @@ class LocalFeatureExtractor(FeatureCacheMixin, FeatureExtractor):
             detection_threshold (float, optional): Threshold for keypoints detection.
             force_num_keypoints (bool, optional): Force to return exactly max_num_keypoints keypoints.
             device (str | None, optional): Select between cuda and cpu devices.
+            batch_size (int, optional): Number of images processed at once. Images in a batch must have the same size.
             num_workers (int, optional): Number of workers used for data loading.
             cache_path (str, optional): Path for cached results. No caching for None.
             config_tag (str, optional): Free-form tag stored in the cache config. Reusing cache_path with a
@@ -61,7 +63,7 @@ class LocalFeatureExtractor(FeatureCacheMixin, FeatureExtractor):
         """
 
         super().__init__(
-            batch_size=1,
+            batch_size=batch_size,
             num_workers=num_workers,
             device=device,
             cache_path=cache_path,
@@ -75,7 +77,7 @@ class LocalFeatureExtractor(FeatureCacheMixin, FeatureExtractor):
     def build_model(self) -> torch.nn.Module:
         raise NotImplementedError
 
-    def extract(self, image: torch.Tensor) -> dict[str, torch.Tensor]:
+    def extract(self, images: torch.Tensor) -> list[dict[str, torch.Tensor]]:
         raise NotImplementedError
 
     def model_config(self) -> dict:
@@ -95,16 +97,19 @@ class LocalFeatureExtractor(FeatureCacheMixin, FeatureExtractor):
         return [x for sub in feats for x in sub]
 
     def forward_batch(self, batch: tuple[torch.Tensor, torch.Tensor]) -> list[dict]:
-        # Batch has always size 1
-        image, _ = batch
-        image = image.to(self.device)
-        image_size = torch.tensor([image.shape[3], image.shape[2]])
+        images, _ = batch
+        images = images.to(self.device)
+        image_size = torch.tensor([images.shape[3], images.shape[2]])
         with torch.inference_mode():
-            features = {k: v.cpu() for k, v in self.extract(image).items()}
-        if self.force_num_keypoints:
-            features = pad_features(features, self.max_num_keypoints, image_size)
-        features["image_size"] = image_size
-        return [features]
+            batch_features = [{k: v.cpu() for k, v in f.items()} for f in self.extract(images)]
+
+        outputs = []
+        for features in batch_features:
+            if self.force_num_keypoints:
+                features = pad_features(features, self.max_num_keypoints, image_size)
+            features["image_size"] = image_size
+            outputs.append(features)
+        return outputs
 
 
 class DiskExtractor(LocalFeatureExtractor):
@@ -123,6 +128,7 @@ class DiskExtractor(LocalFeatureExtractor):
         window_size: int = 5,
         checkpoint: str = "depth",
         device: str | None = None,
+        batch_size: int = 1,
         num_workers: int = 1,
         cache_path: str | None = None,
         config_tag: str | None = None,
@@ -132,6 +138,7 @@ class DiskExtractor(LocalFeatureExtractor):
             detection_threshold=detection_threshold,
             force_num_keypoints=force_num_keypoints,
             device=device,
+            batch_size=batch_size,
             num_workers=num_workers,
             cache_path=cache_path,
             config_tag=config_tag,
@@ -145,19 +152,22 @@ class DiskExtractor(LocalFeatureExtractor):
     def model_config(self) -> dict:
         return super().model_config() | {"window_size": self.window_size, "checkpoint": self.checkpoint}
 
-    def extract(self, image: torch.Tensor) -> dict[str, torch.Tensor]:
-        features = self.model(
-            image,
+    def extract(self, images: torch.Tensor) -> list[dict[str, torch.Tensor]]:
+        batch_features = self.model(
+            images,
             n=self.max_num_keypoints,
             window_size=self.window_size,
             score_threshold=self.detection_threshold,
             pad_if_not_divisible=True,
-        )[0]
-        return {
-            "keypoints": features.keypoints,
-            "keypoint_scores": features.detection_scores,
-            "descriptors": features.descriptors,
-        }
+        )
+        return [
+            {
+                "keypoints": f.keypoints,
+                "keypoint_scores": f.detection_scores,
+                "descriptors": f.descriptors,
+            }
+            for f in batch_features
+        ]
 
 
 class AlikedExtractor(LocalFeatureExtractor):
@@ -176,6 +186,7 @@ class AlikedExtractor(LocalFeatureExtractor):
         model_name: str = "aliked-n16",
         nms_radius: int = 2,
         device: str | None = None,
+        batch_size: int = 1,
         num_workers: int = 1,
         cache_path: str | None = None,
         config_tag: str | None = None,
@@ -185,6 +196,7 @@ class AlikedExtractor(LocalFeatureExtractor):
             detection_threshold=detection_threshold,
             force_num_keypoints=force_num_keypoints,
             device=device,
+            batch_size=batch_size,
             num_workers=num_workers,
             cache_path=cache_path,
             config_tag=config_tag,
@@ -203,11 +215,13 @@ class AlikedExtractor(LocalFeatureExtractor):
     def model_config(self) -> dict:
         return super().model_config() | {"model_name": self.model_name, "nms_radius": self.nms_radius}
 
-    def extract(self, image: torch.Tensor) -> dict[str, torch.Tensor]:
-        features = self.model(image)[0]
-        return {
-            "keypoints": features.keypoints,
-            "keypoint_scores": features.keypoint_scores,
-            "descriptors": features.descriptors,
-        }
+    def extract(self, images: torch.Tensor) -> list[dict[str, torch.Tensor]]:
+        return [
+            {
+                "keypoints": f.keypoints,
+                "keypoint_scores": f.keypoint_scores,
+                "descriptors": f.descriptors,
+            }
+            for f in self.model(images)
+        ]
 
