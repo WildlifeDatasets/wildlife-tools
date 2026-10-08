@@ -40,10 +40,10 @@ class LocalFeatureExtractor(FeatureCacheMixin, FeatureExtractor):
         detection_threshold: float = 0.0,
         force_num_keypoints: bool = True,
         device: str | None = None,
-        batch_size: int = 1,
         num_workers: int = 1,
         cache_path: str | None = None,
         config_tag: str | None = None,
+        batch_size: int = 1,
     ):
         """
         Args:
@@ -51,12 +51,12 @@ class LocalFeatureExtractor(FeatureCacheMixin, FeatureExtractor):
             detection_threshold (float, optional): Threshold for keypoints detection.
             force_num_keypoints (bool, optional): Force to return exactly max_num_keypoints keypoints.
             device (str | None, optional): Select between cuda and cpu devices.
-            batch_size (int, optional): Number of images processed at once. Images in a batch must have the same size.
             num_workers (int, optional): Number of workers used for data loading.
             cache_path (str, optional): Path for cached results. No caching for None.
             config_tag (str, optional): Free-form tag stored in the cache config. Reusing cache_path with a
                 different tag raises an error. Changes of the image transform are not
                 detected automatically, so encode them in the tag (e.g. "resize224").
+            batch_size (int, optional): Number of images processed at once. Images in a batch must have the same size.
         """
 
         super().__init__(
@@ -122,13 +122,13 @@ class DiskExtractor(LocalFeatureExtractor):
         detection_threshold: float = 0.0,
         force_num_keypoints: bool = True,
         max_num_keypoints: int = 256,
-        window_size: int = 5,
-        checkpoint: str = "depth",
         device: str | None = None,
-        batch_size: int = 1,
         num_workers: int = 1,
         cache_path: str | None = None,
         config_tag: str | None = None,
+        batch_size: int = 1,
+        window_size: int = 5,
+        checkpoint: str = "depth",
     ):
         super().__init__(
             max_num_keypoints=max_num_keypoints,
@@ -180,13 +180,13 @@ class AlikedExtractor(LocalFeatureExtractor):
         detection_threshold: float = 0.0,
         force_num_keypoints: bool = True,
         max_num_keypoints: int = 256,
-        model_name: str = "aliked-n16",
-        nms_radius: int = 2,
         device: str | None = None,
-        batch_size: int = 1,
         num_workers: int = 1,
         cache_path: str | None = None,
         config_tag: str | None = None,
+        batch_size: int = 1,
+        model_name: str = "aliked-n16",
+        nms_radius: int = 2,
     ):
         super().__init__(
             max_num_keypoints=max_num_keypoints,
