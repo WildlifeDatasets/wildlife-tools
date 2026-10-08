@@ -50,6 +50,31 @@ class DeepFeatures(FeatureCacheMixin, FeatureExtractor):
 
     @classmethod
     def lazy_load(cls, model_factory: Callable[[], torch.nn.Module], **kwargs) -> "DeepFeatures":
+        """
+        Create the extractor without loading the model. The model is created by `model_factory`
+        on its first use, so it is not loaded at all when all features are already cached.
+
+        Example:
+            ```python
+            import functools
+            import timm
+
+            extractor = DeepFeatures.lazy_load(
+                functools.partial(timm.create_model, "hf-hub:BVRA/MegaDescriptor-L-384", num_classes=0, pretrained=True),
+                device="cuda",
+                cache_path="cache/MacaqueFaces/megadescriptor",
+            )
+            ```
+
+        Args:
+            model_factory (Callable[[], torch.nn.Module]): Function without arguments returning the model.
+                Use `functools.partial` instead of `lambda` if the extractor needs to be pickled.
+            **kwargs: Remaining arguments of the class constructor (e.g. `batch_size`, `device`,
+                `cache_path`, or `processor` for `ClipFeatures` and `DinoFeatures`).
+
+        Returns:
+            extractor (DeepFeatures): Extractor of the class on which the method is called.
+        """
         extractor = cls(None, **kwargs)  # type: ignore[arg-type]
         extractor._model_factory = model_factory
         return extractor
