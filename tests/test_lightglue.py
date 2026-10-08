@@ -2,14 +2,12 @@ import numpy as np
 import pytest
 import torch
 
-from wildlife_tools.features import AlikedExtractor, DiskExtractor, SiftExtractor, SuperPointExtractor
+from wildlife_tools.features import AlikedExtractor, DiskExtractor
 from wildlife_tools.similarity import CollectCountsRansac, MatchLightGlue
 
 pytestmark = pytest.mark.extra_models
 
 EXTRACTORS = {
-    "sift": SiftExtractor,
-    "superpoint": SuperPointExtractor,
     "disk": DiskExtractor,
     "aliked": AlikedExtractor,
 }

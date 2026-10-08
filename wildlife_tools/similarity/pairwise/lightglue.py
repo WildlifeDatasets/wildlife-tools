@@ -1,6 +1,5 @@
+import kornia.feature as KF
 import torch
-from gluefactory.models import get_model
-from omegaconf import OmegaConf
 
 from .base import MatchPairs
 
@@ -20,8 +19,8 @@ class MatchLightGlue(MatchPairs):
     ):
         """
         Args:
-            features (str): Features used for matching. Options: 'sift', 'superpoint', 'aliked',
-                'disk'. Must match extracted features from the dataset.
+            features (str): Features used for matching. Options: 'sift', 'aliked', 'disk'.
+                Must match extracted features from the dataset.
             init_threshold (float, optional): Keep matches only over this threshold. Matches with
                 lower values are not passed to the collector.
             device (str, optional): Device used for inference. Defaults to None.
@@ -31,52 +30,40 @@ class MatchLightGlue(MatchPairs):
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        # Setup config with deaults
-        config = OmegaConf.create(
-            {
-                "name": "matchers.lightglue_pretrained",
-                "features": features,
-                "depth_confidence": -1,
-                "width_confidence": -1,
-                "filter_threshold": init_threshold,
-            }
+        self.features = features
+        self.init_threshold = init_threshold
+        self.device = device
+        self._model_factory = self.build_model
+
+    def build_model(self) -> torch.nn.Module:
+        return KF.LightGlue(
+            self.features,
+            depth_confidence=-1,
+            width_confidence=-1,
+            filter_threshold=self.init_threshold,
         )
 
-        self.model = get_model(config.name)(config)
-        self.device = device
-
     def cache_config(self) -> dict:
-        return super().cache_config() | {"model": OmegaConf.to_container(self.model.conf, resolve=True)}
+        return super().cache_config() | {"model": {"features": self.features, "filter_threshold": self.init_threshold}}
 
     def get_matches(self, batch):
         idx0, data0, idx1, data1 = batch
+        keys = ["keypoints", "descriptors", "image_size", "scales", "oris"]
         data = {
-            "keypoints0": data0["keypoints"].to(self.device),
-            "descriptors0": data0["descriptors"].to(self.device),
-            "view0": {"image_size": data0["image_size"].to(self.device)},
-            "keypoints1": data1["keypoints"].to(self.device),
-            "descriptors1": data1["descriptors"].to(self.device),
-            "view1": {"image_size": data1["image_size"].to(self.device)},
+            "image0": {k: data0[k].to(self.device) for k in keys if k in data0},
+            "image1": {k: data1[k].to(self.device) for k in keys if k in data1},
         }
-
-        if ("scales" in data1) and ("oris" in data1):
-            data["scales1"] = data1["scales"].to(self.device)
-            data["oris1"] = data1["oris"].to(self.device)
-
-        if ("scales" in data0) and ("oris" in data0):
-            data["scales0"] = data0["scales"].to(self.device)
-            data["oris0"] = data0["oris"].to(self.device)
 
         with torch.inference_mode():
             output = self.model(data)
 
-        data = []
+        results = []
         for i, (i0, i1, scores, matches) in enumerate(zip(idx0, idx1, output["scores"], output["matches"])):
             matches = matches.cpu()
             kpts0 = data0["keypoints"][i][matches[:, 0]].cpu().numpy()
             kpts1 = data1["keypoints"][i][matches[:, 1]].cpu().numpy()
             scores = scores.cpu().numpy()
-            data.append(
+            results.append(
                 {
                     "idx0": i0.item(),
                     "idx1": i1.item(),
@@ -85,4 +72,4 @@ class MatchLightGlue(MatchPairs):
                     "scores": scores,
                 }
             )
-        return data
+        return results
