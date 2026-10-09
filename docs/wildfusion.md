@@ -12,13 +12,13 @@ This functionality is implemented using `WildFusion` class, which uses multiple 
 ## Examples
 ### Example - SimilarityPipeline
 
-We use LightGlue matching with SuperPoint descriptors and keypoints extracted from images resized to
+We use LightGlue matching with ALIKED descriptors and keypoints extracted from images resized to
  512x512. The scores are calibrated using isotonic regression. Multiple workers (`num_workers`) are used for loading images, which speeds up the feature extraction significantly.
 
 ```Python
 import timm
 import torchvision.transforms as T
-from wildlife_tools.features import SuperPointExtractor
+from wildlife_tools.features import AlikedExtractor
 from wildlife_tools.similarity import MatchLightGlue
 
 from wildlife_tools.similarity.wildfusion import SimilarityPipeline
@@ -26,14 +26,14 @@ from wildlife_tools.similarity.calibration import IsotonicCalibration
 
 
 pipeline = SimilarityPipeline(
-  matcher = MatchLightGlue(features='superpoint'),
-  extractor = SuperPointExtractor(num_workers=4),
+  matcher = MatchLightGlue(features='aliked'),
+  extractor = AlikedExtractor(num_workers=4),
   transform = T.Compose([
       T.Resize([512, 512]),
       T.ToTensor()
   ]),
   calibration = IsotonicCalibration()
-),
+)
 pipeline.fit_calibration(calibration_dataset1, calibration_dataset2)
 scores = pipeline(query, database)
 ```
@@ -56,16 +56,6 @@ from wildlife_tools.similarity.calibration import IsotonicCalibration
 matchers = [
 
     SimilarityPipeline(
-        matcher = MatchLightGlue(features='superpoint'),
-        extractor = SuperPointExtractor(num_workers=4),
-        transform = T.Compose([
-            T.Resize([512, 512]),
-            T.ToTensor()
-        ]),
-        calibration = IsotonicCalibration()
-    ),
-
-    SimilarityPipeline(
         matcher = MatchLightGlue(features='aliked'),
         extractor = AlikedExtractor(num_workers=4),
         transform = T.Compose([
@@ -86,8 +76,8 @@ matchers = [
     ),
 
     SimilarityPipeline(
-        matcher = MatchLightGlue(features='sift'),
-        extractor = SiftExtractor(num_workers=4),
+        matcher = MatchLightGlue(features='doghardnet'),
+        extractor = DoGHardNetExtractor(num_workers=4),
         transform = T.Compose([
             T.Resize([512, 512]),
             T.ToTensor()
@@ -124,7 +114,7 @@ matchers = [
     ),
 ]
 
-wildfusion = WildFusion(calibrated_matchers = matchers)
+wildfusion = WildFusion(calibrated_pipelines = matchers)
 wildfusion.fit_calibration(calibration_dataset1, calibration_dataset2)
 similarity = wildfusion(query, database)
 ```
@@ -154,7 +144,7 @@ priority_matcher =  SimilarityPipeline(
     ]),
 )
 
-wildfusion = WildFusion(calibrated_matchers = matchers)
+wildfusion = WildFusion(calibrated_pipelines = matchers, priority_pipeline = priority_matcher)
 wildfusion.fit_calibration(calibration_dataset1, calibration_dataset2)
 similarity = wildfusion(query, database, B=100)
 

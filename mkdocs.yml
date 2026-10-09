@@ -34,6 +34,7 @@ nav:
   - Introduction: index.md  
   - Inference: inference.md
   - Training ML models: training.md
+  - Caching: caching.md
   - Pre-trained models:
     - MegaDescriptor: megadescriptor.md
     - WildFusion: wildfusion.md
