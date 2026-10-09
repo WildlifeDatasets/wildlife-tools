@@ -40,6 +40,7 @@ The `wildlife-tools` library offers a simple interface for various tasks in the 
 
 - It covers use cases such as training, feature extraction, similarity calculation, image retrieval, and classification.
 - It provides traning codes and usage examples for our models [MegaDescriptor](./megadescriptor.md) and [WildFusion](./wildfusion.md).
+- It supports [caching](https://wildlifedatasets.github.io/wildlife-tools/caching/) of extracted features and matching scores, so that repeated runs compute only what is missing.
 - It complements the [WildlifeDatasets](https://github.com/WildlifeDatasets/wildlife-datasets) library, which acts as dataset repository.
 
 More information can be found in the [documentation](https://wildlifedatasets.github.io/wildlife-tools/).
@@ -48,6 +49,12 @@ More information can be found in the [documentation](https://wildlifedatasets.gi
 Here’s a summary of recent updates and changes.
 
 
+- **Local features on Kornia:** Local feature extraction and LightGlue matching use [Kornia](https://kornia.readthedocs.io/) instead of gluefactory, so `wildlife-tools` has no git dependencies.
+    - Feature extraction methods: ALIKED, DISK, XFeat, DeDoDe, DoG+HardNet, KeyNet+AffNet+HardNet features
+    - SuperPoint and SIFT were removed. DoG+HardNet is a close replacement for SIFT.
+    - Extractors support batches (`batch_size`) and multiple workers for data loading (`num_workers`).
+- **New Feature:** [Caching](https://wildlifedatasets.github.io/wildlife-tools/caching/) of extracted features and matches. Models are loaded only when needed and kept on the GPU only during computation.
+- **Python 3.11** or newer is required.
 - **Expanded Functionality:** Local feature matching is done using [gluefactory](https://github.com/cvg/glue-factory) 
     - Feature extraction methods: SuperPoint, ALIKED, DISK, SIFT features
     - Matching method: LightGlue, More efficient LoFTR
@@ -57,7 +64,7 @@ Here’s a summary of recent updates and changes.
 
 ## Installation
 
-Install `wildlife-tools` using `pip`
+`wildlife-tools` requires Python 3.11 or newer. Install it using `pip`
 
 ```script
 pip install git+https://github.com/WildlifeDatasets/wildlife-tools
@@ -118,14 +125,17 @@ dataset_query = ImageDataset(metadata.df.iloc[:100,:], metadata.root, transform=
 ```
 
 ### 2. Extract features
-Extract features using MegaDescriptor Tiny, downloaded from HuggingFace hub.
+Extract features using MegaDescriptor Tiny, downloaded from HuggingFace hub. The features are [cached](https://wildlifedatasets.github.io/wildlife-tools/caching/) in `cache/MacaqueFaces/megadescriptor`, so later runs load them instead of computing them again.
 
 ```Python
 import timm
 from wildlife_tools.features import DeepFeatures
 
 name = 'hf-hub:BVRA/MegaDescriptor-T-224'
-extractor = DeepFeatures(timm.create_model(name, num_classes=0, pretrained=True))
+extractor = DeepFeatures(
+    timm.create_model(name, num_classes=0, pretrained=True),
+    cache_path='cache/MacaqueFaces/megadescriptor'
+)
 query, database = extractor(dataset_query), extractor(dataset_database)
 ```
 
@@ -158,21 +168,23 @@ If you like our package, please cite us.
 
 ```
 @InProceedings{Cermak_2024_WACV,
-    author    = {\v{C}erm\'ak, Vojt\v{e}ch and Picek, Luk\'a\v{s} and Adam, Luk\'a\v{s} and Papafitsoros, Kostas},
-    title     = {{WildlifeDatasets: An Open-Source Toolkit for Animal Re-Identification}},
-    booktitle = {Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)},
-    month     = {January},
+    author    = {{\v{C}}erm{\'a}k, Vojt{\v{e}}ch and Picek, Lukas and Adam, Luk{\'a}{\v{s}} and Papafitsoros, Kostas},
+    title     = {{WildlifeDatasets: An open-source toolkit for animal re-identification}},
+    booktitle = {2024 IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)},
+    pages     = {5941--5951},
     year      = {2024},
-    pages     = {5953-5963}
+    organization={IEEE}
 }
 ```
 
 ```
-@article{cermak2024wildfusion,
-  title={WildFusion: Individual animal identification with calibrated similarity fusion},
+@inproceedings{cermak2024wildfusion,
+  title={Wildfusion: Individual animal identification with calibrated similarity fusion},
   author={Cermak, Vojt{\v{e}}ch and Picek, Lukas and Adam, Luk{\'a}{\v{s}} and Neumann, Luk{\'a}{\v{s}} and Matas, Ji{\v{r}}{\'\i}},
-  journal={arXiv preprint arXiv:2408.12934},
-  year={2024}
+  booktitle={European Conference on Computer Vision},
+  pages={18--36},
+  year={2024},
+  organization={Springer}
 }
 ```
 

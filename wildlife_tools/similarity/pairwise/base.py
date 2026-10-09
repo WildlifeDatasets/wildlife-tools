@@ -8,7 +8,7 @@ import torch
 from tqdm import tqdm
 
 from ...data import FeatureDataset, ImageDataset
-from ...data.cache import CacheMixin
+from ...data.cache import CacheMixin, ModelMixin
 from ..base import Matcher
 from .collectors import CollectCounts, Collector
 
@@ -75,7 +75,7 @@ class PairDataset(torch.utils.data.IterableDataset):
                 yield idx0, self.dataset0[idx0][0], idx1, self.dataset1[idx1][0]
 
 
-class MatchPairs(CacheMixin, Matcher[FeatureDataset | ImageDataset]):
+class MatchPairs(CacheMixin, ModelMixin, Matcher[FeatureDataset | ImageDataset]):
     """
     Base class for matching pairs from two datasets.
     Any child class needs to implement `get_matches` method that implements processing of pair batches.
@@ -103,7 +103,7 @@ class MatchPairs(CacheMixin, Matcher[FeatureDataset | ImageDataset]):
             config_tag (str, optional): Free-form tag stored in the cache config. Reusing cache_path with a
                 different tag raises an error. Changes of the image transform (for LoFTR) or of the
                 feature extractor (for LightGlue) are not detected automatically, so encode them in
-                the tag (e.g. "resize224_gray" or "sift256_resize224").
+                the tag (e.g. "resize224_gray" or "aliked256_resize224").
             cache_scores_only (bool, optional): If True, only scores are cached (keypoints are dropped),
                 which greatly reduces cache size. Collectors needing keypoints (e.g. CollectCountsRansac)
                 cannot be used then.
@@ -149,8 +149,9 @@ class MatchPairs(CacheMixin, Matcher[FeatureDataset | ImageDataset]):
         dataset_pairs = PairDataset(query, database, pairs=pairs)
 
         self.collector.init_store(grid_shape=dataset_pairs.grid_shape)
-        for matches in self._iter_matches(dataset_pairs):
-            self.collector.add(matches)
+        with self.model_on_device():
+            for matches in self._iter_matches(dataset_pairs):
+                self.collector.add(matches)
 
         results = self.collector.process_results()
         return results
@@ -173,15 +174,18 @@ class MatchPairs(CacheMixin, Matcher[FeatureDataset | ImageDataset]):
             with env.begin() as txn:
                 missing = [(i0, i1) for i0, i1 in pair_list if txn.get(self.get_pair_key(keys0[i0], keys1[i1])) is None]
 
-            for matches in self._iter_matches(PairDataset(query, database, pairs=missing)):
-                with env.begin(write=True) as txn:
-                    for m in matches:
-                        i0, i1 = m.pop("idx0"), m.pop("idx1")
-                        if self.cache_scores_only:
-                            m = {"scores": m["scores"]}
-                        txn.put(
-                            self.get_pair_key(keys0[i0], keys1[i1]), pickle.dumps(m, protocol=pickle.HIGHEST_PROTOCOL)
-                        )
+            if missing:
+                with self.model_on_device():
+                    for matches in self._iter_matches(PairDataset(query, database, pairs=missing)):
+                        with env.begin(write=True) as txn:
+                            for m in matches:
+                                i0, i1 = m.pop("idx0"), m.pop("idx1")
+                                if self.cache_scores_only:
+                                    m = {"scores": m["scores"]}
+                                txn.put(
+                                    self.get_pair_key(keys0[i0], keys1[i1]),
+                                    pickle.dumps(m, protocol=pickle.HIGHEST_PROTOCOL),
+                                )
 
             self.collector.init_store(grid_shape=(len(query), len(database)))
             with env.begin() as txn:

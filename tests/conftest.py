@@ -1,16 +1,18 @@
 import multiprocessing as mp
 import os
 
+import kornia.feature as KF
 import numpy as np
 import pandas as pd
 import pytest
 import timm
+import torch
 import torchvision.transforms as T
 from transformers import AutoImageProcessor, AutoModel, CLIPModel, CLIPProcessor
 from wildlife_datasets import datasets
 
 from wildlife_tools.data import ImageDataset
-from wildlife_tools.features import ClipFeatures, DeepFeatures, DinoFeatures, SiftExtractor
+from wildlife_tools.features import AlikedExtractor, ClipFeatures, DeepFeatures, DinoFeatures
 from wildlife_tools.similarity import CosineSimilarity
 
 mp.set_start_method("spawn", force=True)
@@ -21,7 +23,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         "--run-extra-models",
         action="store_true",
         default=False,
-        help="Run tests that download additional models (SuperPoint, DISK, ALIKED, LightGlue).",
+        help="Run tests that download additional models (DISK, ALIKED, LightGlue).",
     )
 
 
@@ -108,21 +110,35 @@ def extractor_dino():
     return DinoFeatures(model=model, processor=processor)
 
 
-@pytest.fixture(scope="session")
-def extractor_sift():
-    return SiftExtractor()
+class RandomAlikedExtractor(AlikedExtractor):
+    def build_model(self) -> torch.nn.Module:
+        torch.manual_seed(0)
+        return KF.ALIKED(
+            self.model_name,
+            max_num_keypoints=self.max_num_keypoints,
+            detection_threshold=self.detection_threshold,
+            nms_radius=self.nms_radius,
+        )
 
 
 @pytest.fixture(scope="session")
-def extractor_sift_cached(cache_dir):
-    cache_path = cache_dir / "features_sift.pkl"
-    return SiftExtractor(cache_path=cache_path)
+def random_aliked_cls():
+    return RandomAlikedExtractor
 
 
 @pytest.fixture(scope="session")
-def features_sift(dataset_lightglue):
-    extractor = SiftExtractor()
-    return extractor(dataset_lightglue)
+def extractor_aliked():
+    return RandomAlikedExtractor(device="cpu")
+
+
+@pytest.fixture(scope="session")
+def extractor_aliked_cached(cache_dir):
+    return RandomAlikedExtractor(device="cpu", cache_path=cache_dir / "features_aliked_random")
+
+
+@pytest.fixture(scope="session")
+def features_aliked(dataset_lightglue, extractor_aliked):
+    return extractor_aliked(dataset_lightglue)
 
 
 @pytest.fixture(scope="session")

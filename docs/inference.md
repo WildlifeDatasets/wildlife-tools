@@ -96,12 +96,34 @@ extractor = DeepFeatures(backbone, device='cuda')
 features = extractor(dataset)
 ```
 
-### Local features
-
-There are multiple local feature extractors including Aliked, DISK, SuperPoint and SIFT.
+If the model should be loaded only when it is needed (for example when the features are [cached](./caching.md)), create the extractor by `lazy_load` with a function creating the model.
 
 ```Python
-from wildlife_tools.features import AlikedExtractor, DiskExtractor, SiftExtractor, SuperPointExtractor
+import functools
+
+extractor = DeepFeatures.lazy_load(
+    functools.partial(AutoModel.from_pretrained, 'conservationxlabs/miewid-msv3', trust_remote_code=True),
+    device='cuda',
+)
+```
+
+### Local features
+
+Local feature extractors detect keypoints and compute their descriptors. They are based on [Kornia](https://kornia.readthedocs.io/) and their features are matched by `MatchLightGlue` with the corresponding `features` argument.
+
+| Extractor | `MatchLightGlue(features=...)` |
+|---|---|
+| `AlikedExtractor` | `'aliked'` |
+| `DiskExtractor` | `'disk'` |
+| `XFeatExtractor` | `'xfeat'` |
+| `DeDoDeExtractor(descriptor='B')` | `'dedodeb'` |
+| `DeDoDeExtractor(descriptor='G')` | `'dedodeg'` |
+| `DoGHardNetExtractor()` | `'doghardnet'` |
+| `DoGHardNetExtractor(affnet=True)` | `'dog_affnet_hardnet'` |
+| `KeyNetAffNetHardNetExtractor` | `'keynet_affnet_hardnet'` |
+
+```Python
+from wildlife_tools.features import AlikedExtractor, DiskExtractor, DoGHardNetExtractor, XFeatExtractor
 
 device = 'cuda'
 num_workers = 4
@@ -112,14 +134,14 @@ features = extractor(dataset)
 extractor = DiskExtractor(device=device, num_workers=num_workers)
 features = extractor(dataset)
 
-extractor = SuperPointExtractor(device=device, num_workers=num_workers)
+extractor = DoGHardNetExtractor(device=device, num_workers=num_workers)
 features = extractor(dataset)
 
-extractor = SiftExtractor(device=device, num_workers=num_workers)
+extractor = XFeatExtractor(device=device, num_workers=num_workers)
 features = extractor(dataset)
 ```
 
-Image loading is often the bottleneck of local feature extraction. Using multiple workers (`num_workers`) for data loading speeds up the extraction significantly.
+Image loading is often the bottleneck of local feature extraction. Using multiple workers (`num_workers`) for data loading speeds up the extraction significantly. Images can also be processed in batches (`batch_size`), but only if all images have the same size, for example after resizing.
 
 For possible keywords, look at their [definitions](https://github.com/WildlifeDatasets/wildlife-tools/blob/main/wildlife_tools/features/local.py).
 
@@ -144,21 +166,21 @@ sim = similarity(query, database)
 
 The `similarity.pairwise` module provides tools and methods for calculating pairwise matching similarity scores. At its core, the `MatchPairs` base class offers pairwise matching with support for batch processing, making it essential for neural network-based matching. Specific implementations of of `MatchPairs` are:
 
-- `MatchLightGlue`: It uses the LightGlue model, a lightweight neural matching that uses extracted SIFT, DISK, ALIKED or SuperPoint keypoints and descriptors.
-- `MatchLOFTR`: It uses the LOFTR (Local Feature TRansformer) model, which performs descriptor-free matching using directly pair of images.
+- `MatchLightGlue`: It uses the LightGlue model, a lightweight neural matching that uses keypoints and descriptors from the [local feature extractors](#local-features).
+- `MatchLOFTR`: It uses the LOFTR (Local Feature TRansformer) model, which performs descriptor-free matching using directly pair of images. Pretrained models `'outdoor'`, `'indoor'` and `'indoor_new'` are available.
 
 Outputs from the matchers, such as confidence scores for local matches and keypoints, are processed using collectors from `similarity.pairwise.collectors`. In particular, the `CollectCounts` collector calculates  matching similarity scores by counting significant matches based on given confidence thresholds.
 
-The following example matches all pairs by the SuperGlue matcher with SuperPoint features and calculates similarity scores based on the count of significant matches at confidence thresholds of 0.25, 0.5, and 0.75.
+The following example matches all pairs by the LightGlue matcher with ALIKED features and calculates similarity scores based on the count of significant matches at confidence thresholds of 0.25, 0.5, and 0.75.
 
 ```python
-from wildlife_tools.features import SuperPointExtractor
+from wildlife_tools.features import AlikedExtractor
 from wildlife_tools.similarity import MatchLightGlue, CollectCounts
 
 transform = T.Compose([T.Resize([224, 224]), T.ToTensor()])
 dataset_query.transform, dataset_database.transform = transform, transform
-extractor = SuperPointExtractor()
-matcher = MatchLightGlue(features='superpoint', collector=CollectCounts(thresholds=[0.25, 0.5, 0.75]))
+extractor = AlikedExtractor()
+matcher = MatchLightGlue(features='aliked', collector=CollectCounts(thresholds=[0.25, 0.5, 0.75]))
 output = matcher(extractor(dataset_query), extractor(dataset_database))
 ```
 
