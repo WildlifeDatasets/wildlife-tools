@@ -1,8 +1,10 @@
 import numpy as np
 import pytest
+import torch
 
 from wildlife_tools.data import FeatureDataset
 from wildlife_tools.features import DataToMemory
+from wildlife_tools.features.local_utils import pad_features
 
 
 def test_clip_features(dataset, extractor_clip):
@@ -83,6 +85,32 @@ def test_features_cache_config_mismatch(dataset_deep, cache_dir, random_aliked_c
         random_aliked_cls(device="cpu", max_num_keypoints=100, cache_path=cache_path)(dataset_deep)
     with pytest.raises(ValueError):
         random_aliked_cls(device="cpu", config_tag="resize224", cache_path=cache_path)(dataset_deep)
+
+
+@pytest.mark.parametrize("n", [0, 3])
+def test_pad_features(n):
+    image_size = torch.tensor([50, 30])
+    features = {
+        "keypoints": torch.rand(n, 2) * 10,
+        "keypoint_scores": torch.rand(n),
+        "descriptors": torch.rand(n, 8),
+        "lafs": torch.rand(n, 2, 3),
+    }
+    padded = pad_features(features, 10, image_size)
+
+    assert all(len(v) == 10 for v in padded.values())
+    assert padded["lafs"].shape == (10, 2, 3)
+    for key in features:
+        assert torch.equal(padded[key][:n], features[key])
+    assert torch.all(padded["descriptors"][n:] == 0)
+    assert torch.all(padded["keypoint_scores"][n:] == 0)
+    assert torch.all(padded["keypoints"][n:] >= 0)
+    assert torch.all(padded["keypoints"][n:] <= image_size - 1)
+
+
+def test_pad_features_enough_keypoints():
+    features = {"keypoints": torch.rand(10, 2), "descriptors": torch.rand(10, 8)}
+    assert pad_features(features, 5, torch.tensor([50, 30])) is features
 
 
 # Compatibility with wildlife-datasets
