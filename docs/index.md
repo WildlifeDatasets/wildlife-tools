@@ -10,7 +10,7 @@ The `wildlife-tools` library offers a simple interface for various tasks in the 
 
 ## Installation
 
-Install `wildlife-tools` using `pip`
+`wildlife-tools` requires Python 3.11 or newer. Install it using `pip`
 
 ```script
 pip install git+https://github.com/WildlifeDatasets/wildlife-tools

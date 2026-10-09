@@ -49,6 +49,12 @@ More information can be found in the [documentation](https://wildlifedatasets.gi
 Here’s a summary of recent updates and changes.
 
 
+- **Local features on Kornia:** Local feature extraction and LightGlue matching use [Kornia](https://kornia.readthedocs.io/) instead of gluefactory, so `wildlife-tools` has no git dependencies.
+    - Feature extraction methods: ALIKED, DISK, XFeat, DeDoDe, DoG+HardNet, KeyNet+AffNet+HardNet features
+    - SuperPoint and SIFT were removed. DoG+HardNet is a close replacement for SIFT.
+    - Extractors support batches (`batch_size`) and multiple workers for data loading (`num_workers`).
+- **New Feature:** [Caching](https://wildlifedatasets.github.io/wildlife-tools/caching/) of extracted features and matches. Models are loaded only when needed and kept on the GPU only during computation.
+- **Python 3.11** or newer is required.
 - **Expanded Functionality:** Local feature matching is done using [gluefactory](https://github.com/cvg/glue-factory) 
     - Feature extraction methods: SuperPoint, ALIKED, DISK, SIFT features
     - Matching method: LightGlue, More efficient LoFTR
@@ -58,7 +64,7 @@ Here’s a summary of recent updates and changes.
 
 ## Installation
 
-Install `wildlife-tools` using `pip`
+`wildlife-tools` requires Python 3.11 or newer. Install it using `pip`
 
 ```script
 pip install git+https://github.com/WildlifeDatasets/wildlife-tools

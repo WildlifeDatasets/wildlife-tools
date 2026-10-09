@@ -103,7 +103,7 @@ class MatchPairs(CacheMixin, ModelMixin, Matcher[FeatureDataset | ImageDataset])
             config_tag (str, optional): Free-form tag stored in the cache config. Reusing cache_path with a
                 different tag raises an error. Changes of the image transform (for LoFTR) or of the
                 feature extractor (for LightGlue) are not detected automatically, so encode them in
-                the tag (e.g. "resize224_gray" or "sift256_resize224").
+                the tag (e.g. "resize224_gray" or "aliked256_resize224").
             cache_scores_only (bool, optional): If True, only scores are cached (keypoints are dropped),
                 which greatly reduces cache size. Collectors needing keypoints (e.g. CollectCountsRansac)
                 cannot be used then.
