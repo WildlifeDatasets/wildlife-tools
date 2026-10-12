@@ -96,7 +96,7 @@ extractor = DeepFeatures(backbone, device='cuda')
 features = extractor(dataset)
 ```
 
-If the model should be loaded only when it is needed (for example when the features are [cached](./caching.md)), create the extractor by `lazy_load` with a function creating the model.
+Use `lazy_load` to avoid initializing the model until it is actually required. This is especially useful when features may be retrieved from the [cache](./caching.md), in which case the model does not need to be loaded at all.
 
 ```Python
 import functools
@@ -143,7 +143,6 @@ features = extractor(dataset)
 
 Image loading is often the bottleneck of local feature extraction. Using multiple workers (`num_workers`) for data loading speeds up the extraction significantly. Images can also be processed in batches (`batch_size`), but only if all images have the same size, for example after resizing.
 
-For possible keywords, look at their [definitions](https://github.com/WildlifeDatasets/wildlife-tools/blob/main/wildlife_tools/features/local.py).
 
 
 
@@ -167,7 +166,7 @@ sim = similarity(query, database)
 The `similarity.pairwise` module provides tools and methods for calculating pairwise matching similarity scores. At its core, the `MatchPairs` base class offers pairwise matching with support for batch processing, making it essential for neural network-based matching. Specific implementations of of `MatchPairs` are:
 
 - `MatchLightGlue`: It uses the LightGlue model, a lightweight neural matching that uses keypoints and descriptors from the [local feature extractors](#local-features).
-- `MatchLOFTR`: It uses the LOFTR (Local Feature TRansformer) model, which performs descriptor-free matching using directly pair of images. Pretrained models `'outdoor'`, `'indoor'` and `'indoor_new'` are available.
+- `MatchLOFTR`: It uses the LOFTR (Local Feature TRansformer) model, which performs descriptor-free matching using directly pair of images. Pretrained models `'outdoor'` (default, trained on MegaDepth), `'indoor'` and `'indoor_new'` (trained on ScanNet) are available. `'indoor_new'` is the same model as `'indoor'`, retrained after a fix of its positional encoding.
 
 Outputs from the matchers, such as confidence scores for local matches and keypoints, are processed using collectors from `similarity.pairwise.collectors`. In particular, the `CollectCounts` collector calculates  matching similarity scores by counting significant matches based on given confidence thresholds.
 
