@@ -179,7 +179,7 @@ If you like our package, please cite us.
 
 ```
 @inproceedings{cermak2024wildfusion,
-  title={Wildfusion: Individual animal identification with calibrated similarity fusion},
+  title={{WildFusion: Individual animal identification with calibrated similarity fusion}},
   author={Cermak, Vojt{\v{e}}ch and Picek, Lukas and Adam, Luk{\'a}{\v{s}} and Neumann, Luk{\'a}{\v{s}} and Matas, Ji{\v{r}}{\'\i}},
   booktitle={European Conference on Computer Vision},
   pages={18--36},
