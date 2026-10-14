@@ -9,3 +9,8 @@
     options:
       show_root_heading: true
       heading_level: 2
+
+::: train.ranking
+    options:
+      show_root_heading: true
+      heading_level: 2
