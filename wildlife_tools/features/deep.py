@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 import numpy as np
 import torch
 from transformers import CLIPModel, CLIPProcessor
@@ -9,19 +11,6 @@ from .base import FeatureExtractor
 def collate_fn(batch):
     images, labels = zip(*batch)  # tuple of PIL images
     return list(images), labels
-
-
-def model_variant(model: torch.nn.Module) -> str | None:
-    config = getattr(model, "config", None)
-    name = getattr(config, "name_or_path", None)
-    if isinstance(name, str) and name:
-        return name
-
-    pretrained_cfg = getattr(model, "pretrained_cfg", None)
-    if isinstance(pretrained_cfg, dict):
-        return pretrained_cfg.get("hf_hub_id") or pretrained_cfg.get("architecture")
-
-    return None
 
 
 class DeepFeatures(FeatureCacheMixin, FeatureExtractor):
@@ -46,8 +35,8 @@ class DeepFeatures(FeatureCacheMixin, FeatureExtractor):
             device (str, optional): Select between cuda and cpu devices.
             cache_path (str, optional): Path for cached results. No caching for None.
             config_tag (str, optional): Free-form tag stored in the cache config. Reusing cache_path with a
-                different tag raises an error. Changes of the image transform are not
-                detected automatically, so encode them in the tag (e.g. "resize224").
+                different tag raises an error. Changes of the model or of the image transform are not
+                detected automatically, so encode them in the tag (e.g. "megadescriptor-L-384_resize384").
         """
 
         super().__init__(
@@ -59,11 +48,36 @@ class DeepFeatures(FeatureCacheMixin, FeatureExtractor):
         )
         self.model = model
 
-    def cache_config(self) -> dict:
-        return super().cache_config() | {
-            "model": type(self.model).__name__,
-            "variant": model_variant(self.model),
-        }
+    @classmethod
+    def lazy_load(cls, model_factory: Callable[[], torch.nn.Module], **kwargs) -> "DeepFeatures":
+        """
+        Create the extractor without loading the model. The model is created by `model_factory`
+        on its first use, so it is not loaded at all when all features are already cached.
+
+        Example:
+            ```python
+            import functools
+            import timm
+
+            extractor = DeepFeatures.lazy_load(
+                functools.partial(timm.create_model, "hf-hub:BVRA/MegaDescriptor-L-384", num_classes=0, pretrained=True),
+                device="cuda",
+                cache_path="cache/MacaqueFaces/megadescriptor",
+            )
+            ```
+
+        Args:
+            model_factory (Callable[[], torch.nn.Module]): Function without arguments returning the model.
+                Use `functools.partial` instead of `lambda` if the extractor needs to be pickled.
+            **kwargs: Remaining arguments of the class constructor (e.g. `batch_size`, `device`,
+                `cache_path`, or `processor` for `ClipFeatures` and `DinoFeatures`).
+
+        Returns:
+            extractor (DeepFeatures): Extractor of the class on which the method is called.
+        """
+        extractor = cls(None, **kwargs)  # type: ignore[arg-type]
+        extractor._model_factory = model_factory
+        return extractor
 
     def cat_features_dictionary(self, feats: list[np.ndarray]) -> np.ndarray:
         return np.stack(feats, axis=0)
@@ -102,23 +116,22 @@ class ClipFeatures(DeepFeatures):
             device (str, optional): Select between cuda and cpu devices.
             cache_path (str, optional): Path for cached results. No caching for None.
             config_tag (str, optional): Free-form tag stored in the cache config. Reusing cache_path with a
-                different tag raises an error. Changes of the image transform are not
-                detected automatically, so encode them in the tag (e.g. "resize224").
+                different tag raises an error. Changes of the model or of the image transform are not
+                detected automatically, so encode them in the tag (e.g. "clip-vit-large-patch14").
         """
-        if model is None:
-            model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14").vision_model
-
         if processor is None:
             processor = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14")
 
         super().__init__(
-            model,
+            model,  # type: ignore[arg-type]
             batch_size=batch_size,
             num_workers=num_workers,
             device=device,
             cache_path=cache_path,
             config_tag=config_tag,
         )
+        if model is None:
+            self._model_factory = lambda: CLIPModel.from_pretrained("openai/clip-vit-large-patch14").vision_model
         self.processor = processor
         self.transform = lambda x: processor(images=x, return_tensors="pt")["pixel_values"]
 

@@ -39,8 +39,8 @@ def test_deep_feature_dataset(dataset, features_deep):
     assert isinstance(dataset.num_classes, int)
 
 
-def test_sift_feature_dataset_save_load(dataset, features_sift):
-    a = FeatureDataset(features_sift, metadata=dataset.metadata)
+def test_local_feature_dataset_save_load(dataset, features_aliked):
+    a = FeatureDataset(features_aliked, metadata=dataset.metadata)
     a.save("test.pkl")
     b = FeatureDataset.from_file("test.pkl")
 

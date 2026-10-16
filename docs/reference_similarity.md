@@ -44,7 +44,9 @@
       heading_level: 2
       filters:
         - "!^_[^_]"
-        - "!LoFTR"
+        - "!loftr_config"
+        - "!SkipFinePreprocess"
+        - "!SkipFineMatching"
 
 ::: similarity.pairwise.collectors
     options:

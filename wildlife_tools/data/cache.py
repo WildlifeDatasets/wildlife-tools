@@ -1,6 +1,7 @@
 import pickle
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
+from collections.abc import Callable, Generator, Sequence
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Generic, TypeVar
 
@@ -112,7 +113,50 @@ class CacheMixin:
         return env
 
 
-class FeatureCacheMixin(CacheMixin, ABC, Generic[TDict, TFeature, TModel]):
+class ModelMixin:
+    """
+    Base class for objects using a PyTorch model, which may be created lazily.
+
+    The model is either set directly or created by `_model_factory` on its first use, so that
+    it is not loaded at all when all results are already cached. The model is kept on CPU and
+    moved to `device` only during computation (see `model_on_device`).
+    """
+
+    device: str
+    _model: torch.nn.Module | None = None
+    _model_factory: Callable[[], torch.nn.Module] | None = None
+
+    @property
+    def model(self) -> torch.nn.Module:
+        """
+        Model used for the computation. Created by `_model_factory` on the first access if not set.
+
+        Raises:
+            RuntimeError: If neither the model nor the model factory is set.
+        """
+        if self._model is None:
+            if self._model_factory is None:
+                raise RuntimeError(f"{type(self).__name__} has no model. Pass a model or use lazy_load.")
+            self._model = self._model_factory()
+        return self._model
+
+    @model.setter
+    def model(self, model: torch.nn.Module | None) -> None:
+        self._model = model
+
+    @contextmanager
+    def model_on_device(self) -> Generator[None, None, None]:
+        """
+        Context manager moving the model to `device` in eval mode, and back to CPU on exit (also on errors).
+        """
+        self.model = self.model.to(self.device).eval()
+        try:
+            yield
+        finally:
+            self.model = self.model.to("cpu")
+
+
+class FeatureCacheMixin(CacheMixin, ModelMixin, ABC, Generic[TDict, TFeature, TModel]):
     def __init__(
         self,
         batch_size: int = 128,
@@ -166,9 +210,7 @@ class FeatureCacheMixin(CacheMixin, ABC, Generic[TDict, TFeature, TModel]):
         """
 
         check_dataset_output(dataset, check_label=False)
-        self.model = self.model.to(self.device).eval()
         features = self.extract_with_cache(dataset)
-        self.model = self.model.to("cpu")
 
         return FeatureDataset(
             metadata=dataset.metadata,
@@ -182,8 +224,9 @@ class FeatureCacheMixin(CacheMixin, ABC, Generic[TDict, TFeature, TModel]):
         if self.cache_path is None:
             loader = self.make_loader(dataset)
             feats = []
-            for batch in tqdm(loader, mininterval=1, ncols=100):
-                feats.append(self.process_batch(batch))
+            with self.model_on_device():
+                for batch in tqdm(loader, mininterval=1, ncols=100):
+                    feats.append(self.process_batch(batch))
             return self.cat_features_model(feats)
 
         keys = [self.get_key(dataset, i) for i in range(len(dataset))]
@@ -204,15 +247,16 @@ class FeatureCacheMixin(CacheMixin, ABC, Generic[TDict, TFeature, TModel]):
 
                 # Load the missing entries
                 ptr = 0
-                for batch in tqdm(loader, mininterval=1, ncols=100):
-                    feats = self.forward_batch(batch)
+                with self.model_on_device():
+                    for batch in tqdm(loader, mininterval=1, ncols=100):
+                        feats = self.forward_batch(batch)
 
-                    # Write the batch
-                    with env.begin(write=True) as txn:
-                        for j in range(len(feats)):
-                            key = keys[missing[ptr]].encode()
-                            self._save_entry(txn, key, feats[j])
-                            ptr += 1
+                        # Write the batch
+                        with env.begin(write=True) as txn:
+                            for j in range(len(feats)):
+                                key = keys[missing[ptr]].encode()
+                                self._save_entry(txn, key, feats[j])
+                                ptr += 1
 
             # Read all features back in order
             outputs = []

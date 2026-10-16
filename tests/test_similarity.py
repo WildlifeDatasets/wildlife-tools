@@ -3,6 +3,18 @@ import pytest
 
 from wildlife_tools.data import ImageDataset
 from wildlife_tools.similarity import CollectCountsRansac, CosineSimilarity, MatchLOFTR
+from wildlife_tools.similarity.pairwise.collectors import Collector
+
+
+class CollectMatches(Collector):
+    def init_store(self, grid_shape: tuple | None = None) -> None:
+        self.matches = []
+
+    def add(self, results_list: list[dict]) -> None:
+        self.matches.extend(results_list)
+
+    def process_results(self) -> list[dict]:
+        return sorted(self.matches, key=lambda m: (m["idx0"], m["idx1"]))
 
 
 def test_cosine_similarity(features_deep):
@@ -57,6 +69,22 @@ def test_match_loftr_cache_config_mismatch(dataset_loftr, cache_dir):
     similarity = MatchLOFTR(batch_size=1, device="cpu", init_threshold=0.3, cache_path=cache_path)
     with pytest.raises(ValueError):
         similarity(dataset_loftr, dataset_loftr, pairs=pairs)
+
+
+def test_match_loftr_apply_fine(dataset_loftr):
+    coarse = MatchLOFTR(batch_size=2, device="cpu", apply_fine=False, collector=CollectMatches())(
+        dataset_loftr, dataset_loftr
+    )
+    fine = MatchLOFTR(batch_size=2, device="cpu", apply_fine=True, collector=CollectMatches())(
+        dataset_loftr, dataset_loftr
+    )
+
+    assert len(coarse) == len(fine)
+    for c, f in zip(coarse, fine):
+        np.testing.assert_allclose(c["scores"], f["scores"], atol=1e-5)
+        np.testing.assert_allclose(c["kpts0"], f["kpts0"])
+    keypoints_differ = [not np.allclose(c["kpts1"], f["kpts1"]) for c, f in zip(coarse, fine) if len(c["kpts1"])]
+    assert any(keypoints_differ)
 
 
 # Compatibility with wildlife-datasets

@@ -1,71 +1,77 @@
-import types
-
-import lmdb
+import kornia.feature as KF
 import torch
-from gluefactory.models import get_model
-from omegaconf import OmegaConf
 
 from ..data import FeatureCacheMixin
 from .base import FeatureExtractor
-from .gluefactory_fix import extract_single_image_fix  # https://github.com/cvg/glue-factory/pull/50
+from .local_utils import laf_features, pad_features, to_grayscale
 
 
-class GlueFactoryExtractor(FeatureCacheMixin, FeatureExtractor):
+class LocalFeatureExtractor(FeatureCacheMixin, FeatureExtractor):
     """
-    Base class for Gluefactory extractors.
+    Base class for local feature extractors.
 
     Common configuration of extractors:
 
         1. max_num_keypoints: Maximum number of keypoints to return.
         1. detection_threshold: Threshold for keypoints detection (use 0.0 if force_num_keypoints = True).
-        1. force_num_keypoints: Force to return exactly max_num_keypoints keypoints.
+        1. force_num_keypoints: Force to return exactly max_num_keypoints keypoints. Missing keypoints
+            are padded with random locations and zero descriptors.
 
+    Each extracted feature is a dictionary with keypoints, keypoint_scores, descriptors and image_size.
     """
 
     def __init__(
         self,
-        config: dict,
+        max_num_keypoints: int = 256,
+        detection_threshold: float = 0.0,
+        force_num_keypoints: bool = True,
         device: str | None = None,
         num_workers: int = 1,
         cache_path: str | None = None,
         config_tag: str | None = None,
+        batch_size: int = 1,
     ):
         """
         Args:
-            config (dict): Configuration dictionary for the model.
+            max_num_keypoints (int, optional): Maximum number of keypoints to return.
+            detection_threshold (float, optional): Threshold for keypoints detection.
+            force_num_keypoints (bool, optional): Force to return exactly max_num_keypoints keypoints.
             device (str | None, optional): Select between cuda and cpu devices.
             num_workers (int, optional): Number of workers used for data loading.
             cache_path (str, optional): Path for cached results. No caching for None.
             config_tag (str, optional): Free-form tag stored in the cache config. Reusing cache_path with a
                 different tag raises an error. Changes of the image transform are not
                 detected automatically, so encode them in the tag (e.g. "resize224").
+            batch_size (int, optional): Number of images processed at once. Images in a batch must have the same size.
         """
 
         super().__init__(
-            batch_size=1,
+            batch_size=batch_size,
             num_workers=num_workers,
             device=device,
             cache_path=cache_path,
             config_tag=config_tag,
         )
+        self.max_num_keypoints = max_num_keypoints
+        self.detection_threshold = detection_threshold
+        self.force_num_keypoints = force_num_keypoints
+        self._model_factory = self.build_model
 
-        config = OmegaConf.create(config)
-        self.model = get_model(config.name)(config)
+    def build_model(self) -> torch.nn.Module:
+        raise NotImplementedError
+
+    def extract(self, images: torch.Tensor) -> list[dict[str, torch.Tensor]]:
+        raise NotImplementedError
+
+    def model_config(self) -> dict:
+        return {
+            "max_num_keypoints": self.max_num_keypoints,
+            "detection_threshold": self.detection_threshold,
+            "force_num_keypoints": self.force_num_keypoints,
+        }
 
     def cache_config(self) -> dict:
-        return super().cache_config() | {"model": OmegaConf.to_container(self.model.conf, resolve=True)}
-
-    def _save_entry(self, txn: lmdb.Transaction, key: bytes, entry) -> None:
-        entry = self._extract_entry(entry)
-        super()._save_entry(txn, key, entry)
-
-    def _extract_entry(self, entry):
-        return {
-            "keypoints": entry["keypoints"].clone().cpu(),
-            "keypoint_scores": entry["keypoint_scores"].clone().cpu(),
-            "descriptors": entry["descriptors"].clone().cpu(),
-            "image_size": entry["image_size"].clone().cpu(),
-        }
+        return super().cache_config() | {"model": self.model_config()}
 
     def cat_features_dictionary(self, feats: list[dict]) -> list[dict]:
         return feats
@@ -74,46 +80,22 @@ class GlueFactoryExtractor(FeatureCacheMixin, FeatureExtractor):
         return [x for sub in feats for x in sub]
 
     def forward_batch(self, batch: tuple[torch.Tensor, torch.Tensor]) -> list[dict]:
-        # Batch has always size 1
-        image, _ = batch
-        image = image.to(self.device)
+        images, _ = batch
+        images = images.to(self.device)
+        image_size = torch.tensor([images.shape[3], images.shape[2]])
         with torch.inference_mode():
-            output = self.model({"image": image})
-            output = {k: v.squeeze(0).cpu() for k, v in output.items()}
-            output["image_size"] = torch.tensor(image.shape[2:])
-        return [output]
+            batch_features = [{k: v.cpu() for k, v in f.items()} for f in self.extract(images)]
+
+        outputs = []
+        for features in batch_features:
+            if self.force_num_keypoints:
+                features = pad_features(features, self.max_num_keypoints, image_size)
+            features["image_size"] = image_size
+            outputs.append(features)
+        return outputs
 
 
-class SuperPointExtractor(GlueFactoryExtractor):
-    """
-    Superpoint keypoints and descriptors.
-
-    - Paper: SuperPoint: Self-Supervised Interest Point Detection and Description
-    - Link: https://arxiv.org/abs/1712.07629
-    """
-
-    def __init__(
-        self,
-        detection_threshold: float = 0.0,
-        force_num_keypoints: bool = True,
-        max_num_keypoints: int = 256,
-        device: str | None = None,
-        num_workers: int = 1,
-        cache_path: str | None = None,
-        config_tag: str | None = None,
-        **model_config,
-    ):
-        config = {
-            "name": "gluefactory_nonfree.superpoint",
-            "nms_radius": 3,
-            "detection_threshold": detection_threshold,
-            "force_num_keypoints": force_num_keypoints,
-            "max_num_keypoints": max_num_keypoints,
-        } | model_config
-        super().__init__(config, device=device, num_workers=num_workers, cache_path=cache_path, config_tag=config_tag)
-
-
-class DiskExtractor(GlueFactoryExtractor):
+class DiskExtractor(LocalFeatureExtractor):
     """
     DISK keypoints and descriptors.
 
@@ -130,18 +112,48 @@ class DiskExtractor(GlueFactoryExtractor):
         num_workers: int = 1,
         cache_path: str | None = None,
         config_tag: str | None = None,
-        **model_config,
+        batch_size: int = 1,
+        window_size: int = 5,
+        checkpoint: str = "depth",
     ):
-        config = {
-            "name": "extractors.disk_kornia",
-            "detection_threshold": detection_threshold,
-            "force_num_keypoints": force_num_keypoints,
-            "max_num_keypoints": max_num_keypoints,
-        } | model_config
-        super().__init__(config, device=device, num_workers=num_workers, cache_path=cache_path, config_tag=config_tag)
+        super().__init__(
+            max_num_keypoints=max_num_keypoints,
+            detection_threshold=detection_threshold,
+            force_num_keypoints=force_num_keypoints,
+            device=device,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            cache_path=cache_path,
+            config_tag=config_tag,
+        )
+        self.window_size = window_size
+        self.checkpoint = checkpoint
+
+    def build_model(self) -> torch.nn.Module:
+        return KF.DISK.from_pretrained(self.checkpoint)
+
+    def model_config(self) -> dict:
+        return super().model_config() | {"window_size": self.window_size, "checkpoint": self.checkpoint}
+
+    def extract(self, images: torch.Tensor) -> list[dict[str, torch.Tensor]]:
+        batch_features = self.model(
+            images,
+            n=self.max_num_keypoints,
+            window_size=self.window_size,
+            score_threshold=self.detection_threshold,
+            pad_if_not_divisible=True,
+        )
+        return [
+            {
+                "keypoints": f.keypoints,
+                "keypoint_scores": f.detection_scores,
+                "descriptors": f.descriptors,
+            }
+            for f in batch_features
+        ]
 
 
-class AlikedExtractor(GlueFactoryExtractor):
+class AlikedExtractor(LocalFeatureExtractor):
     """
     ALIKED keypoints and descriptors.
 
@@ -158,24 +170,55 @@ class AlikedExtractor(GlueFactoryExtractor):
         num_workers: int = 1,
         cache_path: str | None = None,
         config_tag: str | None = None,
-        **model_config,
+        batch_size: int = 1,
+        model_name: str = "aliked-n16",
+        nms_radius: int = 2,
     ):
+        super().__init__(
+            max_num_keypoints=max_num_keypoints,
+            detection_threshold=detection_threshold,
+            force_num_keypoints=force_num_keypoints,
+            device=device,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            cache_path=cache_path,
+            config_tag=config_tag,
+        )
+        self.model_name = model_name
+        self.nms_radius = nms_radius
 
-        config = {
-            "name": "extractors.aliked",
-            "detection_threshold": detection_threshold,
-            "force_num_keypoints": force_num_keypoints,
-            "max_num_keypoints": max_num_keypoints,
-        } | model_config
-        super().__init__(config, device=device, num_workers=num_workers, cache_path=cache_path, config_tag=config_tag)
+    def build_model(self) -> torch.nn.Module:
+        return KF.ALIKED.from_pretrained(
+            self.model_name,
+            max_num_keypoints=self.max_num_keypoints,
+            detection_threshold=self.detection_threshold,
+            nms_radius=self.nms_radius,
+        )
+
+    def model_config(self) -> dict:
+        return super().model_config() | {"model_name": self.model_name, "nms_radius": self.nms_radius}
+
+    def extract(self, images: torch.Tensor) -> list[dict[str, torch.Tensor]]:
+        return [
+            {
+                "keypoints": f.keypoints,
+                "keypoint_scores": f.keypoint_scores,
+                "descriptors": f.descriptors,
+            }
+            for f in self.model(images)
+        ]
 
 
-class SiftExtractor(GlueFactoryExtractor):
-    """SIFT keypoints and descriptors."""
+class XFeatExtractor(LocalFeatureExtractor):
+    """
+    XFeat keypoints and descriptors. Match with `MatchLightGlue(features="xfeat")`.
+
+    - Paper: XFeat: Accelerated Features for Lightweight Image Matching
+    - Link: https://arxiv.org/abs/2404.19174
+    """
 
     def __init__(
         self,
-        backend: str = "opencv",
         detection_threshold: float = 0.0,
         force_num_keypoints: bool = True,
         max_num_keypoints: int = 256,
@@ -183,23 +226,174 @@ class SiftExtractor(GlueFactoryExtractor):
         num_workers: int = 1,
         cache_path: str | None = None,
         config_tag: str | None = None,
-        **model_config,
+        batch_size: int = 1,
     ):
+        super().__init__(
+            max_num_keypoints=max_num_keypoints,
+            detection_threshold=detection_threshold,
+            force_num_keypoints=force_num_keypoints,
+            device=device,
+            num_workers=num_workers,
+            cache_path=cache_path,
+            config_tag=config_tag,
+            batch_size=batch_size,
+        )
 
-        config = {
-            "name": "extractors.sift",
-            "backend": backend,
-            "detection_threshold": detection_threshold,
-            "force_num_keypoints": force_num_keypoints,
-            "max_num_keypoints": max_num_keypoints,
-        } | model_config
-        super().__init__(config, device=device, num_workers=num_workers, cache_path=cache_path, config_tag=config_tag)
+    def build_model(self) -> torch.nn.Module:
+        return KF.XFeat.from_pretrained(top_k=self.max_num_keypoints, detection_threshold=self.detection_threshold)
 
-        # Fix extract_single_image method.
-        self.model.extract_single_image = types.MethodType(extract_single_image_fix, self.model)
+    def extract(self, images: torch.Tensor) -> list[dict[str, torch.Tensor]]:
+        return [
+            {
+                "keypoints": f["keypoints"],
+                "keypoint_scores": f["scores"],
+                "descriptors": f["descriptors"],
+            }
+            for f in self.model.detectAndCompute(images)
+        ]
 
-    def _extract_entry(self, entry):
-        entry_new = super()._extract_entry(entry)
-        entry_new["scales"] = entry["scales"].clone().cpu()
-        entry_new["oris"] = entry["oris"].clone().cpu()
-        return entry_new
+
+class DeDoDeExtractor(LocalFeatureExtractor):
+    """
+    DeDoDe keypoints and descriptors. Match with `MatchLightGlue(features="dedodeb")` for
+    descriptor="B" and `MatchLightGlue(features="dedodeg")` for descriptor="G".
+    The detection_threshold is not used.
+
+    - Paper: DeDoDe: Detect, Don't Describe -- Describe, Don't Detect for Local Feature Matching
+    - Link: https://arxiv.org/abs/2308.08479
+    """
+
+    def __init__(
+        self,
+        detection_threshold: float = 0.0,
+        force_num_keypoints: bool = True,
+        max_num_keypoints: int = 256,
+        device: str | None = None,
+        num_workers: int = 1,
+        cache_path: str | None = None,
+        config_tag: str | None = None,
+        batch_size: int = 1,
+        descriptor: str = "B",
+        detector_weights: str = "L-C4-v2",
+    ):
+        super().__init__(
+            max_num_keypoints=max_num_keypoints,
+            detection_threshold=detection_threshold,
+            force_num_keypoints=force_num_keypoints,
+            device=device,
+            num_workers=num_workers,
+            cache_path=cache_path,
+            config_tag=config_tag,
+            batch_size=batch_size,
+        )
+        self.descriptor = descriptor
+        self.detector_weights = detector_weights
+
+    def build_model(self) -> torch.nn.Module:
+        amp_dtype = torch.float16 if str(self.device).startswith("cuda") else torch.float32
+        return KF.DeDoDe.from_pretrained(
+            detector_weights=self.detector_weights,
+            descriptor_weights=f"{self.descriptor}-upright",
+            amp_dtype=amp_dtype,
+        )
+
+    def model_config(self) -> dict:
+        return super().model_config() | {"descriptor": self.descriptor, "detector_weights": self.detector_weights}
+
+    def extract(self, images: torch.Tensor) -> list[dict[str, torch.Tensor]]:
+        keypoints, scores, descriptors = self.model(images, n=self.max_num_keypoints)
+        return [
+            {
+                "keypoints": keypoints[i],
+                "keypoint_scores": scores[i],
+                "descriptors": descriptors[i],
+            }
+            for i in range(len(keypoints))
+        ]
+
+
+class DoGHardNetExtractor(LocalFeatureExtractor):
+    """
+    Difference of Gaussians keypoints with HardNet descriptors. Match with
+    `MatchLightGlue(features="doghardnet")`, or `MatchLightGlue(features="dog_affnet_hardnet")` for affnet=True.
+
+    - Paper (HardNet): Working hard to know your neighbor's margins: Local descriptor learning loss
+    - Link: https://arxiv.org/abs/1705.10872
+    """
+
+    def __init__(
+        self,
+        detection_threshold: float = 0.0,
+        force_num_keypoints: bool = True,
+        max_num_keypoints: int = 256,
+        device: str | None = None,
+        num_workers: int = 1,
+        cache_path: str | None = None,
+        config_tag: str | None = None,
+        batch_size: int = 1,
+        affnet: bool = False,
+    ):
+        super().__init__(
+            max_num_keypoints=max_num_keypoints,
+            detection_threshold=detection_threshold,
+            force_num_keypoints=force_num_keypoints,
+            device=device,
+            num_workers=num_workers,
+            cache_path=cache_path,
+            config_tag=config_tag,
+            batch_size=batch_size,
+        )
+        self.affnet = affnet
+
+    def build_model(self) -> torch.nn.Module:
+        detector = KF.SIFTFeature(
+            num_features=self.max_num_keypoints, score_threshold=self.detection_threshold
+        ).detector
+        if self.affnet:
+            detector.aff = KF.LAFAffNetShapeEstimator(pretrained=True)
+        descriptor = KF.LAFDescriptor(KF.HardNet(pretrained=True), patch_size=32, grayscale_descriptor=True)
+        return KF.LocalFeature(detector, descriptor)
+
+    def model_config(self) -> dict:
+        return super().model_config() | {"affnet": self.affnet}
+
+    def extract(self, images: torch.Tensor) -> list[dict[str, torch.Tensor]]:
+        return [laf_features(*self.model(to_grayscale(image[None])))[0] for image in images]
+
+
+class KeyNetAffNetHardNetExtractor(LocalFeatureExtractor):
+    """
+    KeyNet keypoints with AffNet shapes and HardNet descriptors. Match with
+    `MatchLightGlue(features="keynet_affnet_hardnet")`.
+
+    - Paper (KeyNet): Key.Net: Keypoint Detection by Handcrafted and Learned CNN Filters
+    - Link: https://arxiv.org/abs/1904.00889
+    """
+
+    def __init__(
+        self,
+        detection_threshold: float = 0.0,
+        force_num_keypoints: bool = True,
+        max_num_keypoints: int = 256,
+        device: str | None = None,
+        num_workers: int = 1,
+        cache_path: str | None = None,
+        config_tag: str | None = None,
+        batch_size: int = 1,
+    ):
+        super().__init__(
+            max_num_keypoints=max_num_keypoints,
+            detection_threshold=detection_threshold,
+            force_num_keypoints=force_num_keypoints,
+            device=device,
+            num_workers=num_workers,
+            cache_path=cache_path,
+            config_tag=config_tag,
+            batch_size=batch_size,
+        )
+
+    def build_model(self) -> torch.nn.Module:
+        return KF.KeyNetAffNetHardNet(num_features=self.max_num_keypoints, score_threshold=self.detection_threshold)
+
+    def extract(self, images: torch.Tensor) -> list[dict[str, torch.Tensor]]:
+        return [laf_features(*self.model(to_grayscale(image[None])))[0] for image in images]
