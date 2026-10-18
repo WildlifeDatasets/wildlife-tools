@@ -38,7 +38,7 @@ dependencies=[
           'tensorboard',
           'pytorch_metric_learning>=2.9.0',
           'transformers>=4.30.2',
-          'wildlife-datasets>=1.0.8',
+          'wildlife-datasets>=1.0.9',
           'kornia>=0.8.3',
           'lmdb',
           'matplotlib',
