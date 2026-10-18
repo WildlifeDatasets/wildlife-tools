@@ -1,0 +1,1136 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../inference/">
+      
+      
+        <link rel="next" href="../caching/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Training ML models - Wildlife Tools</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#training-ml-models" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Wildlife Tools" class="md-header__button md-logo" aria-label="Wildlife Tools" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Wildlife Tools
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Training ML models
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/WildlifeDatasets/wildlife-tools" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    wildlife-tools
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Wildlife Tools" class="md-nav__button md-logo" aria-label="Wildlife Tools" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Wildlife Tools
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/WildlifeDatasets/wildlife-tools" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    wildlife-tools
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../inference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training ML models
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training ML models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#replicability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Replicability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#metric-learning-objectives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metric learning objectives
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Metric learning objectives">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gsap-and-smoothap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        gSAP and SmoothAP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#siglip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SigLIP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mining" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mining
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#combining-objectives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Combining objectives
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#batch-requirements-for-comparisons" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Batch requirements for comparisons
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../caching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Caching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pre-trained models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Pre-trained models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../megadescriptor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MegaDescriptor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../wildfusion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WildFusion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    References
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    References
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference_features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference_inference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference_similarity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Similarity
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference_training/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#replicability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Replicability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#metric-learning-objectives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metric learning objectives
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Metric learning objectives">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gsap-and-smoothap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        gSAP and SmoothAP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#siglip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SigLIP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mining" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mining
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#combining-objectives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Combining objectives
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#batch-requirements-for-comparisons" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Batch requirements for comparisons
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="training-ml-models">Training ML models</h1>
+<p>We provide a simple trainer for <code>WildlifeDataset</code> instances and a suite of metric learning objectives. Every objective
+accepts <code>objective(embeddings, labels)</code> and returns a scalar loss, so it can be used directly with <code>BasicTrainer</code>.</p>
+<h2 id="replicability">Replicability</h2>
+<p>The model can be trained with a specified seed to ensure replicable results by calling the <code>set_seed</code> function at the beginning of the training process. If the trainer is saved into checkpoint, the seed is stored as well, allowing for its later use in restarting the model and maintaining replicability throughout the restart.</p>
+<h2 id="examples">Examples</h2>
+<p>We load the dataset as in the <a href="../inference/">feature extraction</a> section.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">wildlife_datasets.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">MacaqueFaces</span> 
+<span class="kn">import</span><span class="w"> </span><span class="nn">torchvision.transforms</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">T</span>
+
+<span class="n">root</span> <span class="o">=</span> <span class="s2">"data/MacaqueFaces"</span>
+<span class="n">transform</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span>
+    <span class="n">T</span><span class="o">.</span><span class="n">Resize</span><span class="p">([</span><span class="mi">384</span><span class="p">,</span> <span class="mi">384</span><span class="p">]),</span>
+    <span class="n">T</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span>
+    <span class="n">T</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="p">(</span><span class="mf">0.485</span><span class="p">,</span> <span class="mf">0.456</span><span class="p">,</span> <span class="mf">0.406</span><span class="p">),</span> <span class="n">std</span><span class="o">=</span><span class="p">(</span><span class="mf">0.229</span><span class="p">,</span> <span class="mf">0.224</span><span class="p">,</span> <span class="mf">0.225</span><span class="p">))</span>
+<span class="p">])</span>
+
+<span class="n">MacaqueFaces</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">MacaqueFaces</span><span class="p">(</span>
+    <span class="n">root</span><span class="p">,</span>
+    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+    <span class="n">load_label</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">factorize_label</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Then we can finetune or train a model as follows.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">timm</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.optim</span><span class="w"> </span><span class="kn">import</span> <span class="n">SGD</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">wildlife_tools.train</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArcFaceLoss</span><span class="p">,</span> <span class="n">BasicTrainer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">wildlife_tools.train</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_seed</span>
+
+<span class="c1"># Download MegaDescriptor-L backbone from HuggingFace Hub</span>
+<span class="n">backbone</span> <span class="o">=</span> <span class="n">timm</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s1">'hf-hub:BVRA/MegaDescriptor-L-384'</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Arcface loss - needs backbone output size and number of classes.</span>
+<span class="n">embedding_size</span> <span class="o">=</span> <span class="n">backbone</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">objective</span> <span class="o">=</span> <span class="n">ArcFaceLoss</span><span class="p">(</span>
+    <span class="n">num_classes</span><span class="o">=</span><span class="n">dataset</span><span class="o">.</span><span class="n">num_classes</span><span class="p">,</span>
+    <span class="n">embedding_size</span><span class="o">=</span><span class="n">embedding_size</span><span class="p">,</span>
+    <span class="n">margin</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">scale</span><span class="o">=</span><span class="mi">64</span>
+    <span class="p">)</span>
+
+<span class="n">params</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="n">backbone</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">objective</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">SGD</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>
+
+<span class="n">trainer</span> <span class="o">=</span> <span class="n">BasicTrainer</span><span class="p">(</span>
+    <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">backbone</span><span class="p">,</span>
+    <span class="n">objective</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
+    <span class="n">optimizer</span><span class="o">=</span><span class="n">optimizer</span><span class="p">,</span>
+    <span class="n">epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s1">'cuda'</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+</code></pre></div>
+<h2 id="metric-learning-objectives">Metric learning objectives</h2>
+<p>The established objectives use the existing <a href="https://kevinmusgrave.github.io/pytorch-metric-learning/losses/">PyTorch Metric Learning backend</a>
+(version 2.9.0 or newer). Its constructors, distances, reducers, and additional keyword arguments apply to the directly
+exported classes. ArcFace, Sub-center ArcFace, and Triplet use the wildlife-tools wrappers described below. The AP
+surrogates and SigLIP are implemented in <code>wildlife_tools.train.ranking</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Family</th>
+<th>Available classes</th>
+<th>Key parameters / conventions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pairwise</td>
+<td><code>ContrastiveLoss</code></td>
+<td><code>pos_margin=0</code>, <code>neg_margin=1</code>; normalized Euclidean distance by default</td>
+</tr>
+<tr>
+<td>Triplet / margin</td>
+<td><code>TripletLoss</code>, <code>MarginLoss</code></td>
+<td>Triplet: <code>margin=0.2</code>, <code>mining="semihard"</code>, <code>distance="l2_squared"</code>; Margin: <code>margin</code>, <code>beta</code>, <code>learn_beta</code></td>
+</tr>
+<tr>
+<td>Adaptive / threshold margins</td>
+<td><code>DynamicSoftMarginLoss</code>, <code>ThresholdConsistentMarginLoss</code></td>
+<td>Dynamic margin: <code>min_val</code>, <code>num_bins</code>, <code>momentum</code>; threshold margin: <code>margin_plus</code>, <code>margin_minus</code>, <code>lambda_plus</code>, <code>lambda_minus</code></td>
+</tr>
+<tr>
+<td>Pair weighting</td>
+<td><code>MultiSimilarityLoss</code>, <code>CircleLoss</code></td>
+<td>Multi-Similarity: <code>alpha=2</code>, <code>beta=50</code>, <code>base=0.5</code>; Circle: <code>m=0.4</code>, <code>gamma=80</code></td>
+</tr>
+<tr>
+<td>Contrastive / neighborhood</td>
+<td><code>SupConLoss</code>, <code>NTXentLoss</code>, <code>NPairsLoss</code>, <code>NCALoss</code></td>
+<td>SupCon and NT-Xent: <code>temperature</code>; NCA: <code>softmax_scale</code>; NT-Xent is the InfoNCE-style per-positive objective</td>
+</tr>
+<tr>
+<td>Angular / tuplet</td>
+<td><code>AngularLoss</code>, <code>TupletMarginLoss</code></td>
+<td><code>alpha</code> and tuplet <code>margin</code> are in <strong>degrees</strong>, following the backend</td>
+</tr>
+<tr>
+<td>Lifted structure</td>
+<td><code>LiftedStructureLoss</code>, <code>GeneralizedLiftedStructureLoss</code></td>
+<td><code>pos_margin</code>, <code>neg_margin</code></td>
+</tr>
+<tr>
+<td>Histogram ranking</td>
+<td><code>HistogramLoss</code>, <code>FastAPLoss</code></td>
+<td>Histogram: <code>n_bins</code> or <code>delta</code>; FastAP: <code>num_bins</code></td>
+</tr>
+<tr>
+<td>Neighborhood ranking</td>
+<td><code>PNPLoss</code>, <code>RankedListLoss</code></td>
+<td>PNP: <code>variant</code>, <code>anneal</code>, <code>alpha</code>, <code>b</code>; Ranked List requires <code>margin</code> and <code>Tn</code>, for example <code>RankedListLoss(margin=0.4, Tn=5)</code></td>
+</tr>
+<tr>
+<td>Sigmoid ranking</td>
+<td><code>SmoothAPLoss</code>, <code>GSAPLoss</code></td>
+<td><code>temperature</code>, <code>chunk_size</code>; gSAP also has <code>negative_drop_rate</code></td>
+</tr>
+<tr>
+<td>Shared pair threshold</td>
+<td><code>SigLIPLoss</code></td>
+<td><code>scale=10</code>, <code>bias=-10</code>, <code>learnable=True</code></td>
+</tr>
+<tr>
+<td>Learned proxies</td>
+<td><code>ProxyAnchorLoss</code>, <code>ProxyNCALoss</code></td>
+<td>Both need <code>num_classes</code>, <code>embedding_size</code>; Proxy Anchor: <code>margin=0.1</code>, <code>alpha=32</code></td>
+</tr>
+<tr>
+<td>Multiple centers</td>
+<td><code>SoftTripleLoss</code>, <code>SubCenterArcFaceLoss</code></td>
+<td>Both need class count and embedding size; <code>centers_per_class</code> or <code>sub_centers</code></td>
+</tr>
+<tr>
+<td>Classifier margins</td>
+<td><code>ArcFaceLoss</code>, <code>CosFaceLoss</code>, <code>SphereFaceLoss</code></td>
+<td>ArcFace and Sub-center ArcFace margins are in <strong>radians</strong>; CosFace uses a cosine margin; SphereFace uses an integer multiplicative angular margin</td>
+</tr>
+<tr>
+<td>Classifier reference</td>
+<td><code>NormalizedSoftmaxLoss</code>, <code>SoftmaxLoss</code></td>
+<td>Both need <code>num_classes</code>, <code>embedding_size</code>; normalized softmax also has <code>temperature</code></td>
+</tr>
+</tbody>
+</table>
+<p>For example, replace the objective in the training recipe:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">wildlife_tools.train</span><span class="w"> </span><span class="kn">import</span> <span class="n">GSAPLoss</span><span class="p">,</span> <span class="n">ProxyAnchorLoss</span><span class="p">,</span> <span class="n">SupConLoss</span>
+
+<span class="n">objective</span> <span class="o">=</span> <span class="n">SupConLoss</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="c1"># Or a trainable proxy objective:</span>
+<span class="n">objective</span> <span class="o">=</span> <span class="n">ProxyAnchorLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="n">dataset</span><span class="o">.</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="o">=</span><span class="n">embedding_size</span><span class="p">)</span>
+<span class="c1"># Or the global AP objective from the linked paper:</span>
+<span class="n">objective</span> <span class="o">=</span> <span class="n">GSAPLoss</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">negative_drop_rate</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+</code></pre></div>
+<p>Move the backbone and objective to the training device <strong>before</strong> constructing the optimizer, and include both sets
+of parameters. Proxy objectives, classifier heads, trainable MarginLoss beta, and SigLIP scale/bias need optimizer updates.
+<code>BasicTrainer</code> includes objective state in its checkpoints.</p>
+<div class="highlight"><pre><span></span><code><span class="n">backbone</span> <span class="o">=</span> <span class="n">backbone</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">"cuda"</span><span class="p">)</span>
+<span class="n">objective</span> <span class="o">=</span> <span class="n">objective</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">"cuda"</span><span class="p">)</span>
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">SGD</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="n">backbone</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">objective</span><span class="o">.</span><span class="n">parameters</span><span class="p">()),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="gsap-and-smoothap">gSAP and SmoothAP</h3>
+<p><code>GSAPLoss</code> implements the sigmoid gAP surrogate in <a href="https://arxiv.org/abs/2610.09863">Global Average Precision for Representation Learning</a>.
+It ranks all valid directed batch pairs together. <code>SmoothAPLoss</code> computes the per-query surrogate and averages queries
+with positives. The formulas include each positive's sigmoid self-comparison, <code>sigmoid(0) = 0.5</code>, as in the paper's
+Eqs. (3), (8)--(10). Embedding self-pairs are excluded from the candidate set in both losses.</p>
+<p>gSAP defaults to dropping the lowest 90% of negative scores. Set <code>negative_drop_rate=0</code> to optimize the full surrogate.
+All positives are retained. Queries without positives still contribute negatives to gSAP; SmoothAP omits those queries
+from its mean. Both return a differentiable zero if there are no positives. A batch containing only positives has zero AP loss.</p>
+<p>Both losses checkpoint chunks of positive-versus-candidate comparisons, recomputing them during backward. Chunking
+bounds saved activation memory but does not remove the comparison cost or the batch similarity matrix. Low-precision
+inputs are promoted to float32. Large batches may still require negative dropping and a smaller chunk size.
+The embedding API computes cosine similarities outside CPU/CUDA autocast. For the matrix API, compute similarities
+in float32 before supplying them; casting an already rounded similarity matrix cannot restore its precision.</p>
+<p>For existing similarities, local descriptors, or cross-modal training, use the matrix API:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">wildlife_tools.train</span><span class="w"> </span><span class="kn">import</span> <span class="n">GSAPLoss</span>
+
+<span class="n">queries</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">query_embeddings</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">references</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">reference_embeddings</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">similarities</span> <span class="o">=</span> <span class="n">queries</span> <span class="o">@</span> <span class="n">references</span><span class="o">.</span><span class="n">T</span>
+<span class="n">positives</span> <span class="o">=</span> <span class="n">query_labels</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">==</span> <span class="n">reference_labels</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">GSAPLoss</span><span class="p">(</span><span class="n">negative_drop_rate</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">from_similarity</span><span class="p">(</span><span class="n">similarities</span><span class="p">,</span> <span class="n">positives</span><span class="p">)</span>
+</code></pre></div>
+<p><code>from_similarity</code> accepts a rectangular floating-point matrix, a boolean or binary positive mask, and an optional
+boolean <code>valid_mask</code>. It never removes the diagonal automatically: diagonal pairs can be genuine cross-modal positives.
+When the two axes contain the same observations, pass a mask excluding their self-pairs. Similarities must be larger
+for better matches; convert distances accordingly.</p>
+<h3 id="siglip">SigLIP</h3>
+<p><code>SigLIPLoss</code> adapts the <a href="https://arxiv.org/abs/2303.15343">SigLIP signed logistic objective</a> to labeled embedding batches.
+The sum over valid pairs is divided by the query count, rather than the pair count. It learns a shared positive scale
+and bias by default and supports the same matrix API. Unlike the AP losses, negative-only batches still produce a loss.</p>
+<h3 id="mining">Mining</h3>
+<p>Use a backend miner with a compatible backend objective through <code>MinedLoss</code>. For Multi-Similarity this also exposes
+the pair-selection stage explicitly, instead of silently assuming that loss weighting performs mining.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pytorch_metric_learning</span><span class="w"> </span><span class="kn">import</span> <span class="n">miners</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">wildlife_tools.train</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinedLoss</span><span class="p">,</span> <span class="n">MultiSimilarityLoss</span>
+
+<span class="n">objective</span> <span class="o">=</span> <span class="n">MinedLoss</span><span class="p">(</span><span class="n">MultiSimilarityLoss</span><span class="p">(),</span> <span class="n">miners</span><span class="o">.</span><span class="n">MultiSimilarityMiner</span><span class="p">(</span><span class="n">epsilon</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span>
+</code></pre></div>
+<p><code>TripletLoss</code> already includes its triplet miner. gSAP and SmoothAP use their valid pair masks, rather than a tuple miner.</p>
+<h3 id="combining-objectives">Combining objectives</h3>
+<p><code>CombinedLoss</code> registers all constituent modules and stores the weights in checkpoint state:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">wildlife_tools.train</span><span class="w"> </span><span class="kn">import</span> <span class="n">CombinedLoss</span><span class="p">,</span> <span class="n">ProxyAnchorLoss</span><span class="p">,</span> <span class="n">SoftmaxLoss</span>
+
+<span class="n">objective</span> <span class="o">=</span> <span class="n">CombinedLoss</span><span class="p">(</span>
+    <span class="n">objectives</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">"classification"</span><span class="p">:</span> <span class="n">SoftmaxLoss</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">),</span>
+        <span class="s2">"metric"</span><span class="p">:</span> <span class="n">ProxyAnchorLoss</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="n">weights</span><span class="o">=</span><span class="p">{</span><span class="s2">"classification"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">"metric"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">},</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>This combines categorical and metric supervision on the supplied embeddings. A nonlinear adaptation head, and a
+particular categorical objective such as Seesaw, remain separate choices when constructing the HEAda model.</p>
+<h3 id="batch-requirements-for-comparisons">Batch requirements for comparisons</h3>
+<p>Pair, triplet, contrastive, and AP losses need multiple images of at least some identities in each batch. Identity-balanced
+sampling is usually appropriate. Proxy losses can learn from singleton identities. Backend objectives differ in their
+mining and reduction rules; the table lists families, not an assertion that their numerical loss scales are comparable.</p>
+<p><code>BasicTrainer</code> currently shuffles images. Use a custom loader with <code>trainer.train_epoch(loader)</code> when comparing losses
+under controlled identity-balanced batches. Gradient accumulation does not add cross-microbatch comparisons: the AP
+and contrastive candidate sets are those of each forward pass.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
