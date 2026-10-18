@@ -1,102 +1,28 @@
-import json
 import os
 import pickle
 from collections.abc import Callable, Sequence
 from typing import Any
 
-import cv2
-import numpy as np
 import pandas as pd
-import pycocotools.mask as mask_coco
 from PIL import Image
+from wildlife_datasets import datasets
 
 Transform = Callable[[Image.Image], Any]
 
 
-class ImageDataset:
+class WildlifeDataset(datasets.WildlifeDataset):
     """
-    PyTorch-style dataset for a image datasets
+    PyTorch-style dataset for image datasets. Wrapper around `WildlifeDataset` from wildlife-datasets.
 
     Args:
         metadata (pd.DataFrame): A pandas dataframe containing image metadata.
         root (str | None, optional): Root directory if paths in metadata are relative. If None, absolute paths in metadata are used.
         transform (Transform | None, optional): A function that takes in a PIL image and returns its transformed version.
+        img_load (str, optional): Method to load images. See wildlife-datasets for available options.
         col_path (str, optional): Column name in the metadata containing image file paths.
         col_label (str, optional): Column name in the metadata containing class labels.
         load_label (bool, optional): If False, `__getitem__` returns only image instead of (image, label) tuple.
-
-    Attributes:
-        labels (np.ndarray): An integers array of ordinal encoding of labels.
-        labels_string (np.ndarray): A strings array of original labels.
-        labels_map (dict): A mapping between labels and their ordinal encoding.
-        num_classes (int): Return the number of unique classes in the dataset.
-    """
-
-    def __init__(
-        self,
-        metadata: pd.DataFrame,
-        root: str | None = None,
-        transform: Transform | None = None,
-        col_path: str = "path",
-        col_label: str = "identity",
-        load_label: bool = True,
-    ):
-        self.metadata = metadata.reset_index(drop=True)
-        self.root = root
-        self.transform = transform
-        self.col_path = col_path
-        self.col_label = col_label
-        self.load_label = load_label
-        self.labels, self.labels_map = pd.factorize(self.metadata[self.col_label].values)
-
-    @property
-    def labels_string(self):
-        return self.metadata[self.col_label].astype(str).values
-
-    @property
-    def num_classes(self):
-        return len(self.labels_map)
-
-    def __len__(self):
-        return len(self.metadata)
-
-    def get_image(self, path: str):
-        img = cv2.imread(path)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img = Image.fromarray(img)
-        return img
-
-    def __getitem__(self, idx: int):
-        data = self.metadata.iloc[idx]
-        if self.root:
-            img_path = os.path.join(self.root, data[self.col_path])
-        else:
-            img_path = data[self.col_path]
-        img = self.get_image(img_path)
-
-        if self.transform:
-            img = self.transform(img)
-
-        if self.load_label:
-            return img, self.labels[idx]
-        else:
-            return img
-
-
-class WildlifeDataset(ImageDataset):
-    """
-    PyTorch-style dataset for a datasets from wildlife-datasets library.
-
-    Args:
-        metadata (pd.DataFrame): A pandas dataframe containing image metadata.
-        root (str | None, optional): Root directory if paths in metadata are relative. If None, absolute paths in metadata are used.
-        transform (Transform | None, optional): A function that takes in a PIL image and returns its transformed version.
-        img_load (str, optional): Method to load images.
-            Options: 'full', 'full_mask', 'full_hide', 'bbox', 'bbox_mask', 'bbox_hide',
-                      and 'crop_black'.
-        col_path (str, optional): Column name in the metadata containing image file paths.
-        col_label (str, optional): Column name in the metadata containing class labels.
-        load_label (bool, optional): If False, `__getitem__` returns only image instead of (image, label) tuple.
+        **kwargs: Additional arguments passed to `WildlifeDataset` from wildlife-datasets.
 
     Attributes:
         labels (np.ndarray): An integers array of ordinal encoding of labels.
@@ -114,124 +40,22 @@ class WildlifeDataset(ImageDataset):
         col_path: str = "path",
         col_label: str = "identity",
         load_label: bool = True,
-    ):
-        self.metadata = metadata.reset_index(drop=True)
-        self.root = root
-        self.transform = transform
-        self.img_load = img_load
-        self.col_path = col_path
-        self.col_label = col_label
-        self.load_label = load_label
-        self.labels, self.labels_map = pd.factorize(self.metadata[self.col_label].values)
+        **kwargs,
+    ) -> None:
+        super().__init__(
+            root=root,
+            df=metadata,
+            transform=transform,
+            img_load=img_load,
+            col_path=col_path,
+            col_label=col_label,
+            load_label=load_label,
+            factorize_label=True,
+            **kwargs,
+        )
 
-    def __getitem__(self, idx: int):
-        data = self.metadata.iloc[idx]
-        if self.root:
-            img_path = os.path.join(self.root, data[self.col_path])
-        else:
-            img_path = data[self.col_path]
-        img = self.get_image(img_path)
 
-        if self.img_load in ["full_mask", "full_hide", "bbox_mask", "bbox_hide", "mask_crop"]:
-            if "segmentation" not in data:
-                raise ValueError(f"{self.img_load} selected but no segmentation found.")
-            if isinstance(data["segmentation"], str):
-                segmentation = eval(data["segmentation"])
-            else:
-                segmentation = data["segmentation"]
-            if isinstance(segmentation, list) or isinstance(segmentation, np.ndarray):
-                # Convert polygon to compressed RLE
-                w, h = img.size
-                rles = mask_coco.frPyObjects([segmentation], h, w)
-                segmentation = mask_coco.merge(rles)
-            if isinstance(segmentation, dict) and (
-                isinstance(segmentation["counts"], list) or isinstance(segmentation["counts"], np.ndarray)
-            ):
-                # Convert uncompressed RLE to compressed RLE
-                h, w = segmentation["size"]
-                segmentation = mask_coco.frPyObjects(segmentation, h, w)
-
-        if self.img_load in ["bbox"]:
-            if "bbox" not in data:
-                raise ValueError(f"{self.img_load} selected but no bbox found.")
-            if isinstance(data["bbox"], str):
-                bbox = json.loads(data["bbox"])
-            else:
-                bbox = data["bbox"]
-
-        # Load full image as it is.
-        if self.img_load == "full":
-            img = img
-
-        # Mask background using segmentation mask.
-        elif self.img_load == "full_mask":
-            if not np.any(pd.isnull(segmentation)):
-                mask = mask_coco.decode(segmentation).astype("bool")
-                img = Image.fromarray(img * mask[..., np.newaxis])
-
-        # Hide object using segmentation mask
-        elif self.img_load == "full_hide":
-            if not np.any(pd.isnull(segmentation)):
-                mask = mask_coco.decode(segmentation).astype("bool")
-                img = Image.fromarray(img * ~mask[..., np.newaxis])
-
-        # Crop to bounding box
-        elif self.img_load == "bbox":
-            if not np.any(pd.isnull(bbox)):
-                img = img.crop((bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3]))
-
-        # Mask background using segmentation mask and crop to bounding box.
-        elif self.img_load == "bbox_mask":
-            if not np.any(pd.isnull(segmentation)):
-                mask = mask_coco.decode(segmentation).astype("bool")
-                img = Image.fromarray(img * mask[..., np.newaxis])
-                y_nonzero, x_nonzero, _ = np.nonzero(img)
-                img = img.crop(
-                    (
-                        np.min(x_nonzero),
-                        np.min(y_nonzero),
-                        np.max(x_nonzero),
-                        np.max(y_nonzero),
-                    )
-                )
-
-        # Hide object using segmentation mask and crop to bounding box.
-        elif self.img_load == "bbox_hide":
-            if not np.any(pd.isnull(segmentation)):
-                mask = mask_coco.decode(segmentation).astype("bool")
-                img = Image.fromarray(img * ~mask[..., np.newaxis])
-                y_nonzero, x_nonzero, _ = np.nonzero(img)
-                img = img.crop(
-                    (
-                        np.min(x_nonzero),
-                        np.min(y_nonzero),
-                        np.max(x_nonzero),
-                        np.max(y_nonzero),
-                    )
-                )
-
-        # Crop black background around images
-        elif self.img_load == "crop_black":
-            y_nonzero, x_nonzero, _ = np.nonzero(img)
-            img = img.crop(
-                (
-                    np.min(x_nonzero),
-                    np.min(y_nonzero),
-                    np.max(x_nonzero),
-                    np.max(y_nonzero),
-                )
-            )
-
-        else:
-            raise ValueError(f"Invalid img_load argument: {self.img_load}")
-
-        if self.transform:
-            img = self.transform(img)
-
-        if self.load_label:
-            return img, self.labels[idx]
-        else:
-            return img
+ImageDataset = WildlifeDataset
 
 
 class FeatureDataset:
