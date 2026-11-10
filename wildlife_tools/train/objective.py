@@ -1,4 +1,5 @@
 import math
+from importlib.metadata import version
 
 import torch
 import torch.nn as nn
@@ -31,6 +32,8 @@ from pytorch_metric_learning.losses import (
 )
 
 from .ranking import GSAPLoss, SigLIPLoss, SmoothAPLoss
+
+PML_MARGIN_IN_DEGREES = int(version("pytorch_metric_learning").split(".")[0]) < 3
 
 __all__ = [
     "AngularLoss",
@@ -86,7 +89,7 @@ class ArcFaceLoss(nn.Module):
         self.loss = losses.ArcFaceLoss(
             num_classes=num_classes,
             embedding_size=embedding_size,
-            margin=57.3 * margin,
+            margin=math.degrees(margin) if PML_MARGIN_IN_DEGREES else margin,
             scale=scale,
         )
 
@@ -112,7 +115,7 @@ class SubCenterArcFaceLoss(nn.Module):
         self.loss = losses.SubCenterArcFaceLoss(
             num_classes=num_classes,
             embedding_size=embedding_size,
-            margin=math.degrees(margin),
+            margin=math.degrees(margin) if PML_MARGIN_IN_DEGREES else margin,
             scale=scale,
             sub_centers=sub_centers,
         )
