@@ -104,3 +104,26 @@ def test_topk_large_k(database_labels, similarity):
         [["A", "B", "C", "D", "E"], ["C", "B", "E", "D", "A"], ["B", "D", "A", "E", "C"], ["C", "B", "D", "A", "E"]]
     )
     np.testing.assert_array_equal(preds, expected_preds)
+
+
+def test_knn_single_query_k1(database_labels):
+    similarity = np.array([[0.1, 0.4, 0.5, 0.2, 0.3]])
+    classifier = KnnClassifier(database_labels, k=1, return_scores=True)
+    preds, scores = classifier(similarity)
+    expected_preds = np.array(["C"])
+    expected_scores = np.array([0.5])
+    np.testing.assert_array_equal(preds, expected_preds)
+    np.testing.assert_array_almost_equal(scores, expected_scores)
+
+
+def test_topk_single_query_single_database():
+    database_labels = np.array(["A"])
+    similarity = np.array([[0.7]])
+    classifier = TopkClassifier(database_labels, k=1, return_all=True)
+    preds, scores, idx = classifier(similarity)
+    expected_preds = np.array([["A"]])
+    expected_scores = np.array([[0.7]])
+    expected_idx = np.array([[0]])
+    np.testing.assert_array_equal(preds, expected_preds)
+    np.testing.assert_array_almost_equal(scores, expected_scores)
+    np.testing.assert_array_equal(idx, expected_idx)

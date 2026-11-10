@@ -43,7 +43,7 @@ class KnnClassifier:
         # Get ranked predictions and scores.
         similarity = torch.tensor(similarity, dtype=torch.float32)
         scores, idx = similarity.topk(k=self.k, dim=1)
-        preds = self.database_labels[idx]
+        preds = self.database_labels[idx.numpy()]
 
         preds = np.array(preds)
         scores = scores.numpy()
@@ -113,7 +113,7 @@ class TopkClassifier:
         # Get ranked predictions, scores, and database index.
         similarity = torch.tensor(similarity, dtype=torch.float32)
         scores, idx = similarity.topk(k=similarity.shape[1], dim=1)
-        preds = self.database_labels[idx]
+        preds = self.database_labels[idx.numpy()]
 
         preds = np.array(preds)
         scores = scores.numpy()
